@@ -1,2 +1,1 @@
-tutaj wpisujemy kontekst 
-lubie placki
+tutaj wpisujemy kontekst
