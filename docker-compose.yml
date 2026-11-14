@@ -1,0 +1,86 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 0. Inicjalizator danych startowych (MOCK HEURYSTYKA)
+  # Jeśli w ./data/earth nie ma jeszcze macierzy .npy, generuje je przed startem
+  # Szukacza. Jeśli prawdziwe dane już tam są - nic nie nadpisuje.
+  # ---------------------------------------------------------------------------
+  precomputer-mock-init:
+    build:
+      context: ./5-precomputer
+      dockerfile: Dockerfile.mock
+    volumes:
+      - ./data:/data
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
+  # 1. Frontend (PHP 8.3 + Apache)
+  # Korzysta z plików w głównym katalogu repozytorium (bez ich przenoszenia).
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: ./2-networker/Dockerfile.frontend
+    volumes:
+      - ./index.php:/var/www/html/index.php:ro
+      - ./explorer.php:/var/www/html/explorer.php:ro
+      - ./style.css:/var/www/html/style.css:ro
+    expose:
+      - "80"
+    networks:
+      default:
+        aliases:
+          - 1-frontend
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 3. Charakteryzator (Księżyc / Mars -> TargetProfile)
+  # UWAGA: Obecnie uruchamia Dockerfile.mock (MOCK_HEURYSTYKA_charakteryzator_api.py).
+  # Gdy docelowy 3-charakteryzator będzie gotowy, zmień dockerfile na Dockerfile.
+  # ---------------------------------------------------------------------------
+  charakteryzator:
+    build:
+      context: ./3-charakteryzator
+      dockerfile: Dockerfile.mock
+    volumes:
+      - ./data:/data:ro
+    expose:
+      - "8001"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 4. Szukacz (Wyszukiwanie wektorowe na macierzach Ziemi w RAM / mmap)
+  # ---------------------------------------------------------------------------
+  szukacz:
+    build: ./4-szukacz
+    depends_on:
+      precomputer-mock-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./data:/data:ro
+    expose:
+      - "8002"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 2. Networker (Nginx Reverse Proxy + FastAPI API Gateway)
+  # Główny punkt wejścia (porty 80 i 443).
+  # ---------------------------------------------------------------------------
+  networker:
+    build: ./2-networker
+    depends_on:
+      - frontend
+      - charakteryzator
+      - szukacz
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CHARAKTERYZATOR_URL=http://charakteryzator:8001
+      - SZUKACZ_URL=http://szukacz:8002
+      - NETWORKER_ALLOW_MOCK_FALLBACK=1
+    volumes:
+      - ./data:/data:ro
+      - ./2-networker/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    restart: unless-stopped
