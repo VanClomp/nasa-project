@@ -48,8 +48,8 @@ Całość działa na pojedynczym serwerze VPS z Linuxem w środowisku Docker Com
 │   ├── moon/
 │   ├── mars/
 │   └── earth/
-├── 1-frontend/                # Kod aplikacji webowej (Vite + Three.js)
-├── 2-networker/               # Bramka API i serwer plików statycznych
+├── 1-frontend/                # Aplikacja webowa (PHP 8 + HTML5/CSS3/JS + Three.js + C++/Wasm)
+├── 2-networker/               # Bramka API i reverse-proxy do 1-frontend
 ├── 3-charakteryzator/         # Serwis ekstrakcji cech Księżyca i Marsa
 ├── 4-szukacz/                 # Silnik wyszukiwania wektorowego Ziemi
 └── 5-precomputer/             # Skrypty ETL przygotowujące dane i mocki
@@ -92,19 +92,24 @@ Zestaw plików Cloud-Optimized GeoTIFF (`.tif`) z wewnętrznym kafelkowaniem (`T
 ## 5. Podział Pracy na 5 Osób (Specyfikacja Komponentów i Kontrakty API)
 
 ### Komponent 1: Frontend (`1-frontend`)
-- **Stack:** TypeScript, Vite, Three.js (WebGL), TailwindCSS, Chart.js / D3.
+- **Stack:** PHP 8.x + HTML5 / Modern CSS (Neon Dark UI + Animacje), Vanilla JS (ES Modules) + Three.js (WebGL) + Chart.js (z CDN/lokalnie) + opcjonalny moduł **C++ (WebAssembly / Emscripten lub binarka CLI)** do szybkich obliczeń po stronie klienta/serwera UI.
+- **Zgodność z resztą systemu:** Pełna. Komunikacja z resztą zespołu odbywa się wyłącznie po standardowych kontraktach JSON (`POST /api/v1/characterize` oraz `POST /api/v1/search`), niezależnie od tego, że widok budowany jest w PHP i HTML zamiast Vite/TypeScript.
 - **Zadania:**
-  1. Wizualizacja 3D globusów (przełączanie Księżyc / Mars / Ziemia).
-  2. Obsługa wyboru punktu na Księżycu/Marsie -> odpytanie API -> prezentacja odczytanych cech z `Charakteryzatora`.
-  3. Panel suwaków wag `[0.0 - 1.0]` dla `K_FEATURES` oraz filtr jaskiń.
-  4. Renderowanie na globusie Ziemi zwróconej heatmapy (jako `THREE.DataTexture` nakładana i kolorowana w GLSL Fragment Shaderze) oraz pinezek dla Top 100 miejsc.
-  5. Widok szczegółów kandydata: zdjęcia satelitarne (WMS Sentinel-2 / NASA GIBS), klimatogram 12-miesięczny, wizualizacja kąta Słońca (syntetyczne niebo / shader atmosferyczny) i profilu horyzontu.
+  1. Modularny szablon interfejsu w PHP (`index.php` + komponenty PHP dla panelu suwaków `K_FEATURES`, kart kandydatów, presetów misji NASA oraz widoków porównania).
+  2. Wizualizacja 3D globusów w Three.js (przełączanie Księżyc / Mars / Ziemia) z nowoczesnymi animacjami przejść i ciemnym, neonowym stylem HUD.
+  3. Obsługa wyboru punktu na Księżycu/Marsie -> odpytanie API (`fetch` z JS lub proxy w PHP do `networkera`) -> prezentacja odczytanych cech z `Charakteryzatora`.
+  4. Panel suwaków wag `[0.0 - 1.0]` dla `K_FEATURES` oraz filtr jaskiń.
+  5. Renderowanie na globusie Ziemi zwróconej heatmapy (`heatmap_base64` jako `THREE.Texture` / `THREE.DataTexture`) oraz pinezek dla Top 100 miejsc.
+  6. **Rola dla C++ (Bonus / High-Performance UI):**
+     - **Wariant A (C++ -> WebAssembly przez Emscripten):** Błyskawiczne przeliczanie wag w czasie rzeczywistym (60 FPS podczas przesuwania suwaka bez czekania na sieć) dla załadowanych Top 100 kandydatów, generowanie siatki 3D terenu (DEM mesh) lub symulacja kąta Słońca i cieni horyzontu bezpośrednio w przeglądarce.
+     - **Wariant B (Natywny mikro-moduł C++ wywoływany z PHP):** Super-szybkie generowanie profili horyzontu / analizy geometrycznej lub przetwarzanie buforów obrazowych po stronie kontenera `1-frontend`.
+  7. Widok szczegółów kandydata: zdjęcia satelitarne (WMS Sentinel-2 / NASA GIBS), klimatogram 12-miesięczny, wizualizacja kąta Słońca i profilu horyzontu.
 
 ### Komponent 2: Networker (`2-networker`)
 - **Stack:** Nginx + Python (FastAPI + `httpx` async) lub Go (Fiber).
-- **Porty:** Zewnętrzny `80`/`443` -> wewnętrzny `8000`.
+- **Porty:** Zewnętrzny `80`/`443` -> wewnętrzny `8000` (API) oraz proxy do kontenera `1-frontend:80` (PHP/Apache).
 - **Zadania:**
-  1. Serwowanie statycznego buildu z `1-frontend`.
+  1. Przekierowanie ruchu webowego (`/`) do kontenera `1-frontend` (lub serwowanie wygenerowanych zasobów).
   2. Orkiestracja zapytań między klientem, `charakteryzatorem` (`http://charakteryzator:8001`) a `szukaczem` (`http://szukacz:8002`).
 - **Endpointy publiczne:**
   - `POST /api/v1/characterize` -> zwraca `TargetProfile`.
