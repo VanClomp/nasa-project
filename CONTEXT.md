@@ -81,3 +81,12 @@ Kolejność cech w tablicach `features_norm` i `weights` (indeksy `0..8`) jest s
 2. **`POST /api/v1/search`**
    * Wysyłasz: `{"features_norm": [...], "weights": [...], "require_caves": false, "top_k": 100}`
    * Otrzymujesz: `execution_time_ms`, `best_global_month`, `heatmap_base64` (obraz `1024x512` nakładany na globus Ziemi) oraz listę `candidates` (Top lokalizacje na Ziemi z ich `climatogram_12m`, `monthly_scores` i `features_raw_best_month`).
+
+---
+
+## 6. Organizacja CSS
+* Wszystkie pliki `.php` korzystają z jednego, wspólnego arkusza stylów [style.css](file:///Users/antos/Documents/programowanie/nasa-project/nasa-project/style.css).
+* Dla każdej nowej strony `.php` podpinaj `<link rel="stylesheet" href="style.css">` i dopisuj nowe klasy w tym pliku.
+
+## 7. Licencje
+Zapisz w pliku 'LICENCES.md' wszystkie źródła, gdy używamy czegoś z internetu

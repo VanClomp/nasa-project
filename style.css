@@ -1,0 +1,882 @@
+/* ==========================================================================
+   style.css — Uniwersalny arkusz stylów dla wszystkich stron (.php)
+   ========================================================================== */
+
+:root {
+    --bg: #050507;
+    --bg-deep: #050507;
+    --surface: rgba(14, 15, 20, 0.72);
+    --bg-panel: rgba(14, 15, 20, 0.78);
+    --bg-card: rgba(20, 22, 29, 0.65);
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --text-primary: #F4F4F6;
+    --text-main: #F4F4F6;
+    --text-secondary: #8E929F;
+    --text-muted: #8E929F;
+    --text-Dim: #525665;
+    --moon-accent: #60A5FA;
+    --mars-accent: #F97316;
+    --cyan: #60A5FA;
+    --emerald: #10B981;
+    --accent-primary: #60A5FA;
+    --accent-secondary: #93C5FD;
+    --accent-glow: rgba(96, 165, 250, 0.12);
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-body="moon"] {
+    --accent-primary: #60A5FA;
+    --accent-secondary: #93C5FD;
+    --accent-glow: rgba(96, 165, 250, 0.12);
+}
+
+html[data-body="mars"] {
+    --accent-primary: #F97316;
+    --accent-secondary: #FB923C;
+    --accent-glow: rgba(249, 115, 22, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+html[data-body] body {
+    height: 100vh;
+}
+
+/* ==========================================================================
+   INDEX.PHP — Ekran wyboru celu (Księżyc / Mars)
+   ========================================================================== */
+
+/* Bardzo subtelne, minimalistyczne tło punktowe i poświata */
+.ambient-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: 
+        radial-gradient(800px circle at 25% 50%, rgba(96, 165, 250, 0.04), transparent 65%),
+        radial-gradient(800px circle at 75% 50%, rgba(249, 115, 22, 0.04), transparent 65%);
+    transition: opacity 0.8s var(--ease-out);
+}
+
+/* Minimalistyczny Topbar (w stylu SpaceX / Linear) */
+.topbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 3rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.brand-mark {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #F4F4F6;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+.brand-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+}
+
+.brand-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-Dim);
+    padding-left: 0.85rem;
+    border-left: 1px solid var(--border-subtle);
+}
+
+.topbar-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 2rem;
+}
+
+/* Sekcja nagłówka – czysta typografia, zero zbędnych ozdobników */
+.header-section {
+    position: relative;
+    z-index: 10;
+    padding: 2.2rem 3rem 1.2rem;
+    max-width: 1640px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.header-title {
+    font-size: clamp(1.75rem, 2.5vw, 2.35rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    color: var(--text-primary);
+}
+
+.header-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    max-width: 440px;
+    text-align: right;
+    line-height: 1.5;
+}
+
+/* Dwa wielkie, minimalistyczne kafelki wyboru */
+.tiles-grid {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+    padding: 0.5rem 3rem 2.75rem;
+    max-width: 1640px;
+    width: 100%;
+    margin: 0 auto;
+    align-items: stretch;
+}
+
+.celestial-card {
+    position: relative;
+    border-radius: 16px;
+    background: var(--surface);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-subtle);
+    padding: 2.25rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    overflow: hidden;
+    transition: 
+        transform 0.6s var(--ease-out),
+        border-color 0.45s var(--ease-out),
+        box-shadow 0.6s var(--ease-out),
+        opacity 0.5s var(--ease-out);
+}
+
+/* Subtelny Spotlight śledzący kursor (styl Linear.app) */
+.celestial-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        600px circle at var(--mx, 50%) var(--my, 50%),
+        var(--card-glow, rgba(255, 255, 255, 0.06)),
+        transparent 45%
+    );
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Delikatna linia świetlna na górnej krawędzi po najechaniu */
+.celestial-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-accent), transparent);
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out), left 0.6s var(--ease-out), right 0.6s var(--ease-out);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.celestial-card:hover::before {
+    opacity: 1;
+}
+
+.celestial-card:hover::after {
+    opacity: 0.9;
+    left: 5%;
+    right: 5%;
+}
+
+.tiles-grid:hover .celestial-card:not(:hover) {
+    opacity: 0.55;
+    transform: scale(0.992);
+}
+
+.card-moon {
+    --card-accent: var(--moon-accent);
+    --card-glow: rgba(96, 165, 250, 0.09);
+}
+
+.card-moon:hover {
+    border-color: rgba(96, 165, 250, 0.38);
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px -10px rgba(96, 165, 250, 0.18);
+    transform: translateY(-4px);
+}
+
+.card-mars {
+    --card-accent: var(--mars-accent);
+    --card-glow: rgba(249, 115, 22, 0.09);
+}
+
+.card-mars:hover {
+    border-color: rgba(249, 115, 22, 0.38);
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px -10px rgba(249, 115, 22, 0.18);
+    transform: translateY(-4px);
+}
+
+/* Górny wiersz metadanych karty */
+.card-top {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.card-index {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.card-index-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--card-accent);
+    box-shadow: 0 0 10px var(--card-accent);
+}
+
+/* Scena 3D w centrum kafelka */
+.planet-viewport {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 290px;
+}
+
+.canvas-holder {
+    width: 340px;
+    height: 340px;
+    transition: transform 0.75s var(--ease-out);
+}
+
+.celestial-card:hover .canvas-holder {
+    transform: scale(1.06);
+}
+
+/* Dolna sekcja karty */
+.card-bottom {
+    position: relative;
+    z-index: 3;
+}
+
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.55rem;
+}
+
+.planet-title {
+    font-size: 2rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+}
+
+.action-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.3s ease, transform 0.35s var(--ease-out);
+}
+
+.celestial-card:hover .action-indicator {
+    color: var(--card-accent);
+    transform: translateX(4px);
+}
+
+.planet-summary {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 1.5rem;
+    max-width: 90%;
+}
+
+/* Minimalistyczna tabela parametrów (tabular-nums) */
+.metrics-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.metric-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.metric-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-Dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.metric-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Płynne wygaszenie przy przejściu do explorer.php */
+body.leaving {
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-out);
+}
+
+/* ==========================================================================
+   EXPLORER.PHP — Główny terminal Mission Control
+   ========================================================================== */
+
+/* Minimalistyczne tło z subtelną poświatą */
+.hud-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(750px circle at 50% 45%, var(--accent-glow), transparent 65%);
+    transition: background 0.6s ease;
+}
+
+/* GÓRNY PASEK NAWIGACYJNY */
+.navbar {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    background: rgba(5, 5, 7, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-btn {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.app-title {
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+}
+
+/* Przełącznik Księżyc / Mars / Ziemia (Mapa Analogów) */
+.mode-switcher {
+    display: flex;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.mode-btn {
+    padding: 0.4rem 0.9rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.mode-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+}
+
+.mode-btn.earth-mode.active {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--emerald);
+}
+
+.nav-telemetry {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.cpp-badge {
+    padding: 0.28rem 0.6rem;
+    border-radius: 5px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+}
+
+/* GŁÓWNY UKŁAD 3-KOLUMNOWY */
+.workspace {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 350px 1fr 420px;
+    gap: 1rem;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.hud-panel {
+    background: var(--bg-panel);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.panel-header {
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-title {
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.panel-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+
+/* LEWY PANEL: PRESETY, WSPÓŁRZĘDNE I 9 SUWAKÓW K_FEATURES */
+.section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.55rem;
+    display: block;
+}
+
+.presets-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+}
+
+.preset-chip {
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    font-size: 0.72rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-chip:hover, .preset-chip.active {
+    border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.preset-chip strong {
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+
+.preset-chip span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.coords-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.hud-input-group {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 0.35rem 0.6rem;
+}
+
+.hud-input-group label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+.hud-input-group input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84rem;
+    font-weight: 500;
+    outline: none;
+}
+
+.scan-btn {
+    padding: 0 0.9rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--text-main);
+    color: #050507;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.scan-btn:hover {
+    opacity: 0.9;
+}
+
+/* Suwaki 9 cech K_FEATURES */
+.slider-item {
+    margin-bottom: 0.65rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.slider-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: var(--border-subtle);
+}
+
+.slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.slider-name {
+    font-weight: 400;
+    color: var(--text-main);
+}
+
+.slider-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.hud-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 2px;
+    outline: none;
+}
+
+.hud-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-main);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.hud-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.cave-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+/* ŚRODKOWY PANEL: INTERAKTYWNY GLOBUS 3D + ODCZYT CECH CHARAKTERYZATORA */
+.center-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.globe-viewport {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#main-globe-canvas {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+#main-globe-canvas:active {
+    cursor: grabbing;
+}
+
+.globe-hud-overlay {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.hud-pill {
+    pointer-events: auto;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    background: rgba(10, 11, 15, 0.8);
+    border: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Pasek odczytanych parametrów z Charakteryzatora na dole środka */
+.target-readout-bar {
+    padding: 0.85rem 1rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+}
+
+.readout-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.readout-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+}
+
+.readout-box span {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.readout-box strong {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+/* PRAWY PANEL: TOP KANDYDACI NA ZIEMI + KLIMATOGRAM + RADAR */
+.candidate-card {
+    position: relative;
+    padding: 0.85rem 0.95rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 0.55rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.candidate-card:hover, .candidate-card.selected {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.cand-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.cand-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.cand-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--emerald);
+    font-variant-numeric: tabular-nums;
+}
+
+.cand-name {
+    font-weight: 500;
+    font-size: 0.84rem;
+    margin-bottom: 0.3rem;
+    color: var(--text-main);
+}
+
+.cand-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--text-muted);
+}
+
+.charts-box {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.chart-wrap {
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 0.65rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 1280px) {
+    html[data-body] body { overflow-y: auto; height: auto; }
+    .workspace { grid-template-columns: 1fr; }
+    .globe-viewport { min-height: 420px; }
+}
+
+@media (max-width: 1024px) {
+    body { overflow-y: auto; }
+    .header-section { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .header-subtitle { text-align: left; }
+    .tiles-grid { grid-template-columns: 1fr; }
+}
