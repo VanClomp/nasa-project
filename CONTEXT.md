@@ -1,44 +1,45 @@
 # Project Context – Planetary Analog Finder (NASA Space Apps 2026)
 
-## 1. Opis projektu i Twoja rola
-Projekt **Planetary Analog Finder** wyszukuje na Ziemi lokalizacje oraz miesiące w roku, które najlepiej odpowiadają warunkom fizycznym, geologicznym i oświetleniowym wybranego punktu na **Księżycu** lub **Marsie**.
+## 1. Opis projektu i rola
+**Planetary Analog Finder** to narzędzie analityczno-wizualizacyjne wyszukujące na Ziemi lokalizacje oraz okresy w roku (miesiące), które pod względem fizycznym, geologicznym i orbitalnym najlepiej odpowiadają wybranemu punktowi na **Księżycu** lub **Marsie**.
 
-Odpowiadasz za **Komponent 1 (`1-frontend`)**. Architektura całego systemu jest oparta o kontenery Dockerowe i kontrakty JSON (`POST /api/v1/characterize` oraz `POST /api/v1/search`), dzięki czemu Twój komponent jest w 100% kompatybilny z resztą zespołu (`2-networker`, `3-charakteryzator`, `4-szukacz`, `5-precomputer`), będąc jednocześnie napisanym w technologiach dopasowanych pod Ciebie: **PHP 8 + HTML5/CSS3 + JavaScript (Three.js) + C++**.
+## 2. Kierunek Artystyczny i Design System (Minimalist Aerospace / Linear / SpaceX UI)
+
+Odchodzimy od „growego”, przesadzonego stylu sci-fi/cyberpunk (brak gamingowych fontów typu *Orbitron*, brak sztucznych laserów, narożników z gier i jaskrawych tęczowych ramek). Stawiamy na **dojrzały, minimalistyczny, inżynieryjny design premium** inspirowany interfejsami **SpaceX Crew Dragon, Linear.app, Vercel oraz NASA JPL Eyes**.
+
+### Zasady przewodnie:
+1. **Minimalizm i przestrzeń (Negative Space):**
+   * Czysta geometria, dużo oddechu wokół elementów, cienkie linie podziału (`1px solid rgba(255, 255, 255, 0.07)`), brak zbędnych ozdobników.
+2. **Paleta kolorystyczna (Matte Obsidian & Precision Accents):**
+   * **Tło bazowe:** Głęboki, matowy obsydian `#050507` oraz `#090A0F` (bez krzykliwych gradientów).
+   * **Powierzchnie (Cards / Panels):** Subtelne, półprzezroczyste warstwy `rgba(17, 19, 24, 0.72)` z delikatnym rozmyciem `backdrop-filter: blur(20px)` oraz cienką obwódką `1px` rozświetlaną dopiero przy interakcji.
+   * **Tekst:**
+     * Główny: `#F4F4F6` (czysta, lekko złamana biel)
+     * Drugorzędny: `#8E929F` (chłodny, techniczny szary)
+     * Etykiety / metadane: `#525665`
+   * **Stonowane, precyzyjne akcenty świetlne (tylko tam, gdzie niosą informację):**
+     * **Księżyc (Lunar Ice / Silver):** `#E2E8F0` oraz chłodny subtelny błękit `#60A5FA`
+     * **Mars (Ember / Terracotta):** `#F97316` oraz ciepły bursztyn `#FB923C`
+     * **Wskaźnik dopasowania Ziemi (Signal Emerald):** `#10B981`
+3. **Typografia (Inżynieryjna precyzja):**
+   * **Nagłówki i UI:** *Inter* lub *Plus Jakarta Sans* (wagi `400`, `500`, `600`, ciasny kerning `letter-spacing: -0.03em`).
+   * **Dane liczbowe, współrzędne i telemetria:** *JetBrains Mono* (`font-variant-numeric: tabular-nums`) – gwarantuje idealne wyrównanie kolumn z liczbami i brak skakania interfejsu podczas animacji.
 
 ---
 
-## 2. Twój Stack Technologiczny (`1-frontend`)
+## 3. Nowoczesne, subtelne animacje (High-Craft Motion)
 
-* **PHP 8.x + HTML5:**
-  * Generowanie struktury strony ([index.php](file:///Users/antos/Documents/programowanie/nasa-project/nasa-project/index.php)) oraz modularnych komponentów UI (np. pętla generująca 9 suwaków dla `K_FEATURES`, gotowe presety misji NASA, karty kandydatów).
-  * Opcjonalny lokalny endpoint proxy/mock w PHP (`api_proxy.php`), który pozwala Ci testować cały frontend nawet zanim reszta zespołu postawi swoje kontenery Dockerowe!
-* **Modern CSS3 + Vanilla JS (ES6+) + Three.js / Chart.js (przez CDN):**
-  * Zero skomplikowanych bundlerów (brak konieczności używania Node.js/Vite) – czysty, szybki kod uruchamiany od razu z serwera PHP.
-  * Wizualizacja 3D globusów (Księżyc / Mars / Ziemia), nakładanie heatmapy (`heatmap_base64`) i pinezek Top 100 miejsc.
-* **C++ (Super-boost wydajnościowy i efekt „WOW” dla jury hackathonu):**
-  * **Opcja A – C++ skompilowany do WebAssembly (Wasm przez Emscripten):**
-    * Przeliczanie wag w czasie rzeczywistym (60 FPS podczas przeciągania suwaków `[0.0 - 1.0]`) na pobranej liście kandydatów bez czekania na zapytanie sieciowe.
-    * Obliczanie geometrii Słońca, cieni horyzontu lub generowanie siatki 3D terenu (DEM) bezpośrednio w przeglądarce.
-  * **Opcja B – Natywny program w C++ wywoływany z PHP (`proc_open` / `exec` lub FastCGI):**
-    * Błyskawiczne przetwarzanie danych lokalnych, symulacje fizyczne/orbitalne lub generowanie profili terenu po stronie kontenera `1-frontend`.
+Animacje mają budować wrażenie precyzyjnego instrumentu naukowego:
 
----
-
-## 3. Styl wizualny i Design System (Dark Sci-Fi / Neon Space HUD)
-
-### Paleta kolorystyczna
-* **Tło bazowe (Deep Space Dark):**
-  * Główne tło: `#07090E` / `#0B0F19` (głęboka czerń z kosmicznym granatem)
-  * Panele HUD (Glassmorphism): `rgba(15, 23, 42, 0.68)` + `backdrop-filter: blur(16px)`
-* **Akcenty neonowe (Neon Accents):**
-  * **Główny neon (Telemetry Cyan):** `#00F0FF` – obramowania HUD, aktywne kontrolki, wiązka skanera, wykresy
-  * **Tryb Księżyca (Lunar Violet / Ice Blue):** `#38BDF8` / `#8B5CF6`
-  * **Tryb Marsa (Martian Neon Orange / Crimson):** `#FF4D2A` / `#FF2A6D`
-  * **Dopasowanie na Ziemi (Bio Emerald):** `#00FF9D` – wysoki `% Match`, pinezki najlepszych analogów na Ziemi
-* **Typografia:**
-  * Nagłówki: *Orbitron* lub *Space Grotesk* (klimat NASA / Sci-Fi HUD)
-  * Interfejs: *Inter* / *Plus Jakarta Sans*
-  * Dane telemetryczne, współrzędne `(lat, lon)`, wyniki `Score`: *JetBrains Mono*
+1. **Realistyczne oświetlenie 3D (Terminator & Fresnel Rim Glow):**
+   * Globusy Księżyca i Marsa w Three.js są oświetlone kierunkowym światłem słonecznym z wyraźną granicą dnia i nocy (*terminator line*) oraz subtelną poświatą krawędziową (*Fresnel shader*).
+   * Po najechaniu kursorem na kafelek kamera i źródło światła płynnie, z bezwładnością (*damped inertia*) reagują na ruch myszy, a globus delikatnie przyspiesza obrót.
+2. **Subtelny efekt Spotlight na krawędziach (`1px Border Glow`):**
+   * Zamiast świecenia całego kafelka – kursor myszy oświetla jedynie cienką (`1px`) krawędź karty oraz delikatny refleks w miejscu, w którym znajduje się wskaźnik (styl Linear / Vercel).
+3. **Płynna fizyka przejść (`cubic-bezier(0.22, 1, 0.36, 1)`):**
+   * Wszystkie przejścia (zmiana kart, rozwijanie parametrów, aktualizacja wykresów i pasków dopasowania) korzystają z miękkich krzywych wygaszania.
+4. **Animacje danych (`Tabular Number Transitions`):**
+   * Płynna interpolacja wartości liczbowych (np. `94.2%`) i szerokości pasków dopasowania w czasie rzeczywistym (60 FPS) podczas przesuwania suwaków wag.
 
 ---
 
@@ -57,7 +58,7 @@ Odpowiadasz za **Komponent 1 (`1-frontend`)**. Architektura całego systemu jest
 
 ---
 
-## 5. Kontrakt Danych z Resztą Zespołu (9 cech `K_FEATURES`)
+## 5. Kontrakt API (9 cech `K_FEATURES`)
 
 Kolejność cech w tablicach `features_norm` i `weights` (indeksy `0..8`) jest stała w całym systemie:
 
