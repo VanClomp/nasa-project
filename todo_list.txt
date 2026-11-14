@@ -1,0 +1,121 @@
+TODO DLA INNYCH MODUŁÓW (zostawione przez Szukacza, 4-szukacz/)
+================================================================
+
+Szukacz jest zaimplementowany w katalogu 4-szukacz/. Pełny opis wejścia
+i wyjścia: 4-szukacz/README.md. Poniżej rzeczy, które wymagają zmian albo
+decyzji w innych modułach. Szukacz nie zmienił żadnego pliku poza swoim
+katalogiem, tym plikiem i LICENCES.md.
+
+
+NETWORKER i FRONTEND (zapytanie POST /search)
+---------------------------------------------
+
+1. Nowe pole wejściowe: min_distance_km (liczba >= 0).
+   Minimalna odległość w km między zwracanymi lokalizacjami. Z dwóch punktów
+   leżących bliżej siebie Szukacz bierze tylko lepszy, a i tak zwraca top_k
+   wyników. Szukacz zakłada, że dostaje tę wartość w zapytaniu.
+   - Do zrobienia: Frontend zbiera wartość od użytkownika (albo ustala stałą),
+     Networker przekazuje ją bez zmian do http://szukacz:8002/search.
+   - Dopóki pola nie ma w zapytaniu, Szukacz przyjmuje 100 km
+     (zmienna SZUKACZ_MIN_DISTANCE_KM). Wartość 0 wyłącza odsiewanie.
+
+2. Pozostałe pola zapytania są bez zmian: features_norm, weights,
+   require_caves, top_k.
+
+
+NETWORKER i FRONTEND (odpowiedź POST /search)
+---------------------------------------------
+
+3. Brak pola name_hint.
+   Szukacz nie zwraca nazwy regionu. explorer.php wstawia c.name_hint do karty
+   kandydata (linia ok. 791) i pokaże "undefined".
+   - Do zrobienia: frontend pokazuje coś innego (np. współrzędne) albo inny
+     moduł dopisuje nazwę.
+
+4. Dodatkowe pole kandydata: features_norm.
+   9 znormalizowanych cech punktu w jego najlepszym miesiącu. Frontend już
+   z niego korzysta przy przeliczaniu suwaków na żywo. Nic do zrobienia,
+   tylko informacja, że pole jest poza specyfikacją.
+
+5. heatmap_base64 to gotowa tekstura.
+   "data:image/webp;base64,...", obraz RGBA 1024x512, kolor #10B981, krycie
+   rośnie z dopasowaniem, piksele bez danych przezroczyste. Skala krycia jest
+   względna dla danego zapytania (najlepszy punkt = pełne krycie).
+   - Do zrobienia: frontend rysuje teraz własną heatmapę z plam wokół
+     kandydatów (explorer.php, linia ok. 536) i tego pola nie czyta. Żeby
+     pokazać prawdziwą mapę, trzeba nałożyć ten obraz na globus Ziemi.
+
+6. Miesiące są liczone od 1 (best_month, best_global_month: 1..12).
+   monthly_scores i tablice w climatogram_12m mają 12 pozycji, indeks 0 to
+   styczeń. Zgodne z tym, jak czyta je explorer.php.
+
+7. Przypadki brzegowe, które frontend powinien znieść:
+   - candidates może mieć mniej niż top_k pozycji albo być puste
+     (np. require_caves bez jaskiń w pobliżu); wtedy best_global_month = null.
+   - Brak danych w macierzach wychodzi jako null (w monthly_scores,
+     features_raw_best_month, climatogram_12m, nearest_cave_km).
+   - Błędne zapytanie daje status 422 z opisem w polu "detail". Uwaga:
+     callApi w explorer.php przy każdym statusie innym niż 200 po cichu
+     przełącza się na wbudowany mock PHP, więc błąd nie będzie widoczny.
+
+8. climatogram_12m zawiera wszystkie 9 cech, nie tylko temp_mean
+   i soil_moisture. Odpowiedź dla 100 kandydatów ma ok. 270 kB plus heatmapa
+   ok. 110 kB (pomiar na danych syntetycznych).
+
+9. Filtr require_caves używa progu 15 km (ta sama wartość co w mocku
+   w explorer.php). Zmiana przez zmienną SZUKACZ_CAVE_MAX_KM.
+
+
+PRECOMPUTER (pliki w /data/earth)
+---------------------------------
+
+10. Szukacz czyta dokładnie to, co opisuje punkt 4.1 specyfikacji:
+    - earth_features_norm.npy  (N_POINTS, 12, 9) float32, wartości [0, 1]
+    - earth_features_raw.npy   ten sam kształt, wartości fizyczne
+    - earth_metadata.parquet albo earth_metadata.npy (tablica strukturalna)
+      z kolumnami: id, lat, lon, px_x (0..1023), px_y (0..511),
+      nearest_cave_km. Wiersze w tej samej kolejności co macierze.
+    Przy innym kształcie albo brakującej kolumnie serwis nie wystartuje
+    i wypisze, czego brakuje.
+
+11. Braki danych: najlepiej, żeby macierze nie zawierały NaN. Jeśli zawierają,
+    miesiąc z NaN w którejkolwiek cesze (także o wadze 0) przegrywa
+    z pozostałymi, a punkt bez żadnego pełnego miesiąca nie trafia do wyników.
+
+12. W repozytorium nie ma jeszcze generate_mock_data.py ani katalogu data/.
+    Szukacz był testowany tylko na własnych danych syntetycznych tworzonych
+    w testach (4-szukacz/tests/test_szukacz.py, funkcja write_dataset).
+    Odczyt metadanych z .parquet nie był uruchomiony.
+
+
+INFRASTRUKTURA (docker-compose.yml)
+-----------------------------------
+
+13. Nie ma jeszcze docker-compose.yml. Szukacz potrzebuje wpisu:
+
+      szukacz:
+        build: ./4-szukacz
+        volumes:
+          - ./data:/data:ro
+        expose:
+          - "8002"
+
+    Dockerfile jest w 4-szukacz/, ale nie był budowany (brak Dockera na
+    maszynie, na której powstał).
+
+
+SZUKACZ (do zrobienia później, celowo pominięte)
+------------------------------------------------
+
+14. Dalsze badanie wynikowych punktów: raycasting po DEM dla Top 5-10
+    (profil zasłonięcia Słońca przez góry), punkt 5.4 zadań Szukacza
+    w specyfikacji.
+
+15. Warstwa HTTP (4-szukacz/szukacz/api.py) nie była uruchomiona, bo nie było
+    pakietu fastapi. Po instalacji zależności: uruchomić testy
+    (python -m unittest discover -s tests -v w katalogu 4-szukacz); test
+    endpointu przestanie być pomijany.
+
+16. Wydajność: ok. 80 ms na zapytanie przy 400 000 punktów (8 rdzeni),
+    specyfikacja zakłada poniżej 15 ms. Możliwy kierunek: jądro liczące
+    w numba zamiast numpy.
