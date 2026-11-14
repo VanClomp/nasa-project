@@ -1,0 +1,13 @@
+{
+ "_note": "Clamp + min-max ranges for features_norm (spec 2.3). The Earth precomputer (Component 5) MUST use the same ranges and units, or Earth and Moon/Mars vectors are not comparable. Edit here, then share with Component 5.",
+ "order": ["temp_mean", "temp_diurnal_amp", "thermal_inertia", "surface_roughness", "soil_moisture", "dust_aerosol", "solar_elevation_max", "radiation_proxy", "slope_deg"],
+ "temp_mean":           {"min": -90.0, "max": 50.0,   "unit": "deg C, mean ground (skin) temperature"},
+ "temp_diurnal_amp":    {"min": 0.0,   "max": 80.0,   "unit": "K, daily max - min of ground temperature"},
+ "thermal_inertia":     {"min": 30.0,  "max": 2500.0, "unit": "J m-2 K-1 s-1/2"},
+ "surface_roughness":   {"min": 0.0,   "max": 200.0,  "unit": "m, std of detrended elevation over ~13 km (Earth must use the same definition)"},
+ "soil_moisture":       {"min": 0.0,   "max": 50.0,   "unit": "wt% water / water-equivalent hydrogen"},
+ "dust_aerosol":        {"min": 0.0,   "max": 1.5,    "unit": "column optical depth, visible"},
+ "solar_elevation_max": {"min": 0.0,   "max": 90.0,   "unit": "deg, noon sun elevation on the date"},
+ "radiation_proxy":     {"min": 0.0,   "max": 1033.0, "unit": "g/cm2 of atmosphere overhead (Earth sea level 1033; Mars ~15-25; Moon 0)"},
+ "slope_deg":           {"min": 0.0,   "max": 45.0,   "unit": "deg"}
+}

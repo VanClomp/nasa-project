@@ -1,0 +1,9 @@
+# Add under "services:" in the team docker-compose.yml
+  charakteryzator:
+    build: ./3-charakteryzator
+    expose: ["8001"]
+    environment:
+      MARS_DATA_DIR: /data/mars          # holds mola_meg032/, tes_thermal_inertia/, tes_albedo/, grs_water/, grs_neutron/, omega_minerals/, caves/
+      MOON_DATA_DIR: /data/moon          # holds lola/, illumination/, diviner/ (incl. prp_*_grid500m_v3.npz), lunar_prospector/, pits/
+    volumes:
+      - ./data:/data:ro

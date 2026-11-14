@@ -1,0 +1,8 @@
+site,seasons,air_min_bias_K,air_min_rms_K,air_max_bias_K,air_max_rms_K
+vl1,14,2.5,3.8,12.0,14.1
+vl2,23,-2.5,3.2,3.2,4.0
+pathfinder,2,0.9,1.2,-4.9,4.9
+phoenix,5,-9.9,10.3,3.2,3.8
+curiosity,24,-2.1,2.5,-13.7,14.0
+insight,23,10.3,10.4,3.2,3.9
+perseverance,24,-6.6,6.9,1.1,4.2
