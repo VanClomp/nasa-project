@@ -1,0 +1,13 @@
+site,name,lat,lon_east,lon_west,albedo,albedo_min_nearby,albedo_max_nearby,thermal_inertia_kieffer,thermal_inertia_SI,thermal_inertia_SI_min_nearby,thermal_inertia_SI_max_nearby,viking_era_elevation_m,viking_era_elev_min_nearby_m,viking_era_elev_max_nearby_m,assumed_mola_elevation_km
+vl1,Chryse Planitia,22.27,312.05,47.95,0.25,0.25,0.25,8.5,356.0,347.0,377.0,-1998.38,-2000.0,-1565.23,-3.6
+vl2,Utopia Planitia,47.64,134.29,225.71,0.25,0.25,0.27,7.8,327.0,297.0,356.0,-2085.15,-2189.47,-1951.05,-4.5
+pathfinder,Ares Vallis,19.1,326.75,33.25,0.22,0.19,0.23,10.4,435.0,398.0,477.0,-1592.75,-1883.71,-1298.45,-3.7
+spirit,Gusev crater,-14.57,175.47,184.53,0.24,0.21,0.27,6.8,285.0,151.0,285.0,2214.84,1488.28,2486.33,-1.9
+opportunity,Meridiani Planum,-1.95,354.47,5.53,0.19,0.16,0.23,7.5,314.0,297.0,356.0,259.06,31.97,525.5,-1.4
+phoenix,Northern plains,68.22,234.25,125.75,,,,,,,,,,,-4.1
+curiosity,Gale crater,-4.59,137.44,222.56,0.24,0.21,0.26,8.0,335.0,268.0,335.0,752.68,467.84,1332.44,-4.5
+insight,Elysium Planitia,4.5,135.62,224.38,0.25,0.24,0.26,7.6,318.0,297.0,347.0,-1122.23,-1132.9,-1026.97,-2.6
+perseverance,Jezero crater,18.44,77.45,282.55,0.19,0.15,0.21,8.9,373.0,322.0,419.0,1448.79,464.61,2010.93,-2.6
+zhurong,Utopia Planitia south,25.07,109.93,250.07,0.25,0.25,0.26,8.5,356.0,343.0,373.0,-2557.67,-2630.91,-2481.87,-4.1
+oxia,Oxia Planum,18.2,335.45,24.55,0.24,0.23,0.25,9.6,402.0,347.0,423.0,-1223.56,-1549.51,-1041.92,-3.0
+arcadia,Arcadia Planitia,40.0,202.0,158.0,0.2,0.19,0.27,6.3,264.0,151.0,268.0,-2100.21,-2847.48,-1561.51,-3.9

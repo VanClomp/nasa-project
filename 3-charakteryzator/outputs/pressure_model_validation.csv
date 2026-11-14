@@ -1,0 +1,7 @@
+site,seasons_compared,measured_over_estimate_median,lowest,highest,rms_error_pct,elevation_used_km,elevation_implied_by_pressure_km
+vl2,23,1.011,0.98,1.043,1.6,-4.505,-4.63
+pathfinder,2,0.968,0.964,0.973,3.2,-3.682,-3.33
+phoenix,5,1.017,1.005,1.019,1.5,-4.126,-4.31
+curiosity,24,0.981,0.931,1.013,3.1,-4.501,-4.29
+insight,10,0.984,0.946,1.007,2.7,-2.613,-2.44
+perseverance,20,1.006,0.97,1.019,1.5,-2.569,-2.63

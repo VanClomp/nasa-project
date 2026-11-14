@@ -1,0 +1,8 @@
+data/
+pathfinder_met/
+outputs/_superseded/
+__pycache__/
+*.pyc
+.DS_Store
+.wtest
+.vscode/

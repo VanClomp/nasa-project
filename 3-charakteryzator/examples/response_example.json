@@ -1,0 +1,1498 @@
+{
+ "schema_version": "1.0",
+ "target_body": "mars",
+ "generated_utc": "2026-11-14T18:07:50Z",
+ "conventions": {
+  "date_mode": "with timestamp_iso: one flat record per point for that date (values / measured / units); without: 12 Mars months",
+  "month": "Mars month k = solar longitude Ls 30(k-1) to 30k; Ls 0 = northern spring equinox; months differ in length (sols given)",
+  "longitude": "degrees east, 0-360",
+  "latitude": "planetocentric degrees north",
+  "parameter": "{value, low, high, unit, measured, source}",
+  "measured": "true = data taken at this place (lander/rover record, orbital map read at this point, or exact orbital geometry); false = global predictor from latitude, elevation and surface properties; value null = no data and no defensible prediction",
+  "low_high": "measured: 10th-90th percentile of daily values in the month; predicted: validated model error band",
+  "storm_year": "same month in a global dust storm year (TES, 2001)",
+  "target_profile": "team spec Component 3 features in spec order with spec units; features_measured holds the yes/no per feature. Normalisation to [0,1] is left to the Earth search, which owns the Earth min/max ranges.",
+  "validation": "outputs/thermal_model_validation.csv, outputs/air_model_validation.csv, outputs/pressure_model_validation.csv, outputs/dust_validation.csv"
+ },
+ "results": [
+  {
+   "id": "jezero",
+   "date": "2026-11-14T12:00:00Z",
+   "lat": 18.44,
+   "lon_east": 77.45,
+   "ls": 21.81,
+   "mars_year": 39,
+   "mars_month": 1,
+   "site": "perseverance",
+   "values": {
+    "elevation": -2568.0,
+    "slope_deg": 1.26,
+    "surface_roughness": 26.3,
+    "thermal_inertia": 311.0,
+    "albedo": 0.168,
+    "soil_moisture": 3.53,
+    "hydrogen_index": -0.24,
+    "hydrated_minerals_nearest_km": 9.0,
+    "hydrated_minerals_within_100km": 6.0,
+    "nearest_skylight_km": null,
+    "gravity": 3.71,
+    "ground_temp_min": 190.1,
+    "ground_temp_max": 274.7,
+    "ground_temp_mean": 222.0,
+    "air_temp_min": 194.4,
+    "air_temp_max": 247.3,
+    "air_temp_mean": 219.2,
+    "pressure": 731.0,
+    "wind_mean": null,
+    "dust_tau": 0.59,
+    "sunlight_mean": 3424.0,
+    "daylight_hours": 12.7,
+    "solar_elevation_max": 80.7,
+    "air_density": 0.0174,
+    "radiation_proxy": 19.7
+   },
+   "measured": {
+    "elevation": true,
+    "slope_deg": true,
+    "surface_roughness": true,
+    "thermal_inertia": true,
+    "albedo": true,
+    "soil_moisture": true,
+    "hydrogen_index": true,
+    "hydrated_minerals_nearest_km": true,
+    "hydrated_minerals_within_100km": true,
+    "nearest_skylight_km": false,
+    "gravity": true,
+    "ground_temp_min": true,
+    "ground_temp_max": true,
+    "ground_temp_mean": true,
+    "air_temp_min": true,
+    "air_temp_max": true,
+    "air_temp_mean": true,
+    "pressure": true,
+    "wind_mean": false,
+    "dust_tau": false,
+    "sunlight_mean": false,
+    "daylight_hours": true,
+    "solar_elevation_max": true,
+    "air_density": true,
+    "radiation_proxy": true
+   },
+   "units": {
+    "elevation": "m above areoid",
+    "slope_deg": "deg",
+    "surface_roughness": "m",
+    "thermal_inertia": "J m-2 K-1 s-1/2",
+    "albedo": "",
+    "soil_moisture": "wt% water-equivalent hydrogen, top ~tens of cm",
+    "hydrogen_index": "0 = equatorial-dry, 0.4+ = ice-rich",
+    "hydrated_minerals_nearest_km": "km",
+    "hydrated_minerals_within_100km": "count",
+    "nearest_skylight_km": "km",
+    "gravity": "m s-2",
+    "ground_temp_min": "K",
+    "ground_temp_max": "K",
+    "ground_temp_mean": "K",
+    "air_temp_min": "K",
+    "air_temp_max": "K",
+    "air_temp_mean": "K",
+    "pressure": "Pa",
+    "wind_mean": "m/s",
+    "dust_tau": "optical depth 0.67 um",
+    "sunlight_mean": "Wh/m2 per sol, flat ground",
+    "daylight_hours": "h",
+    "solar_elevation_max": "deg",
+    "air_density": "kg/m3",
+    "radiation_proxy": "g/cm2 atmosphere overhead (Earth sea level: 1033)"
+   },
+   "storm_year": {
+    "dust_tau": 0.59,
+    "sunlight_mean": 3424.0,
+    "ground_temp_min": 190.4,
+    "ground_temp_max": 269.6
+   },
+   "target_profile": {
+    "features_raw": {
+     "temp_mean": -51.1,
+     "temp_diurnal_amp": 84.6,
+     "thermal_inertia": 311.0,
+     "surface_roughness": 26.3,
+     "soil_moisture": 3.53,
+     "dust_aerosol": 0.59,
+     "solar_elevation_max": 80.7,
+     "radiation_proxy": 19.7,
+     "slope_deg": 1.26
+    },
+    "features_measured": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     false,
+     true,
+     true,
+     true
+    ],
+    "nearest_skylight_km": null
+   },
+   "weights": {
+    "temp_mean": 0.8,
+    "temp_diurnal_amp": 0.7,
+    "thermal_inertia": 0.9,
+    "surface_roughness": 0.8,
+    "soil_moisture": 0.6,
+    "dust_aerosol": 0.5,
+    "solar_elevation_max": 0.4,
+    "radiation_proxy": 0.2,
+    "slope_deg": 0.5
+   }
+  },
+  {
+   "input": {
+    "id": "arbitrary_tharsis_point",
+    "lat": -5.0,
+    "lon": -120.0,
+    "months": [
+     1,
+     4,
+     7,
+     10
+    ]
+   },
+   "coordinates": {
+    "lat": -5.0,
+    "lon_east": 240.0
+   },
+   "site": null,
+   "current": null,
+   "weights": {
+    "values": {
+     "temp_mean": 0.8,
+     "temp_diurnal_amp": 0.7,
+     "thermal_inertia": 0.7,
+     "surface_roughness": 0.5,
+     "soil_moisture": 0.5,
+     "dust_aerosol": 0.5,
+     "solar_elevation_max": 0.4,
+     "radiation_proxy": 0.2,
+     "slope_deg": 0.5
+    },
+    "order": [
+     "temp_mean",
+     "temp_diurnal_amp",
+     "thermal_inertia",
+     "surface_roughness",
+     "soil_moisture",
+     "dust_aerosol",
+     "solar_elevation_max",
+     "radiation_proxy",
+     "slope_deg"
+    ],
+    "rationale": "Default weights for a point that is not a known site.",
+    "meaning": "importance of each feature for finding an Earth analog of this place (0-1, adjustable)"
+   },
+   "static": {
+    "elevation": {
+     "value": 8529.0,
+     "low": null,
+     "high": null,
+     "unit": "m above areoid",
+     "measured": true,
+     "source": "MOLA topography, 1.85 km pixel"
+    },
+    "slope_deg": {
+     "value": 2.59,
+     "low": null,
+     "high": null,
+     "unit": "deg",
+     "measured": true,
+     "source": "MOLA, steepest slope over ~1.85 km baseline (not lander scale)"
+    },
+    "surface_roughness": {
+     "value": 28.4,
+     "low": null,
+     "high": null,
+     "unit": "m",
+     "measured": true,
+     "source": "MOLA, local relief: std of detrended elevation over ~13 km"
+    },
+    "thermal_inertia": {
+     "value": 100.0,
+     "low": null,
+     "high": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "measured": true,
+     "source": "TES nightside thermal inertia, 3 km pixel (direct retrieval)"
+    },
+    "albedo": {
+     "value": 0.284,
+     "low": null,
+     "high": null,
+     "unit": "",
+     "measured": true,
+     "source": "TES bolometric albedo, 7.4 km pixel"
+    },
+    "soil_moisture": {
+     "value": 3.41,
+     "low": null,
+     "high": null,
+     "unit": "wt% water-equivalent hydrogen, top ~tens of cm",
+     "measured": true,
+     "source": "Odyssey GRS water map (5x5 deg, smoothed)"
+    },
+    "hydrogen_index": {
+     "value": -0.11,
+     "low": null,
+     "high": null,
+     "unit": "0 = equatorial-dry, 0.4+ = ice-rich",
+     "measured": true,
+     "source": "Odyssey neutron spectrometer epithermal flux, 0.5 deg"
+    },
+    "hydrated_minerals_nearest_km": {
+     "value": 771.7,
+     "low": null,
+     "high": null,
+     "unit": "km",
+     "measured": true,
+     "source": "OMEGA/CRISM hydrated mineral detections (Carter et al. 2013)"
+    },
+    "hydrated_minerals_within_100km": {
+     "value": 0.0,
+     "low": null,
+     "high": null,
+     "unit": "count",
+     "measured": true,
+     "source": "OMEGA/CRISM hydrated mineral detections"
+    },
+    "nearest_skylight_km": {
+     "value": null,
+     "low": null,
+     "high": null,
+     "unit": "km",
+     "measured": false,
+     "source": "missing: cave catalog not downloaded (USGS server unreachable)"
+    },
+    "gravity": {
+     "value": 3.71,
+     "low": null,
+     "high": null,
+     "unit": "m s-2",
+     "measured": true,
+     "source": "constant (0.38 g); Earth cannot reproduce this"
+    }
+   },
+   "months": [
+    {
+     "month": 1,
+     "ls_start": 0.0,
+     "ls_end": 30.0,
+     "sols": 62,
+     "params": {
+      "ground_temp_min": {
+       "value": 156.1,
+       "low": 150.0,
+       "high": 162.2,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_max": {
+       "value": 275.0,
+       "low": 269.7,
+       "high": 280.3,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_mean": {
+       "value": 202.0,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model"
+      },
+      "air_temp_min": {
+       "value": 162.2,
+       "low": 155.2,
+       "high": 169.2,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_max": {
+       "value": 254.0,
+       "low": 247.0,
+       "high": 261.0,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_mean": {
+       "value": 208.1,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: mean of predicted min and max"
+      },
+      "pressure": {
+       "value": 264.0,
+       "low": 258.0,
+       "high": 270.0,
+       "unit": "Pa",
+       "measured": false,
+       "source": "global predictor: Viking 1 seasonal curve moved to MOLA elevation"
+      },
+      "wind_mean": {
+       "value": null,
+       "low": null,
+       "high": null,
+       "unit": "m/s",
+       "measured": false,
+       "source": "missing: no global wind data (stations only)"
+      },
+      "dust_tau": {
+       "value": 0.19,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: MGS TES dust, zonal median for this latitude, scaled to local pressure"
+      },
+      "sunlight_mean": {
+       "value": 3683.0,
+       "low": 3437.0,
+       "high": 3929.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: orbit geometry + predicted dust and ice"
+      },
+      "daylight_hours": {
+       "value": 12.3,
+       "low": 12.2,
+       "high": 12.3,
+       "unit": "h",
+       "measured": true,
+       "source": "exact orbital geometry"
+      },
+      "solar_elevation_max": {
+       "value": 85.0,
+       "low": null,
+       "high": null,
+       "unit": "deg",
+       "measured": true,
+       "source": "exact orbital geometry (noon sun, highest in the month)"
+      },
+      "air_density": {
+       "value": 0.0066,
+       "low": null,
+       "high": null,
+       "unit": "kg/m3",
+       "measured": false,
+       "source": "pressure / (R * air temperature), R = 191.8 J/kg/K"
+      },
+      "radiation_proxy": {
+       "value": 7.1,
+       "low": null,
+       "high": null,
+       "unit": "g/cm2 atmosphere overhead (Earth sea level: 1033)",
+       "measured": false,
+       "source": "column mass = pressure / g"
+      }
+     },
+     "storm_year": {
+      "dust_tau": {
+       "value": 0.2,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: TES Mars year 25 (2001 global storm), zonal median"
+      },
+      "sunlight_mean": {
+       "value": 3680.0,
+       "low": 3437.0,
+       "high": 3909.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_min": {
+       "value": 156.1,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_max": {
+       "value": 275.0,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      }
+     },
+     "target_profile": {
+      "features_raw": {
+       "temp_mean": -71.1,
+       "temp_diurnal_amp": 118.9,
+       "thermal_inertia": 100.0,
+       "surface_roughness": 28.4,
+       "soil_moisture": 3.41,
+       "dust_aerosol": 0.19,
+       "solar_elevation_max": 85.0,
+       "radiation_proxy": 7.1,
+       "slope_deg": 2.59
+      },
+      "features_measured": [
+       false,
+       false,
+       true,
+       true,
+       true,
+       false,
+       true,
+       false,
+       true
+      ],
+      "nearest_skylight_km": null
+     }
+    },
+    {
+     "month": 4,
+     "ls_start": 90.0,
+     "ls_end": 120.0,
+     "sols": 64,
+     "params": {
+      "ground_temp_min": {
+       "value": 150.7,
+       "low": 144.6,
+       "high": 156.8,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_max": {
+       "value": 260.6,
+       "low": 255.3,
+       "high": 265.9,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_mean": {
+       "value": 192.5,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model"
+      },
+      "air_temp_min": {
+       "value": 157.6,
+       "low": 150.6,
+       "high": 164.6,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_max": {
+       "value": 241.9,
+       "low": 234.9,
+       "high": 248.9,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_mean": {
+       "value": 199.8,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: mean of predicted min and max"
+      },
+      "pressure": {
+       "value": 241.0,
+       "low": 236.0,
+       "high": 247.0,
+       "unit": "Pa",
+       "measured": false,
+       "source": "global predictor: Viking 1 seasonal curve moved to MOLA elevation"
+      },
+      "wind_mean": {
+       "value": null,
+       "low": null,
+       "high": null,
+       "unit": "m/s",
+       "measured": false,
+       "source": "missing: no global wind data (stations only)"
+      },
+      "dust_tau": {
+       "value": 0.1,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: MGS TES dust, zonal median for this latitude, scaled to local pressure"
+      },
+      "sunlight_mean": {
+       "value": 2994.0,
+       "low": 2869.0,
+       "high": 3184.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: orbit geometry + predicted dust and ice"
+      },
+      "daylight_hours": {
+       "value": 12.0,
+       "low": 12.0,
+       "high": 12.1,
+       "unit": "h",
+       "measured": true,
+       "source": "exact orbital geometry"
+      },
+      "solar_elevation_max": {
+       "value": 63.3,
+       "low": null,
+       "high": null,
+       "unit": "deg",
+       "measured": true,
+       "source": "exact orbital geometry (noon sun, highest in the month)"
+      },
+      "air_density": {
+       "value": 0.0063,
+       "low": null,
+       "high": null,
+       "unit": "kg/m3",
+       "measured": false,
+       "source": "pressure / (R * air temperature), R = 191.8 J/kg/K"
+      },
+      "radiation_proxy": {
+       "value": 6.5,
+       "low": null,
+       "high": null,
+       "unit": "g/cm2 atmosphere overhead (Earth sea level: 1033)",
+       "measured": false,
+       "source": "column mass = pressure / g"
+      }
+     },
+     "storm_year": {
+      "dust_tau": {
+       "value": 0.1,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: TES Mars year 25 (2001 global storm), zonal median"
+      },
+      "sunlight_mean": {
+       "value": 2994.0,
+       "low": 2869.0,
+       "high": 3184.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_min": {
+       "value": 150.7,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_max": {
+       "value": 260.6,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      }
+     },
+     "target_profile": {
+      "features_raw": {
+       "temp_mean": -80.6,
+       "temp_diurnal_amp": 109.9,
+       "thermal_inertia": 100.0,
+       "surface_roughness": 28.4,
+       "soil_moisture": 3.41,
+       "dust_aerosol": 0.1,
+       "solar_elevation_max": 63.3,
+       "radiation_proxy": 6.5,
+       "slope_deg": 2.59
+      },
+      "features_measured": [
+       false,
+       false,
+       true,
+       true,
+       true,
+       false,
+       true,
+       false,
+       true
+      ],
+      "nearest_skylight_km": null
+     }
+    },
+    {
+     "month": 7,
+     "ls_start": 180.0,
+     "ls_end": 210.0,
+     "sols": 50,
+     "params": {
+      "ground_temp_min": {
+       "value": 161.3,
+       "low": 155.2,
+       "high": 167.4,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_max": {
+       "value": 293.6,
+       "low": 288.3,
+       "high": 298.9,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_mean": {
+       "value": 213.1,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model"
+      },
+      "air_temp_min": {
+       "value": 166.7,
+       "low": 159.7,
+       "high": 173.7,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_max": {
+       "value": 269.6,
+       "low": 262.6,
+       "high": 276.6,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_mean": {
+       "value": 218.2,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: mean of predicted min and max"
+      },
+      "pressure": {
+       "value": 242.0,
+       "low": 237.0,
+       "high": 248.0,
+       "unit": "Pa",
+       "measured": false,
+       "source": "global predictor: Viking 1 seasonal curve moved to MOLA elevation"
+      },
+      "wind_mean": {
+       "value": null,
+       "low": null,
+       "high": null,
+       "unit": "m/s",
+       "measured": false,
+       "source": "missing: no global wind data (stations only)"
+      },
+      "dust_tau": {
+       "value": 0.2,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: MGS TES dust, zonal median for this latitude, scaled to local pressure"
+      },
+      "sunlight_mean": {
+       "value": 4750.0,
+       "low": 4551.0,
+       "high": 4906.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: orbit geometry + predicted dust and ice"
+      },
+      "daylight_hours": {
+       "value": 12.4,
+       "low": 12.3,
+       "high": 12.5,
+       "unit": "h",
+       "measured": true,
+       "source": "exact orbital geometry"
+      },
+      "solar_elevation_max": {
+       "value": 90.0,
+       "low": null,
+       "high": null,
+       "unit": "deg",
+       "measured": true,
+       "source": "exact orbital geometry (noon sun, highest in the month)"
+      },
+      "air_density": {
+       "value": 0.0058,
+       "low": null,
+       "high": null,
+       "unit": "kg/m3",
+       "measured": false,
+       "source": "pressure / (R * air temperature), R = 191.8 J/kg/K"
+      },
+      "radiation_proxy": {
+       "value": 6.5,
+       "low": null,
+       "high": null,
+       "unit": "g/cm2 atmosphere overhead (Earth sea level: 1033)",
+       "measured": false,
+       "source": "column mass = pressure / g"
+      }
+     },
+     "storm_year": {
+      "dust_tau": {
+       "value": 0.45,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: TES Mars year 25 (2001 global storm), zonal median"
+      },
+      "sunlight_mean": {
+       "value": 4461.0,
+       "low": 4324.0,
+       "high": 4598.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_min": {
+       "value": 162.9,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_max": {
+       "value": 290.7,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      }
+     },
+     "target_profile": {
+      "features_raw": {
+       "temp_mean": -60.0,
+       "temp_diurnal_amp": 132.3,
+       "thermal_inertia": 100.0,
+       "surface_roughness": 28.4,
+       "soil_moisture": 3.41,
+       "dust_aerosol": 0.2,
+       "solar_elevation_max": 90.0,
+       "radiation_proxy": 6.5,
+       "slope_deg": 2.59
+      },
+      "features_measured": [
+       false,
+       false,
+       true,
+       true,
+       true,
+       false,
+       true,
+       false,
+       true
+      ],
+      "nearest_skylight_km": null
+     }
+    },
+    {
+     "month": 10,
+     "ls_start": 270.0,
+     "ls_end": 300.0,
+     "sols": 48,
+     "params": {
+      "ground_temp_min": {
+       "value": 163.4,
+       "low": 157.3,
+       "high": 169.5,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_max": {
+       "value": 291.9,
+       "low": 286.6,
+       "high": 297.2,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "ground_temp_mean": {
+       "value": 213.8,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model"
+      },
+      "air_temp_min": {
+       "value": 168.6,
+       "low": 161.6,
+       "high": 175.6,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_max": {
+       "value": 268.2,
+       "low": 261.2,
+       "high": 275.2,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; elevation outside the stations' range (-4.5 to -1.4 km): temperatures extrapolated"
+      },
+      "air_temp_mean": {
+       "value": 218.4,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: mean of predicted min and max"
+      },
+      "pressure": {
+       "value": 285.0,
+       "low": 279.0,
+       "high": 292.0,
+       "unit": "Pa",
+       "measured": false,
+       "source": "global predictor: Viking 1 seasonal curve moved to MOLA elevation"
+      },
+      "wind_mean": {
+       "value": null,
+       "low": null,
+       "high": null,
+       "unit": "m/s",
+       "measured": false,
+       "source": "missing: no global wind data (stations only)"
+      },
+      "dust_tau": {
+       "value": 0.31,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: MGS TES dust, zonal median for this latitude, scaled to local pressure"
+      },
+      "sunlight_mean": {
+       "value": 4654.0,
+       "low": 4582.0,
+       "high": 4709.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: orbit geometry + predicted dust and ice"
+      },
+      "daylight_hours": {
+       "value": 12.6,
+       "low": 12.6,
+       "high": 12.7,
+       "unit": "h",
+       "measured": true,
+       "source": "exact orbital geometry"
+      },
+      "solar_elevation_max": {
+       "value": 73.4,
+       "low": null,
+       "high": null,
+       "unit": "deg",
+       "measured": true,
+       "source": "exact orbital geometry (noon sun, highest in the month)"
+      },
+      "air_density": {
+       "value": 0.0068,
+       "low": null,
+       "high": null,
+       "unit": "kg/m3",
+       "measured": false,
+       "source": "pressure / (R * air temperature), R = 191.8 J/kg/K"
+      },
+      "radiation_proxy": {
+       "value": 7.7,
+       "low": null,
+       "high": null,
+       "unit": "g/cm2 atmosphere overhead (Earth sea level: 1033)",
+       "measured": false,
+       "source": "column mass = pressure / g"
+      }
+     },
+     "storm_year": {
+      "dust_tau": {
+       "value": 0.38,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: TES Mars year 25 (2001 global storm), zonal median"
+      },
+      "sunlight_mean": {
+       "value": 4560.0,
+       "low": 4518.0,
+       "high": 4581.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_min": {
+       "value": 163.9,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_max": {
+       "value": 291.0,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      }
+     },
+     "target_profile": {
+      "features_raw": {
+       "temp_mean": -59.3,
+       "temp_diurnal_amp": 128.5,
+       "thermal_inertia": 100.0,
+       "surface_roughness": 28.4,
+       "soil_moisture": 3.41,
+       "dust_aerosol": 0.31,
+       "solar_elevation_max": 73.4,
+       "radiation_proxy": 7.7,
+       "slope_deg": 2.59
+      },
+      "features_measured": [
+       false,
+       false,
+       true,
+       true,
+       true,
+       false,
+       true,
+       false,
+       true
+      ],
+      "nearest_skylight_km": null
+     }
+    }
+   ]
+  },
+  {
+   "input": {
+    "id": "north_polar_point",
+    "lat": 80.0,
+    "lon": 30.0,
+    "months": [
+     4,
+     10
+    ]
+   },
+   "coordinates": {
+    "lat": 80.0,
+    "lon_east": 30.0
+   },
+   "site": null,
+   "current": null,
+   "weights": {
+    "values": {
+     "temp_mean": 0.8,
+     "temp_diurnal_amp": 0.7,
+     "thermal_inertia": 0.7,
+     "surface_roughness": 0.5,
+     "soil_moisture": 0.5,
+     "dust_aerosol": 0.5,
+     "solar_elevation_max": 0.4,
+     "radiation_proxy": 0.2,
+     "slope_deg": 0.5
+    },
+    "order": [
+     "temp_mean",
+     "temp_diurnal_amp",
+     "thermal_inertia",
+     "surface_roughness",
+     "soil_moisture",
+     "dust_aerosol",
+     "solar_elevation_max",
+     "radiation_proxy",
+     "slope_deg"
+    ],
+    "rationale": "Default weights for a point that is not a known site.",
+    "meaning": "importance of each feature for finding an Earth analog of this place (0-1, adjustable)"
+   },
+   "static": {
+    "elevation": {
+     "value": -3933.0,
+     "low": null,
+     "high": null,
+     "unit": "m above areoid",
+     "measured": true,
+     "source": "MOLA topography, 1.85 km pixel"
+    },
+    "slope_deg": {
+     "value": 3.05,
+     "low": null,
+     "high": null,
+     "unit": "deg",
+     "measured": true,
+     "source": "MOLA, steepest slope over ~1.85 km baseline (not lander scale)"
+    },
+    "surface_roughness": {
+     "value": 46.5,
+     "low": null,
+     "high": null,
+     "unit": "m",
+     "measured": true,
+     "source": "MOLA, local relief: std of detrended elevation over ~13 km"
+    },
+    "thermal_inertia": {
+     "value": 645.0,
+     "low": null,
+     "high": null,
+     "unit": "J m-2 K-1 s-1/2",
+     "measured": true,
+     "source": "TES nightside thermal inertia, 3 km pixel (direct retrieval)"
+    },
+    "albedo": {
+     "value": 0.32,
+     "low": null,
+     "high": null,
+     "unit": "",
+     "measured": true,
+     "source": "TES bolometric albedo, 7.4 km pixel"
+    },
+    "soil_moisture": {
+     "value": null,
+     "low": null,
+     "high": null,
+     "unit": "wt% water-equivalent hydrogen, top ~tens of cm",
+     "measured": false,
+     "source": "outside the GRS water map (poleward of its coverage); see hydrogen_index"
+    },
+    "hydrogen_index": {
+     "value": 0.02,
+     "low": null,
+     "high": null,
+     "unit": "0 = equatorial-dry, 0.4+ = ice-rich",
+     "measured": true,
+     "source": "Odyssey neutron spectrometer epithermal flux, 0.5 deg"
+    },
+    "hydrated_minerals_nearest_km": {
+     "value": 1012.1,
+     "low": null,
+     "high": null,
+     "unit": "km",
+     "measured": true,
+     "source": "OMEGA/CRISM hydrated mineral detections (Carter et al. 2013)"
+    },
+    "hydrated_minerals_within_100km": {
+     "value": 0.0,
+     "low": null,
+     "high": null,
+     "unit": "count",
+     "measured": true,
+     "source": "OMEGA/CRISM hydrated mineral detections"
+    },
+    "nearest_skylight_km": {
+     "value": null,
+     "low": null,
+     "high": null,
+     "unit": "km",
+     "measured": false,
+     "source": "missing: cave catalog not downloaded (USGS server unreachable)"
+    },
+    "gravity": {
+     "value": 3.71,
+     "low": null,
+     "high": null,
+     "unit": "m s-2",
+     "measured": true,
+     "source": "constant (0.38 g); Earth cannot reproduce this"
+    }
+   },
+   "months": [
+    {
+     "month": 4,
+     "ls_start": 90.0,
+     "ls_end": 120.0,
+     "sols": 64,
+     "params": {
+      "ground_temp_min": {
+       "value": 215.7,
+       "low": 209.6,
+       "high": 221.8,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; poleward of the most poleward station (68N): temperatures extrapolated"
+      },
+      "ground_temp_max": {
+       "value": 229.3,
+       "low": 224.0,
+       "high": 234.6,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; poleward of the most poleward station (68N): temperatures extrapolated"
+      },
+      "ground_temp_mean": {
+       "value": 222.4,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model"
+      },
+      "air_temp_min": {
+       "value": 213.8,
+       "low": 206.8,
+       "high": 220.8,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; poleward of the most poleward station (68N): temperatures extrapolated"
+      },
+      "air_temp_max": {
+       "value": 215.7,
+       "low": 208.7,
+       "high": 222.7,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; poleward of the most poleward station (68N): temperatures extrapolated"
+      },
+      "air_temp_mean": {
+       "value": 214.7,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: mean of predicted min and max"
+      },
+      "pressure": {
+       "value": 765.0,
+       "low": 747.0,
+       "high": 782.0,
+       "unit": "Pa",
+       "measured": false,
+       "source": "global predictor: Viking 1 seasonal curve moved to MOLA elevation"
+      },
+      "wind_mean": {
+       "value": null,
+       "low": null,
+       "high": null,
+       "unit": "m/s",
+       "measured": false,
+       "source": "missing: no global wind data (stations only)"
+      },
+      "dust_tau": {
+       "value": 0.55,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: MGS TES dust, zonal median for this latitude, scaled to local pressure"
+      },
+      "sunlight_mean": {
+       "value": 3632.0,
+       "low": 3431.0,
+       "high": 3695.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: orbit geometry + predicted dust and ice"
+      },
+      "daylight_hours": {
+       "value": 24.7,
+       "low": 24.7,
+       "high": 24.7,
+       "unit": "h",
+       "measured": true,
+       "source": "exact orbital geometry"
+      },
+      "solar_elevation_max": {
+       "value": 35.2,
+       "low": null,
+       "high": null,
+       "unit": "deg",
+       "measured": true,
+       "source": "exact orbital geometry (noon sun, highest in the month)"
+      },
+      "air_density": {
+       "value": 0.0186,
+       "low": null,
+       "high": null,
+       "unit": "kg/m3",
+       "measured": false,
+       "source": "pressure / (R * air temperature), R = 191.8 J/kg/K"
+      },
+      "radiation_proxy": {
+       "value": 20.6,
+       "low": null,
+       "high": null,
+       "unit": "g/cm2 atmosphere overhead (Earth sea level: 1033)",
+       "measured": false,
+       "source": "column mass = pressure / g"
+      }
+     },
+     "storm_year": {
+      "dust_tau": {
+       "value": 0.55,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: TES Mars year 25 (2001 global storm), zonal median"
+      },
+      "sunlight_mean": {
+       "value": 3632.0,
+       "low": 3431.0,
+       "high": 3695.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_min": {
+       "value": 215.7,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_max": {
+       "value": 229.3,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      }
+     },
+     "target_profile": {
+      "features_raw": {
+       "temp_mean": -50.7,
+       "temp_diurnal_amp": 13.6,
+       "thermal_inertia": 645.0,
+       "surface_roughness": 46.5,
+       "soil_moisture": null,
+       "dust_aerosol": 0.55,
+       "solar_elevation_max": 35.2,
+       "radiation_proxy": 20.6,
+       "slope_deg": 3.05
+      },
+      "features_measured": [
+       false,
+       false,
+       true,
+       true,
+       false,
+       false,
+       true,
+       false,
+       true
+      ],
+      "nearest_skylight_km": null
+     }
+    },
+    {
+     "month": 10,
+     "ls_start": 270.0,
+     "ls_end": 300.0,
+     "sols": 48,
+     "params": {
+      "ground_temp_min": {
+       "value": 150.6,
+       "low": 144.5,
+       "high": 156.7,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; poleward of the most poleward station (68N): temperatures extrapolated; ground at CO2 frost point (seasonal frost cover)"
+      },
+      "ground_temp_max": {
+       "value": 150.6,
+       "low": 145.3,
+       "high": 155.9,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model; poleward of the most poleward station (68N): temperatures extrapolated; ground at CO2 frost point (seasonal frost cover)"
+      },
+      "ground_temp_mean": {
+       "value": 150.6,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: surface energy balance model"
+      },
+      "air_temp_min": {
+       "value": 150.6,
+       "low": 143.6,
+       "high": 157.6,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; poleward of the most poleward station (68N): temperatures extrapolated; ground at CO2 frost point (seasonal frost cover)"
+      },
+      "air_temp_max": {
+       "value": 157.5,
+       "low": 150.5,
+       "high": 164.5,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: air from modelled ground, fit on 7 stations; poleward of the most poleward station (68N): temperatures extrapolated; ground at CO2 frost point (seasonal frost cover)"
+      },
+      "air_temp_mean": {
+       "value": 154.1,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: mean of predicted min and max"
+      },
+      "pressure": {
+       "value": 905.0,
+       "low": 884.0,
+       "high": 926.0,
+       "unit": "Pa",
+       "measured": false,
+       "source": "global predictor: Viking 1 seasonal curve moved to MOLA elevation"
+      },
+      "wind_mean": {
+       "value": null,
+       "low": null,
+       "high": null,
+       "unit": "m/s",
+       "measured": false,
+       "source": "missing: no global wind data (stations only)"
+      },
+      "dust_tau": {
+       "value": 0.84,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: MGS TES dust, zonal median for this latitude, scaled to local pressure"
+      },
+      "sunlight_mean": {
+       "value": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: orbit geometry + predicted dust and ice"
+      },
+      "daylight_hours": {
+       "value": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "unit": "h",
+       "measured": true,
+       "source": "exact orbital geometry"
+      },
+      "solar_elevation_max": {
+       "value": 0.0,
+       "low": null,
+       "high": null,
+       "unit": "deg",
+       "measured": true,
+       "source": "exact orbital geometry (noon sun, highest in the month)"
+      },
+      "air_density": {
+       "value": 0.0306,
+       "low": null,
+       "high": null,
+       "unit": "kg/m3",
+       "measured": false,
+       "source": "pressure / (R * air temperature), R = 191.8 J/kg/K"
+      },
+      "radiation_proxy": {
+       "value": 24.4,
+       "low": null,
+       "high": null,
+       "unit": "g/cm2 atmosphere overhead (Earth sea level: 1033)",
+       "measured": false,
+       "source": "column mass = pressure / g"
+      }
+     },
+     "storm_year": {
+      "dust_tau": {
+       "value": 0.9,
+       "low": null,
+       "high": null,
+       "unit": "optical depth 0.67 um",
+       "measured": false,
+       "source": "global predictor: TES Mars year 25 (2001 global storm), zonal median"
+      },
+      "sunlight_mean": {
+       "value": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "unit": "Wh/m2 per sol, flat ground",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_min": {
+       "value": 150.6,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      },
+      "ground_temp_max": {
+       "value": 150.6,
+       "low": null,
+       "high": null,
+       "unit": "K",
+       "measured": false,
+       "source": "global predictor: storm-year dust"
+      }
+     },
+     "target_profile": {
+      "features_raw": {
+       "temp_mean": -122.5,
+       "temp_diurnal_amp": 0.0,
+       "thermal_inertia": 645.0,
+       "surface_roughness": 46.5,
+       "soil_moisture": null,
+       "dust_aerosol": 0.84,
+       "solar_elevation_max": 0.0,
+       "radiation_proxy": 24.4,
+       "slope_deg": 3.05
+      },
+      "features_measured": [
+       false,
+       false,
+       true,
+       true,
+       false,
+       false,
+       true,
+       false,
+       true
+      ],
+      "nearest_skylight_km": null
+     }
+    }
+   ]
+  }
+ ]
+}

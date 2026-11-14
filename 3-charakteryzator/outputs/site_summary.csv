@@ -1,0 +1,306 @@
+site,group,parameter,value,unit,provenance,note
+vl1,Location,Latitude,22.27,deg N,published (entered by hand),
+vl1,Location,Longitude,312.05,deg E,published (entered by hand),
+vl1,Terrain,Elevation,-3.627,km (MOLA),published (entered by hand),
+vl1,Surface,Thermal inertia,356,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 347 to 377; unit conversion assumed
+vl1,Surface,Albedo,0.25,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.25 to 0.25
+vl1,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+vl1,Atmosphere,Air temperature: typical daily minimum across seasons,178 to 191,K,measured,"partial seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl1,Atmosphere,Air temperature: typical daily maximum across seasons,201 to 248,K,measured,"partial seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl1,Atmosphere,Air temperature: typical day-night swing,16 to 61,K,measured,"partial seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl1,Atmosphere,Air temperature: coldest and warmest hourly mean on record,177 and 256,K,measured,"partial seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl1,Atmosphere,Footpad temperature: typical daily minimum across seasons,198 to 213,K,measured (lander hardware),"all 12 seasons; in overlapping seasons it reads about 23 K above the air minimum and 9 K above the air maximum, so it is not a stand-in for air temperature"
+vl1,Atmosphere,Footpad temperature: typical daily maximum across seasons,227 to 258,K,measured (lander hardware),"all 12 seasons; in overlapping seasons it reads about 23 K above the air minimum and 9 K above the air maximum, so it is not a stand-in for air temperature"
+vl1,Atmosphere,"Pressure: daily mean, lowest to highest season",685 to 890,Pa,measured,full seasonal coverage
+vl1,Atmosphere,Pressure: typical daily swing,4.3,% of the mean,measured,thermal tide
+vl1,Atmosphere,Wind: typical daily mean speed across seasons,2.1 to 7.8,m/s,measured,partial seasonal coverage
+vl1,Atmosphere,Wind: highest hourly value on record,25.9,m/s,measured,
+vl1,Atmosphere,"Optical depth measured from the surface, across seasons",0.47 to 3.37,,measured,full seasonal coverage
+vl1,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",685 to 894,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+vl1,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.51 to 1.26,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+vl1,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.75,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+vl1,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,183 to 191,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+vl1,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,236 to 263,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+vl1,Sunlight,"Energy on flat ground, annual mean, typical dust year",3249,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+vl1,Sunlight,"Energy on flat ground, worst sol, typical dust year",2157,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 266
+vl1,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3139,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+vl1,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",1833,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 262
+vl1,Sunlight,"Daylight, shortest to longest",10.8 to 13.9,hours,computed (orbit geometry),
+vl1,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+vl1,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+vl1,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+vl1,Surface,Ice depth,,,missing,not downloaded or compiled yet
+vl2,Location,Latitude,47.64,deg N,published (entered by hand),
+vl2,Location,Longitude,134.29,deg E,published (entered by hand),
+vl2,Terrain,Elevation,-4.505,km (MOLA),published (entered by hand),
+vl2,Surface,Thermal inertia,327,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 297 to 356; unit conversion assumed
+vl2,Surface,Albedo,0.25,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.25 to 0.27
+vl2,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+vl2,Atmosphere,Air temperature: typical daily minimum across seasons,158 to 195,K,measured,"full seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl2,Atmosphere,Air temperature: typical daily maximum across seasons,171 to 246,K,measured,"full seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl2,Atmosphere,Air temperature: typical day-night swing,12 to 53,K,measured,"full seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl2,Atmosphere,Air temperature: coldest and warmest hourly mean on record,149 and 247,K,measured,"full seasonal coverage; sensor: boom thermocouple, 1.6 m"
+vl2,Atmosphere,"Pressure: daily mean, lowest to highest season",745 to 990,Pa,measured,full seasonal coverage
+vl2,Atmosphere,Pressure: typical daily swing,3.0,% of the mean,measured,thermal tide
+vl2,Atmosphere,Wind: typical daily mean speed across seasons,2.3 to 8.3,m/s,measured,full seasonal coverage
+vl2,Atmosphere,Wind: highest hourly value on record,23.2,m/s,measured,
+vl2,Atmosphere,"Optical depth measured from the surface, across seasons",0.33 to 1.69,,measured,partial seasonal coverage
+vl2,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",743 to 970,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+vl2,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.41 to 1.23,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+vl2,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.51,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+vl2,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,151 to 191,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+vl2,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,183 to 264,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+vl2,Surface,Seasonal CO2 frost in the climate model,"yes, Ls 267-286",,"model-derived (Ames GCM, 1996)",
+vl2,Sunlight,"Energy on flat ground, annual mean, typical dust year",2418,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+vl2,Sunlight,"Energy on flat ground, worst sol, typical dust year",578,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 269
+vl2,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",2402,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+vl2,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",530,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 292
+vl2,Sunlight,"Daylight, shortest to longest",8.1 to 16.6,hours,computed (orbit geometry),
+vl2,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+vl2,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+vl2,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+vl2,Surface,Ice depth,,,missing,not downloaded or compiled yet
+pathfinder,Location,Latitude,19.1,deg N,published (entered by hand),
+pathfinder,Location,Longitude,326.75,deg E,published (entered by hand),
+pathfinder,Terrain,Elevation,-3.682,km (MOLA),published (entered by hand),
+pathfinder,Surface,Thermal inertia,435,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 398 to 477; unit conversion assumed
+pathfinder,Surface,Albedo,0.22,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.19 to 0.23
+pathfinder,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+pathfinder,Atmosphere,Air temperature: typical daily minimum across seasons,198 to 199,K,measured,"partial seasonal coverage; sensor: top of mast, about 1 m above the lander petal"
+pathfinder,Atmosphere,Air temperature: typical daily maximum across seasons,256 to 259,K,measured,"partial seasonal coverage; sensor: top of mast, about 1 m above the lander petal"
+pathfinder,Atmosphere,Air temperature: typical day-night swing,58 to 61,K,measured,"partial seasonal coverage; sensor: top of mast, about 1 m above the lander petal"
+pathfinder,Atmosphere,Air temperature: coldest and warmest hourly mean on record,196 and 260,K,measured,"partial seasonal coverage; sensor: top of mast, about 1 m above the lander petal"
+pathfinder,Atmosphere,"Pressure: daily mean, lowest to highest season",665 to 670,Pa,measured,partial seasonal coverage
+pathfinder,Atmosphere,Pressure: typical daily swing,5.6,% of the mean,measured,thermal tide
+pathfinder,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",689 to 899,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+pathfinder,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.51 to 1.27,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+pathfinder,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.85,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+pathfinder,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,185 to 194,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+pathfinder,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,236 to 263,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+pathfinder,Sunlight,"Energy on flat ground, annual mean, typical dust year",3308,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+pathfinder,Sunlight,"Energy on flat ground, worst sol, typical dust year",2350,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 264
+pathfinder,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3184,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+pathfinder,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",2026,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 262
+pathfinder,Sunlight,"Daylight, shortest to longest",11.0 to 13.6,hours,computed (orbit geometry),
+pathfinder,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+pathfinder,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+pathfinder,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+pathfinder,Surface,Ice depth,,,missing,not downloaded or compiled yet
+spirit,Location,Latitude,-14.57,deg N,published (entered by hand),
+spirit,Location,Longitude,175.47,deg E,published (entered by hand),
+spirit,Terrain,Elevation,-1.94,km (MOLA),published (entered by hand),
+spirit,Surface,Thermal inertia,285,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 151 to 285; unit conversion assumed
+spirit,Surface,Albedo,0.24,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.21 to 0.27
+spirit,Surface,Regional surface class,fine sand to mixed sand and crust,,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+spirit,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",586 to 765,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+spirit,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.45 to 0.97,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+spirit,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",2.66,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+spirit,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,166 to 196,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+spirit,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,247 to 292,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+spirit,Sunlight,"Energy on flat ground, annual mean, typical dust year",3523,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+spirit,Sunlight,"Energy on flat ground, worst sol, typical dust year",2318,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 84
+spirit,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3328,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+spirit,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",2318,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 84
+spirit,Sunlight,"Daylight, shortest to longest",11.4 to 13.3,hours,computed (orbit geometry),
+spirit,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+spirit,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+spirit,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+spirit,Surface,Ice depth,,,missing,not downloaded or compiled yet
+opportunity,Location,Latitude,-1.95,deg N,published (entered by hand),
+opportunity,Location,Longitude,354.47,deg E,published (entered by hand),
+opportunity,Terrain,Elevation,-1.385,km (MOLA),published (entered by hand),
+opportunity,Surface,Thermal inertia,314,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 297 to 356; unit conversion assumed
+opportunity,Surface,Albedo,0.19,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.16 to 0.23
+opportunity,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+opportunity,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",557 to 727,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+opportunity,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.47 to 1.06,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+opportunity,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.90,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+opportunity,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,182 to 205,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+opportunity,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,257 to 283,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+opportunity,Sunlight,"Energy on flat ground, annual mean, typical dust year",3609,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+opportunity,Sunlight,"Energy on flat ground, worst sol, typical dust year",2843,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 83
+opportunity,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3477,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+opportunity,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",2843,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 83
+opportunity,Sunlight,"Daylight, shortest to longest",12.2 to 12.5,hours,computed (orbit geometry),
+opportunity,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+opportunity,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+opportunity,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+opportunity,Surface,Ice depth,,,missing,not downloaded or compiled yet
+phoenix,Location,Latitude,68.22,deg N,published (entered by hand),
+phoenix,Location,Longitude,234.25,deg E,published (entered by hand),
+phoenix,Terrain,Elevation,-4.126,km (MOLA),published (entered by hand),
+phoenix,Surface,Thermal inertia,,,missing,outside map coverage
+phoenix,Surface,Albedo,,,missing,outside map coverage
+phoenix,Atmosphere,Air temperature: typical daily minimum across seasons,181 to 195,K,measured,"partial seasonal coverage; sensor: top of mast, about 2 m above ground"
+phoenix,Atmosphere,Air temperature: typical daily maximum across seasons,229 to 242,K,measured,"partial seasonal coverage; sensor: top of mast, about 2 m above ground"
+phoenix,Atmosphere,Air temperature: typical day-night swing,47 to 50,K,measured,"partial seasonal coverage; sensor: top of mast, about 2 m above ground"
+phoenix,Atmosphere,Air temperature: coldest and warmest hourly mean on record,176 and 249,K,measured,"partial seasonal coverage; sensor: top of mast, about 2 m above ground"
+phoenix,Atmosphere,"Pressure: daily mean, lowest to highest season",731 to 841,Pa,measured,partial seasonal coverage
+phoenix,Atmosphere,Pressure: typical daily swing,1.0,% of the mean,measured,thermal tide
+phoenix,Atmosphere,Wind: typical daily mean speed across seasons,4.1 to 7.2,m/s,measured,partial seasonal coverage
+phoenix,Atmosphere,Wind: highest hourly value on record,16.0,m/s,measured,
+phoenix,Atmosphere,"Optical depth measured from the surface, across seasons",0.30 to 0.51,,measured,partial seasonal coverage
+phoenix,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",718 to 937,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+phoenix,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.43 to 1.35,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+phoenix,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.43,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+phoenix,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,150 to 201,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+phoenix,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,152 to 254,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+phoenix,Surface,Seasonal CO2 frost in the climate model,"yes, Ls 10-24, Ls 202-220, Ls 267-286",,"model-derived (Ames GCM, 1996)",
+phoenix,Sunlight,"Energy on flat ground, annual mean, typical dust year",1605,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+phoenix,Sunlight,"Energy on flat ground, worst sol, typical dust year",0,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 241
+phoenix,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",1602,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+phoenix,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",0,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 241
+phoenix,Sunlight,"Daylight, shortest to longest",0.0 to 24.7,hours,computed (orbit geometry),91 sols of polar night
+phoenix,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+phoenix,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+phoenix,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+phoenix,Surface,Ice depth,,,missing,not downloaded or compiled yet
+curiosity,Location,Latitude,-4.59,deg N,published (entered by hand),
+curiosity,Location,Longitude,137.44,deg E,published (entered by hand),
+curiosity,Terrain,Elevation,-4.501,km (MOLA),published (entered by hand),
+curiosity,Surface,Thermal inertia,335,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 268 to 335; unit conversion assumed
+curiosity,Surface,Albedo,0.24,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.21 to 0.26
+curiosity,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+curiosity,Atmosphere,Air temperature: typical daily minimum across seasons,188 to 207,K,measured,"full seasonal coverage; sensor: REMS estimated ambient, booms at 1.6 m"
+curiosity,Atmosphere,Air temperature: typical daily maximum across seasons,237 to 271,K,measured,"full seasonal coverage; sensor: REMS estimated ambient, booms at 1.6 m"
+curiosity,Atmosphere,Air temperature: typical day-night swing,47 to 66,K,measured,"full seasonal coverage; sensor: REMS estimated ambient, booms at 1.6 m"
+curiosity,Atmosphere,Air temperature: coldest and warmest hourly mean on record,183 and 274,K,measured,"full seasonal coverage; sensor: REMS estimated ambient, booms at 1.6 m"
+curiosity,Atmosphere,Ground temperature: typical daily minimum across seasons,181 to 203,K,measured,full seasonal coverage
+curiosity,Atmosphere,Ground temperature: typical daily maximum across seasons,254 to 283,K,measured,full seasonal coverage
+curiosity,Atmosphere,Ground temperature: typical day-night swing,58 to 88,K,measured,full seasonal coverage
+curiosity,Atmosphere,Ground temperature: coldest and warmest hourly mean on record,176 and 286,K,measured,full seasonal coverage
+curiosity,Atmosphere,"Pressure: daily mean, lowest to highest season",739 to 917,Pa,measured,full seasonal coverage
+curiosity,Atmosphere,Pressure: typical daily swing,10.2,% of the mean,measured,thermal tide
+curiosity,Atmosphere,Relative humidity: highest daily peak,56,%,measured,peaks before dawn
+curiosity,Atmosphere,Ultraviolet (200-380 nm): highest daily peak,21.8,W/m2,measured,
+curiosity,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",743 to 970,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+curiosity,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.56 to 1.37,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+curiosity,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",2.70,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+curiosity,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,173 to 196,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+curiosity,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,252 to 291,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+curiosity,Sunlight,"Energy on flat ground, annual mean, typical dust year",3454,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+curiosity,Sunlight,"Energy on flat ground, worst sol, typical dust year",2681,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 83
+curiosity,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3276,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+curiosity,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",2681,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 83
+curiosity,Sunlight,"Daylight, shortest to longest",12.0 to 12.6,hours,computed (orbit geometry),
+curiosity,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+curiosity,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+curiosity,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+curiosity,Surface,Ice depth,,,missing,not downloaded or compiled yet
+insight,Location,Latitude,4.5,deg N,published (entered by hand),
+insight,Location,Longitude,135.62,deg E,published (entered by hand),
+insight,Terrain,Elevation,-2.613,km (MOLA),published (entered by hand),
+insight,Surface,Thermal inertia,318,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 297 to 347; unit conversion assumed
+insight,Surface,Albedo,0.25,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.24 to 0.26
+insight,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+insight,Atmosphere,Air temperature: typical daily minimum across seasons,180 to 185,K,measured and composite of event windows,"partial seasonal coverage; sensor: TWINS boom tips, about 1.2 m"
+insight,Atmosphere,Air temperature: typical daily maximum across seasons,253 to 257,K,measured and composite of event windows,"partial seasonal coverage; sensor: TWINS boom tips, about 1.2 m"
+insight,Atmosphere,Air temperature: typical day-night swing,72 to 74,K,measured and composite of event windows,"partial seasonal coverage; sensor: TWINS boom tips, about 1.2 m"
+insight,Atmosphere,Air temperature: coldest and warmest hourly mean on record,180 and 258,K,measured,"partial seasonal coverage; sensor: TWINS boom tips, about 1.2 m"
+insight,Atmosphere,"Pressure: daily mean, lowest to highest season",628 to 764,Pa,measured and composite of event windows,partial seasonal coverage
+insight,Atmosphere,Pressure: typical daily swing,7.3,% of the mean,measured,thermal tide
+insight,Atmosphere,Wind: typical daily mean speed across seasons,2.5 to 9.5,m/s,measured,partial seasonal coverage
+insight,Atmosphere,Wind: highest hourly value on record,25.9,m/s,measured,
+insight,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",624 to 814,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+insight,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.50 to 1.20,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+insight,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.91,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+insight,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,179 to 198,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+insight,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,257 to 279,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+insight,Sunlight,"Energy on flat ground, annual mean, typical dust year",3536,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+insight,Sunlight,"Energy on flat ground, worst sol, typical dust year",3066,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 83
+insight,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3400,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+insight,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",3066,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 83
+insight,Sunlight,"Daylight, shortest to longest",12.0 to 12.6,hours,computed (orbit geometry),
+insight,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+insight,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+insight,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+insight,Surface,Ice depth,,,missing,not downloaded or compiled yet
+perseverance,Location,Latitude,18.44,deg N,published (entered by hand),
+perseverance,Location,Longitude,77.45,deg E,published (entered by hand),
+perseverance,Terrain,Elevation,-2.569,km (MOLA),published (entered by hand),
+perseverance,Surface,Thermal inertia,373,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 322 to 419; unit conversion assumed
+perseverance,Surface,Albedo,0.19,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.15 to 0.21
+perseverance,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+perseverance,Atmosphere,Ground temperature: typical daily minimum across seasons,186 to 207,K,measured (derived from thermal flux),full seasonal coverage
+perseverance,Atmosphere,Ground temperature: typical daily maximum across seasons,255 to 284,K,measured (derived from thermal flux),full seasonal coverage
+perseverance,Atmosphere,Ground temperature: typical day-night swing,63 to 92,K,measured (derived from thermal flux),full seasonal coverage
+perseverance,Atmosphere,Ground temperature: coldest and warmest hourly mean on record,181 and 296,K,measured,full seasonal coverage
+perseverance,Atmosphere,"Pressure: daily mean, lowest to highest season",629 to 793,Pa,measured,full seasonal coverage
+perseverance,Atmosphere,Pressure: typical daily swing,4.2,% of the mean,measured,thermal tide
+perseverance,Atmosphere,Wind: typical daily mean speed across seasons,1.9 to 4.3,m/s,measured,partial seasonal coverage
+perseverance,Atmosphere,Wind: highest hourly value on record,15.2,m/s,measured,
+perseverance,Atmosphere,Downward thermal flux from the sky: daily mean across the record,23 to 50,W/m2,measured,
+perseverance,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",621 to 811,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+perseverance,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.47 to 1.15,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+perseverance,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.69,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+perseverance,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,186 to 196,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+perseverance,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,254 to 271,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+perseverance,Sunlight,"Energy on flat ground, annual mean, typical dust year",3373,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+perseverance,Sunlight,"Energy on flat ground, worst sol, typical dust year",2472,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 265
+perseverance,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3254,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+perseverance,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",2166,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 262
+perseverance,Sunlight,"Daylight, shortest to longest",11.1 to 13.6,hours,computed (orbit geometry),
+perseverance,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+perseverance,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+perseverance,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+perseverance,Surface,Ice depth,,,missing,not downloaded or compiled yet
+zhurong,Location,Latitude,25.07,deg N,published (entered by hand),
+zhurong,Location,Longitude,109.93,deg E,published (entered by hand),
+zhurong,Terrain,Elevation,-4.099,km (MOLA),published (entered by hand),
+zhurong,Surface,Thermal inertia,356,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 343 to 373; unit conversion assumed
+zhurong,Surface,Albedo,0.25,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.25 to 0.26
+zhurong,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+zhurong,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",716 to 934,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+zhurong,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.50 to 1.30,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+zhurong,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.82,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+zhurong,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,183 to 191,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+zhurong,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,239 to 262,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+zhurong,Sunlight,"Energy on flat ground, annual mean, typical dust year",3162,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+zhurong,Sunlight,"Energy on flat ground, worst sol, typical dust year",1948,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 267
+zhurong,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3063,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+zhurong,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",1622,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 262
+zhurong,Sunlight,"Daylight, shortest to longest",10.6 to 14.1,hours,computed (orbit geometry),
+zhurong,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+zhurong,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+zhurong,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+zhurong,Surface,Ice depth,,,missing,not downloaded or compiled yet
+oxia,Location,Latitude,18.2,deg N,published (entered by hand),
+oxia,Location,Longitude,335.45,deg E,published (entered by hand),
+oxia,Terrain,Elevation,-3.0,km (MOLA),published (entered by hand),representative point
+oxia,Surface,Thermal inertia,402,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 347 to 423; unit conversion assumed
+oxia,Surface,Albedo,0.24,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.23 to 0.25
+oxia,Surface,Regional surface class,"coarser sand, crusts and scattered rock",,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+oxia,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",647 to 844,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+oxia,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.48 to 1.20,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+oxia,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.77,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+oxia,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,189 to 199,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+oxia,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,253 to 270,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+oxia,Sunlight,"Energy on flat ground, annual mean, typical dust year",3357,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+oxia,Sunlight,"Energy on flat ground, worst sol, typical dust year",2456,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 264
+oxia,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",3234,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+oxia,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",2144,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 262
+oxia,Sunlight,"Daylight, shortest to longest",11.1 to 13.5,hours,computed (orbit geometry),
+oxia,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+oxia,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+oxia,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+oxia,Surface,Ice depth,,,missing,not downloaded or compiled yet
+arcadia,Location,Latitude,40.0,deg N,published (entered by hand),
+arcadia,Location,Longitude,202.0,deg E,published (entered by hand),
+arcadia,Terrain,Elevation,-3.9,km (MOLA),published (entered by hand),representative point
+arcadia,Surface,Thermal inertia,264,J m-2 K-1 s-1/2,"map-derived (Viking-era, 2 deg cell)",nearby cells 151 to 268; unit conversion assumed
+arcadia,Surface,Albedo,0.2,,"map-derived (Viking-era, 1 deg cell)",nearby cells 0.19 to 0.27
+arcadia,Surface,Regional surface class,fine sand to mixed sand and crust,,interpretation of the map value,regional average over roughly 120 km; not a site-scale result
+arcadia,Atmosphere,"Pressure: estimated daily mean, lowest to highest season",703 to 917,Pa,model-derived (Viking 1 curve scaled by elevation),rms error 2.3% against six stations
+arcadia,Atmosphere,"Optical depth from orbit (dust + ice), across seasons, typical year",0.41 to 1.20,,"orbital (TES, by latitude)","zonal average, scaled to site pressure"
+arcadia,Atmosphere,"Optical depth from orbit, highest half-season in the 2001 storm year",1.44,,"orbital (TES, by latitude)",retrievals may miss the storm peak
+arcadia,Atmosphere,Ground temperature in a climate model: daily minimum over four seasons,164 to 180,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+arcadia,Atmosphere,Ground temperature in a climate model: daily maximum over four seasons,214 to 271,K,"model-derived (Ames GCM, 1996)",7.5 x 9 deg grid; coarse
+arcadia,Sunlight,"Energy on flat ground, annual mean, typical dust year",2735,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+arcadia,Sunlight,"Energy on flat ground, worst sol, typical dust year",1040,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 268
+arcadia,Sunlight,"Energy on flat ground, annual mean, 2001 storm-year dust",2697,Wh/m2 per sol,computed (orbit geometry + orbital dust),
+arcadia,Sunlight,"Energy on flat ground, worst sol, 2001 storm-year dust",985,Wh/m2 per sol,computed (orbit geometry + orbital dust),at Ls 293
+arcadia,Sunlight,"Daylight, shortest to longest",9.1 to 15.5,hours,computed (orbit geometry),
+arcadia,Terrain,Slopes and roughness,,,missing,not downloaded or compiled yet
+arcadia,Surface,Rock abundance,,,missing,not downloaded or compiled yet
+arcadia,Surface,Mineralogy,,,missing,not downloaded or compiled yet
+arcadia,Surface,Ice depth,,,missing,not downloaded or compiled yet
