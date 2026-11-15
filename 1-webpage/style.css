@@ -621,21 +621,23 @@ body.leaving {
 }
 
 .panel-switch-btn {
-    padding: 0.32rem 0.65rem;
+    padding: 0.34rem 0.72rem;
     border-radius: 6px;
-    border: 1px solid var(--border-subtle);
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-main);
+    border: 1px solid var(--accent-primary);
+    background: var(--accent-primary);
+    color: #050507;
     font-family: 'Inter', sans-serif;
     font-size: 0.72rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 0 16px -4px var(--accent-primary);
+    transition: opacity 0.2s ease, transform 0.2s var(--ease-out), box-shadow 0.25s ease;
 }
 
 .panel-switch-btn:hover {
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.28);
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px -4px var(--accent-primary);
 }
 
 /* Widok alternatywny: 2 planety obok siebie (Księżyc/Mars + Ziemia) */
