@@ -1,0 +1,10 @@
+.git
+.gemini
+data
+certbot
+2-networker
+3-charakteryzator
+4-szukacz
+5-precomputer
+__pycache__
+*.pyc

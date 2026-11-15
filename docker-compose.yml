@@ -11,10 +11,9 @@ services:
       - ./index.php:/var/www/html/index.php:ro
       - ./explorer.php:/var/www/html/explorer.php:ro
       - ./results.php:/var/www/html/results.php:ro
+      - ./dual.php:/var/www/html/dual.php:ro
       - ./style.css:/var/www/html/style.css:ro
-      - ./mars_photo.jpg:/var/www/html/mars_photo.jpg:ro
-      - ./moon_photo.jpg:/var/www/html/moon_photo.jpg:ro
-      - ./sky_photo.jpg:/var/www/html/sky_photo.jpg:ro
+      - ./images:/var/www/html/images:ro
     expose:
       - "80"
     networks:
