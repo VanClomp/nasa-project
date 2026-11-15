@@ -253,7 +253,7 @@
             darkColor: '#334155',
             rimColor:  '#60A5FA',
             seed: 1.0,
-            textureUrl: 'moon_photo.jpg'
+            textureUrl: 'images/moon_photo.jpg'
         });
 
         const marsScene = createMinimalPlanet('mars-holder', {
@@ -261,7 +261,7 @@
             darkColor: '#431407',
             rimColor:  '#F97316',
             seed: 7.4,
-            textureUrl: 'mars_photo.jpg'
+            textureUrl: 'images/mars_photo.jpg'
         });
 
         function animate() {

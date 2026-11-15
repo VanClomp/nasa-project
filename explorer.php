@@ -309,13 +309,20 @@ if (isset($_GET['w'])) {
             <span class="app-title">Planetary Analog Finder</span>
         </div>
 
-        <div class="mode-switcher">
-            <button class="mode-btn <?php echo $isMoon ? 'active' : ''; ?>" id="btn-mode-moon" onclick="switchCelestialBody('moon')">
-                Księżyc
-            </button>
-            <button class="mode-btn <?php echo !$isMoon ? 'active' : ''; ?>" id="btn-mode-mars" onclick="switchCelestialBody('mars')">
-                Mars
-            </button>
+        <div class="nav-right">
+            <div class="mode-switcher">
+                <button class="mode-btn active" type="button">Pojedynczy</button>
+                <button class="mode-btn" type="button" onclick="switchToDualView()">Dwie planety</button>
+            </div>
+
+            <div class="mode-switcher">
+                <button class="mode-btn <?php echo $isMoon ? 'active' : ''; ?>" id="btn-mode-moon" onclick="switchCelestialBody('moon')">
+                    Księżyc
+                </button>
+                <button class="mode-btn <?php echo !$isMoon ? 'active' : ''; ?>" id="btn-mode-mars" onclick="switchCelestialBody('mars')">
+                    Mars
+                </button>
+            </div>
         </div>
     </header>
 
@@ -595,16 +602,15 @@ if (isset($_GET['w'])) {
         const raycaster = new THREE.Raycaster();
         const mouseVec = new THREE.Vector2();
 
-        renderer.domElement.addEventListener('wheel', (e) => {
-            if (isDiving) return;
-            e.preventDefault();
+        renderer.domElement.style.touchAction = 'none';
 
+        function applyZoomAt(clientX, clientY, deltaZ) {
             const rect = renderer.domElement.getBoundingClientRect();
-            const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+            const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
 
             const oldZ = targetCamZ;
-            const newZ = Math.max(1.42, Math.min(4.6, oldZ + e.deltaY * 0.0022));
+            const newZ = Math.max(1.42, Math.min(4.6, oldZ + deltaZ));
 
             const vFov = (camera.fov * Math.PI) / 180;
             const halfHOld = oldZ * Math.tan(vFov / 2);
@@ -619,6 +625,12 @@ if (isset($_GET['w'])) {
             const maxPan = Math.max(0, (3.1 - newZ) * 0.65);
             targetCamX = Math.max(-maxPan, Math.min(maxPan, worldX - ndcX * halfWNew));
             targetCamY = Math.max(-maxPan, Math.min(maxPan, worldY - ndcY * halfHNew));
+        }
+
+        renderer.domElement.addEventListener('wheel', (e) => {
+            if (isDiving) return;
+            e.preventDefault();
+            applyZoomAt(e.clientX, e.clientY, e.deltaY * 0.0022);
         }, { passive: false });
 
         renderer.domElement.addEventListener('mousedown', (e) => {
@@ -639,26 +651,90 @@ if (isset($_GET['w'])) {
             prevMouse = { x: e.clientX, y: e.clientY };
         });
 
+        function pickPointAt(clientX, clientY) {
+            if (isDiving || globeViewMode === 'earth') return;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouseVec.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            mouseVec.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouseVec, camera);
+            const hits = raycaster.intersectObject(globeMesh);
+            if (hits.length > 0) {
+                const localPt = globeGroup.worldToLocal(hits[0].point.clone()).normalize();
+                const lat = 90 - (Math.acos(localPt.y) * 180 / Math.PI);
+                const lon = ((Math.atan2(localPt.z, -localPt.x) * 180 / Math.PI) - 180);
+                const normLon = lon < -180 ? lon + 360 : (lon > 180 ? lon - 360 : lon);
+                document.getElementById('input-lat').value = lat.toFixed(1);
+                document.getElementById('input-lon').value = normLon.toFixed(1);
+                triggerCharacterize();
+            }
+        }
+
         window.addEventListener('mouseup', (e) => {
-            if (isDragging && !dragMoved && !isDiving && globeViewMode !== 'earth') {
-                // Kliknięcie punktu na Księżycu/Marsie -> przeliczenie na (lat, lon)
-                const rect = renderer.domElement.getBoundingClientRect();
-                mouseVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                mouseVec.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-                raycaster.setFromCamera(mouseVec, camera);
-                const hits = raycaster.intersectObject(globeMesh);
-                if (hits.length > 0) {
-                    const localPt = globeGroup.worldToLocal(hits[0].point.clone()).normalize();
-                    const lat = 90 - (Math.acos(localPt.y) * 180 / Math.PI);
-                    const lon = ((Math.atan2(localPt.z, -localPt.x) * 180 / Math.PI) - 180);
-                    const normLon = lon < -180 ? lon + 360 : (lon > 180 ? lon - 360 : lon);
-                    document.getElementById('input-lat').value = lat.toFixed(1);
-                    document.getElementById('input-lon').value = normLon.toFixed(1);
-                    triggerCharacterize();
-                }
+            if (isDragging && !dragMoved) {
+                pickPointAt(e.clientX, e.clientY);
             }
             isDragging = false;
         });
+
+        // Obsługa dotyku (obrót 1 palcem, tapnięcie, pinch-to-zoom 2 palcami)
+        let prevPinchDist = 0;
+        renderer.domElement.addEventListener('touchstart', (e) => {
+            if (isDiving) return;
+            e.preventDefault();
+            isDragging = true;
+            if (e.touches.length === 1) {
+                dragMoved = false;
+                prevPinchDist = 0;
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                dragMoved = true;
+                prevPinchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        }, { passive: false });
+
+        renderer.domElement.addEventListener('touchmove', (e) => {
+            if (!isDragging || isDiving) return;
+            e.preventDefault();
+            if (e.touches.length === 1 && prevPinchDist === 0) {
+                const dx = e.touches[0].clientX - prevMouse.x;
+                const dy = e.touches[0].clientY - prevMouse.y;
+                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragMoved = true;
+                const sensitivity = Math.max(0.0018, (camera.position.z - 1.0) * 0.0028);
+                globeGroup.rotation.y += dx * sensitivity;
+                globeGroup.rotation.x = Math.max(-1.35, Math.min(1.35, globeGroup.rotation.x + dy * sensitivity));
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                if (prevPinchDist > 0) {
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    applyZoomAt(midX, midY, (prevPinchDist - dist) * 0.012);
+                }
+                prevPinchDist = dist;
+            }
+        }, { passive: false });
+
+        renderer.domElement.addEventListener('touchend', (e) => {
+            if (e.touches.length === 1) {
+                prevPinchDist = 0;
+                dragMoved = true;
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                return;
+            }
+            if (e.touches.length === 0) {
+                if (isDragging && !dragMoved && e.changedTouches.length > 0) {
+                    pickPointAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                }
+                isDragging = false;
+                prevPinchDist = 0;
+            }
+        }, { passive: false });
 
         function easeInOutQuart(t) {
             return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
@@ -810,6 +886,21 @@ if (isset($_GET['w'])) {
             sphereMat.needsUpdate = true;
 
             triggerCharacterize();
+        }
+
+        function switchToDualView() {
+            const lat = parseFloat(document.getElementById('input-lat').value) || 0;
+            const lon = parseFloat(document.getElementById('input-lon').value) || 0;
+            const weights = getWeightsVector().map(w => w.toFixed(2)).join(',');
+            const caves = document.getElementById('require-caves').checked ? '1' : '0';
+            const params = new URLSearchParams({
+                body: currentBody,
+                lat: lat.toFixed(2),
+                lon: lon.toFixed(2),
+                w: weights,
+                caves: caves
+            });
+            window.location.href = `dual.php?${params.toString()}`;
         }
 
         function openResultsPage() {

@@ -165,30 +165,45 @@ $backQuery = http_build_query([
         const pinsGroup = new THREE.Group();
         globeGroup.add(pinsGroup);
 
+        const earthBaseImg = new Image();
+        earthBaseImg.src = 'images/earth_photo.jpg';
+        earthBaseImg.onload = () => {
+            if (typeof sphereMat !== 'undefined') {
+                sphereMat.map = generateEarthHeatmapTexture(currentCandidates);
+                sphereMat.needsUpdate = true;
+            }
+        };
+
         function generateEarthHeatmapTexture(candidates = []) {
             const c = document.createElement('canvas');
-            c.width = 1024;
-            c.height = 512;
+            c.width = 2048;
+            c.height = 1024;
             const ctx = c.getContext('2d');
 
-            ctx.fillStyle = '#091526';
-            ctx.fillRect(0, 0, 1024, 512);
-
-            ctx.strokeStyle = 'rgba(96, 165, 250, 0.14)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < 1024; x += 64) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
+            if (earthBaseImg.complete && earthBaseImg.naturalWidth > 0) {
+                ctx.drawImage(earthBaseImg, 0, 0, c.width, c.height);
+                ctx.fillStyle = 'rgba(5, 10, 20, 0.18)';
+                ctx.fillRect(0, 0, c.width, c.height);
+            } else {
+                ctx.fillStyle = '#091526';
+                ctx.fillRect(0, 0, c.width, c.height);
             }
-            for (let y = 0; y < 512; y += 64) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(96, 165, 250, 0.12)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < c.width; x += 128) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke();
+            }
+            for (let y = 0; y < c.height; y += 128) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.width, y); ctx.stroke();
             }
 
             candidates.forEach(cand => {
-                const px = ((cand.lon + 180) / 360) * 1024;
-                const py = ((90 - cand.lat) / 180) * 512;
-                const radius = 55 * cand.score;
-                const g = ctx.createRadialGradient(px, py, 2, px, py, radius);
-                g.addColorStop(0, `rgba(16, 185, 129, ${cand.score * 0.95})`);
+                const px = ((cand.lon + 180) / 360) * c.width;
+                const py = ((90 - cand.lat) / 180) * c.height;
+                const radius = 110 * cand.score;
+                const g = ctx.createRadialGradient(px, py, 4, px, py, radius);
+                g.addColorStop(0, `rgba(16, 185, 129, ${cand.score * 0.9})`);
                 g.addColorStop(0.5, `rgba(96, 165, 250, ${cand.score * 0.45})`);
                 g.addColorStop(1, 'rgba(96, 165, 250, 0)');
                 ctx.fillStyle = g;
@@ -236,14 +251,15 @@ $backQuery = http_build_query([
         let targetCamY = 0;
         let targetCamZ = 3.1;
 
-        renderer.domElement.addEventListener('wheel', (e) => {
-            e.preventDefault();
+        renderer.domElement.style.touchAction = 'none';
+
+        function applyZoomAt(clientX, clientY, deltaZ) {
             const rect = renderer.domElement.getBoundingClientRect();
-            const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+            const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
 
             const oldZ = targetCamZ;
-            const newZ = Math.max(1.45, Math.min(4.6, oldZ + e.deltaY * 0.0022));
+            const newZ = Math.max(1.45, Math.min(4.6, oldZ + deltaZ));
 
             const vFov = (camera.fov * Math.PI) / 180;
             const halfHOld = oldZ * Math.tan(vFov / 2);
@@ -258,6 +274,11 @@ $backQuery = http_build_query([
             const maxPan = Math.max(0, (3.1 - newZ) * 0.65);
             targetCamX = Math.max(-maxPan, Math.min(maxPan, worldX - ndcX * halfWNew));
             targetCamY = Math.max(-maxPan, Math.min(maxPan, worldY - ndcY * halfHNew));
+        }
+
+        renderer.domElement.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            applyZoomAt(e.clientX, e.clientY, e.deltaY * 0.0022);
         }, { passive: false });
 
         renderer.domElement.addEventListener('mousedown', (e) => {
@@ -278,6 +299,58 @@ $backQuery = http_build_query([
         window.addEventListener('mouseup', () => {
             isDragging = false;
         });
+
+        // Obsługa dotyku dla Ziemi (obrót 1 palcem, pinch-to-zoom 2 palcami)
+        let prevPinchDist = 0;
+        renderer.domElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            if (e.touches.length === 1) {
+                prevPinchDist = 0;
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                prevPinchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        }, { passive: false });
+
+        renderer.domElement.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isDragging) return;
+            if (e.touches.length === 1 && prevPinchDist === 0) {
+                const dx = e.touches[0].clientX - prevMouse.x;
+                const dy = e.touches[0].clientY - prevMouse.y;
+                const sensitivity = Math.max(0.0018, (camera.position.z - 1.0) * 0.0028);
+                globeGroup.rotation.y += dx * sensitivity;
+                globeGroup.rotation.x = Math.max(-1.35, Math.min(1.35, globeGroup.rotation.x + dy * sensitivity));
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                if (prevPinchDist > 0) {
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    applyZoomAt(midX, midY, (prevPinchDist - dist) * 0.012);
+                }
+                prevPinchDist = dist;
+            }
+        }, { passive: false });
+
+        renderer.domElement.addEventListener('touchend', (e) => {
+            if (e.touches.length === 1) {
+                prevPinchDist = 0;
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                return;
+            }
+            if (e.touches.length === 0) {
+                isDragging = false;
+                prevPinchDist = 0;
+            }
+        }, { passive: false });
 
         function animateScene() {
             if (!isDragging) {
