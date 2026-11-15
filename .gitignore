@@ -1,9 +1,8 @@
-# Wygenerowane dane binarne i mocki w wolumenie /data
-data/**/*.npy
-data/**/*.parquet
-data/**/*.tif
-data/**/*.tiff
-data/**/UWAGA_DANE_MOCK_HEURYSTYKA.txt
+# Surowe mapy binarne Marsa i Księżyca (3+ GB, pobierane skryptami fetch_*.sh)
+data/mars/*
+!data/mars/.gitkeep
+data/moon/*
+!data/moon/.gitkeep
 
 # Certyfikaty SSL i dynamiczne konfiguracje Nginx
 certbot/
