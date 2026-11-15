@@ -195,7 +195,7 @@
                 float diff = max(dot(vNormal, lightDir), 0.0);
                 float terminator = smoothstep(-0.08, 0.25, dot(vNormal, lightDir));
 
-                vec3 color = albedo * (0.08 + diff * 0.95 * terminator);
+                vec3 color = albedo * (0.08 + diff * 0.86 * terminator);
 
                 gl_FragColor = vec4(color, 1.0);
             }

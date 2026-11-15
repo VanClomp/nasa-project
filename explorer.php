@@ -305,22 +305,17 @@ if (isset($_GET['w'])) {
     <!-- GÓRNY PASEK NAWIGACYJNY -->
     <header class="navbar">
         <div class="nav-left">
-            <a href="index.php" class="back-btn">← ZMIEŃ CEL (KAFELKI)</a>
-            <span class="app-title">MISSION CONTROL // KONFIGURACJA CELU</span>
+            <a href="index.php" class="back-btn">← Powrót</a>
+            <span class="app-title">Planetary Analog Finder</span>
         </div>
 
         <div class="mode-switcher">
             <button class="mode-btn <?php echo $isMoon ? 'active' : ''; ?>" id="btn-mode-moon" onclick="switchCelestialBody('moon')">
-                01 // KSIĘŻYC
+                Księżyc
             </button>
             <button class="mode-btn <?php echo !$isMoon ? 'active' : ''; ?>" id="btn-mode-mars" onclick="switchCelestialBody('mars')">
-                02 // MARS
+                Mars
             </button>
-        </div>
-
-        <div class="nav-telemetry">
-            <span id="api-latency">CHARAKTERYZATOR: GOTOWY</span>
-            <span class="cpp-badge">9 CECH (K_FEATURES)</span>
         </div>
     </header>
 
@@ -331,13 +326,12 @@ if (isset($_GET['w'])) {
         <aside class="hud-panel">
             <div class="panel-header">
                 <div class="panel-title">
-                    <span>◈ PARAMETRY I WAGI (K_FEATURES)</span>
+                    <span>Parametry i wagi</span>
                 </div>
-                <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);">9 WYMIARÓW</span>
             </div>
 
             <div class="panel-body">
-                <span class="section-label">1. Słynne lokalizacje referencyjne NASA:</span>
+                <span class="section-label">Lokalizacje referencyjne</span>
                 <div class="presets-list" id="presets-container">
                     <?php foreach ($presets[$selectedBody] as $idx => $p): ?>
                         <button class="preset-chip <?php echo $idx === 0 ? 'active' : ''; ?>"
@@ -348,20 +342,20 @@ if (isset($_GET['w'])) {
                     <?php endforeach; ?>
                 </div>
 
-                <span class="section-label">2. Współrzędne docelowe (Kliknij globus lub wpisz):</span>
+                <span class="section-label">Współrzędne</span>
                 <div class="coords-row">
                     <div class="hud-input-group">
-                        <label>LATITUDE (°)</label>
+                        <label>LAT (°)</label>
                         <input type="number" id="input-lat" step="0.1" min="-90" max="90" value="<?php echo $initialLat; ?>">
                     </div>
                     <div class="hud-input-group">
-                        <label>LONGITUDE (°)</label>
+                        <label>LON (°)</label>
                         <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
-                    <button class="scan-btn" onclick="triggerCharacterize()">SKANUJ</button>
+                    <button class="scan-btn" onclick="triggerCharacterize()">Pobierz</button>
                 </div>
 
-                <span class="section-label">3. Wektor wag dopasowania [0.0 – 1.0]:</span>
+                <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
                 <div id="sliders-container">
                     <?php foreach ($kFeatures as $f): ?>
                         <?php $wVal = $initialWeights[$f['idx']] ?? $f['default_w']; ?>
@@ -401,11 +395,7 @@ if (isset($_GET['w'])) {
             <div class="globe-viewport">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill" id="globe-status-pill">
-                        TRYB GLOBUSU: <strong style="color:var(--accent-primary);" id="globe-mode-label"><?php echo strtoupper($selectedBody); ?></strong>
-                        (Kliknij na globus, aby pobrać profil z COG)
-                    </div>
-                    <div class="hud-pill">
-                        KROK 1/2: WYBÓR PUNKTU I WAG
+                        Kliknij powierzchnię, aby wybrać punkt · Scroll, aby przybliżyć
                     </div>
                 </div>
                 <div id="main-globe-canvas"></div>
@@ -415,23 +405,23 @@ if (isset($_GET['w'])) {
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        ODCZYT Z CHARAKTERYZATORA (TARGET PROFILE // <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span>)
+                        Dane lokalizacji · <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span>
                     </span>
-                    <span style="font-family:'JetBrains Mono'; font-size:0.7rem; color:var(--cyan);" id="readout-skylight">
-                        NAJBLIŻSZY SKYLIGHT / LAVA TUBE: -- km
+                    <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
+                        Najbliższa jaskinia: -- km
                     </span>
                 </div>
                 <div class="readout-grid">
                     <div class="readout-box"><span>TEMP. ŚREDNIA</span><strong id="raw-temp_mean">-- °C</strong></div>
                     <div class="readout-box"><span>AMPLITUDA DOBOWA</span><strong id="raw-temp_diurnal_amp">-- °C</strong></div>
                     <div class="readout-box"><span>BEZWŁADNOŚĆ CIEPLNA</span><strong id="raw-thermal_inertia">-- TIU</strong></div>
-                    <div class="readout-box"><span>CHROPOWATOŚĆ SAR</span><strong id="raw-surface_roughness">--</strong></div>
-                    <div class="readout-box"><span>LÓD / WILGOTNOŚĆ</span><strong id="raw-soil_moisture">-- %</strong></div>
+                    <div class="readout-box"><span>CHROPOWATOŚĆ</span><strong id="raw-surface_roughness">--</strong></div>
+                    <div class="readout-box"><span>WILGOTNOŚĆ / LÓD</span><strong id="raw-soil_moisture">-- %</strong></div>
                     <div class="readout-box"><span>ZAPYLENIE (AOD)</span><strong id="raw-dust_aerosol">--</strong></div>
                     <div class="readout-box"><span>MAKS. KĄT SŁOŃCA</span><strong id="raw-solar_elevation_max">-- °</strong></div>
                     <div class="readout-box"><span>PROMIENIOWANIE</span><strong id="raw-radiation_proxy">--</strong></div>
                     <div class="readout-box"><span>NACHYLENIE STOKU</span><strong id="raw-slope_deg">-- °</strong></div>
-                    <div class="readout-box"><span>STATUS COG</span><strong style="color:var(--emerald);">256x256 OK</strong></div>
+                    <div class="readout-box"><span>STATUS</span><strong style="color:var(--emerald);">Gotowy</strong></div>
                 </div>
             </div>
         </section>
@@ -525,20 +515,32 @@ if (isset($_GET['w'])) {
         const sphereGeo = new THREE.SphereGeometry(1.12, 64, 64);
         const sphereMat = new THREE.MeshStandardMaterial({
             map: generateBodyTexture(currentBody),
-            roughness: 0.78,
-            metalness: 0.15
+            roughness: 0.96,
+            metalness: 0.0
         });
         const globeMesh = new THREE.Mesh(sphereGeo, sphereMat);
         globeGroup.add(globeMesh);
 
-        // Znacznik wybranego punktu (celownik laserowy 3D)
-        const markerGeo = new THREE.RingGeometry(0.03, 0.055, 32);
-        const markerMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide });
-        const targetMarker = new THREE.Mesh(markerGeo, markerMat);
+        // Subtelna, ale wyraźna pinezka powierzchniowa (kropka + cienki pierścień)
+        const targetMarker = new THREE.Group();
+        const markerDotGeo = new THREE.CircleGeometry(0.013, 24);
+        const markerDotMat = new THREE.MeshBasicMaterial({ color: 0xf4f4f6, side: THREE.DoubleSide });
+        const markerDot = new THREE.Mesh(markerDotGeo, markerDotMat);
+        targetMarker.add(markerDot);
+
+        const markerRingGeo = new THREE.RingGeometry(0.028, 0.034, 36);
+        const markerRingMat = new THREE.MeshBasicMaterial({
+            color: currentBody === 'moon' ? 0x60a5fa : 0xf97316,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.95
+        });
+        const markerRing = new THREE.Mesh(markerRingGeo, markerRingMat);
+        targetMarker.add(markerRing);
         globeGroup.add(targetMarker);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.05);
         sunLight.position.set(5, 3, 4);
         scene.add(sunLight);
 
@@ -562,36 +564,83 @@ if (isset($_GET['w'])) {
         }
 
         function updateMarkerPosition(lat, lon) {
-            const pos = latLonToVector3(lat, lon, 1.135);
+            const pos = latLonToVector3(lat, lon, 1.124);
             targetMarker.position.copy(pos);
-            targetMarker.lookAt(new THREE.Vector3(0, 0, 0));
+            targetMarker.quaternion.setFromUnitVectors(
+                new THREE.Vector3(0, 0, 1),
+                pos.clone().normalize()
+            );
         }
 
-        // Obracanie globusa myszką + Raycasting kliknięcia punktu (lat, lon)
+        // Obracanie globusa myszką, płynny zoom w stronę kursora (jak Google Maps) + Raycasting kliknięcia
         let isDragging = false;
         let dragMoved = false;
         let prevMouse = { x: 0, y: 0 };
+        let targetCamX = 0;
+        let targetCamY = 0;
+        let targetCamZ = 3.1;
+        let isDiving = false;
+        let diveStart = 0;
+        let diveStartCamX = 0;
+        let diveStartCamY = 0;
+        let diveStartZ = 3.1;
+        let diveStartPosX = 0;
+        let diveStartPosY = 0;
+        let diveStartRotX = 0;
+        let diveStartRotY = 0;
+        let diveTargetRotX = 0;
+        let diveTargetRotY = 0;
+        let diveUrl = '';
+
         const raycaster = new THREE.Raycaster();
         const mouseVec = new THREE.Vector2();
 
+        renderer.domElement.addEventListener('wheel', (e) => {
+            if (isDiving) return;
+            e.preventDefault();
+
+            const rect = renderer.domElement.getBoundingClientRect();
+            const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            const oldZ = targetCamZ;
+            const newZ = Math.max(1.42, Math.min(4.6, oldZ + e.deltaY * 0.0022));
+
+            const vFov = (camera.fov * Math.PI) / 180;
+            const halfHOld = oldZ * Math.tan(vFov / 2);
+            const halfWOld = halfHOld * camera.aspect;
+            const worldX = targetCamX + ndcX * halfWOld;
+            const worldY = targetCamY + ndcY * halfHOld;
+
+            const halfHNew = newZ * Math.tan(vFov / 2);
+            const halfWNew = halfHNew * camera.aspect;
+
+            targetCamZ = newZ;
+            const maxPan = Math.max(0, (3.1 - newZ) * 0.65);
+            targetCamX = Math.max(-maxPan, Math.min(maxPan, worldX - ndcX * halfWNew));
+            targetCamY = Math.max(-maxPan, Math.min(maxPan, worldY - ndcY * halfHNew));
+        }, { passive: false });
+
         renderer.domElement.addEventListener('mousedown', (e) => {
+            if (isDiving) return;
             isDragging = true;
             dragMoved = false;
             prevMouse = { x: e.clientX, y: e.clientY };
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+            if (!isDragging || isDiving) return;
             const dx = e.clientX - prevMouse.x;
             const dy = e.clientY - prevMouse.y;
             if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
-            globeGroup.rotation.y += dx * 0.006;
-            globeGroup.rotation.x = Math.max(-1.2, Math.min(1.2, globeGroup.rotation.x + dy * 0.006));
+            const sensitivity = Math.max(0.0018, (camera.position.z - 1.0) * 0.0028);
+            globeGroup.rotation.y += dx * sensitivity;
+            globeGroup.rotation.x = Math.max(-1.35, Math.min(1.35, globeGroup.rotation.x + dy * sensitivity));
             prevMouse = { x: e.clientX, y: e.clientY };
         });
 
         window.addEventListener('mouseup', (e) => {
-            if (isDragging && !dragMoved && globeViewMode !== 'earth') {
+            if (isDragging && !dragMoved && !isDiving && globeViewMode !== 'earth') {
                 // Kliknięcie punktu na Księżycu/Marsie -> przeliczenie na (lat, lon)
                 const rect = renderer.domElement.getBoundingClientRect();
                 mouseVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -611,14 +660,50 @@ if (isset($_GET['w'])) {
             isDragging = false;
         });
 
-        function animateScene() {
-            if (!isDragging) {
-                globeGroup.rotation.y += 0.0012;
+        function easeInOutQuart(t) {
+            return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+        }
+
+        function animateScene(now) {
+            if (isDiving) {
+                const elapsed = now - diveStart;
+                const progress = Math.min(1, elapsed / 1250);
+                const eased = easeInOutQuart(progress);
+
+                camera.position.x = diveStartCamX * (1 - eased);
+                camera.position.y = diveStartCamY * (1 - eased);
+                camera.position.z = diveStartZ + (1.16 - diveStartZ) * eased;
+                globeGroup.position.x = diveStartPosX * (1 - eased);
+                globeGroup.position.y = diveStartPosY * (1 - eased);
+                globeGroup.rotation.x = diveStartRotX + (diveTargetRotX - diveStartRotX) * eased;
+                globeGroup.rotation.y = diveStartRotY + (diveTargetRotY - diveStartRotY) * eased;
+
+                if (progress > 0.94) {
+                    document.body.style.transition = 'opacity 0.14s ease';
+                    document.body.style.opacity = '0';
+                }
+                if (progress >= 1) {
+                    window.location.href = diveUrl;
+                    return;
+                }
+            } else {
+                if (!isDragging) {
+                    globeGroup.rotation.y += 0.0008;
+                }
+                camera.position.x += (targetCamX - camera.position.x) * 0.08;
+                camera.position.y += (targetCamY - camera.position.y) * 0.08;
+                camera.position.z += (targetCamZ - camera.position.z) * 0.08;
             }
+            // Skalowanie pinezki proporcjonalnie do przybliżenia widoku planety
+            const markerScale = isDiving
+                ? Math.max(0.12, (camera.position.z - 1.05) / 2.05)
+                : Math.max(0.22, (camera.position.z - 1.05) / 2.05);
+            targetMarker.scale.setScalar(markerScale);
+
             renderer.render(scene, camera);
             requestAnimationFrame(animateScene);
         }
-        animateScene();
+        requestAnimationFrame(animateScene);
 
         // =========================================================================
         // 2. KOMUNIKACJA Z API (Z AUTOMATYCZNYM FALLBACKIEM DO WBUDOWANEGO PHP MOCK)
@@ -658,7 +743,6 @@ if (isset($_GET['w'])) {
 
             updateMarkerPosition(lat, lon);
             document.getElementById('readout-coords').innerText = `${lat.toFixed(1)}°, ${lon.toFixed(1)}°`;
-            document.getElementById('api-latency').innerText = 'CHARAKTERYZATOR: POBIERANIE...';
 
             const profile = await callApi('characterize', {
                 target_body: currentBody,
@@ -668,7 +752,6 @@ if (isset($_GET['w'])) {
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);
-            document.getElementById('api-latency').innerText = 'CHARAKTERYZATOR: GOTOWY';
         }
 
         function onWeightSliderChange(slider) {
@@ -688,7 +771,7 @@ if (isset($_GET['w'])) {
             document.getElementById('raw-radiation_proxy').innerText = r.radiation_proxy;
             document.getElementById('raw-slope_deg').innerText = `${r.slope_deg} °`;
             document.getElementById('readout-skylight').innerText =
-                `NAJBLIŻSZY SKYLIGHT / LAVA TUBE: ${profile.nearest_skylight_km} km`;
+                `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
         }
 
         function selectPreset(lat, lon, btnEl) {
@@ -706,7 +789,6 @@ if (isset($_GET['w'])) {
 
             document.getElementById('btn-mode-moon').classList.toggle('active', body === 'moon');
             document.getElementById('btn-mode-mars').classList.toggle('active', body === 'mars');
-            document.getElementById('globe-mode-label').innerText = body.toUpperCase();
 
             const pList = PRESETS[body];
             const pContainer = document.getElementById('presets-container');
@@ -723,6 +805,7 @@ if (isset($_GET['w'])) {
 
             pinsGroup.clear();
             targetMarker.visible = true;
+            markerRingMat.color.setHex(body === 'moon' ? 0x60a5fa : 0xf97316);
             sphereMat.map = generateBodyTexture(body);
             sphereMat.needsUpdate = true;
 
@@ -730,6 +813,7 @@ if (isset($_GET['w'])) {
         }
 
         function openResultsPage() {
+            if (isDiving) return;
             const lat = parseFloat(document.getElementById('input-lat').value) || 0;
             const lon = parseFloat(document.getElementById('input-lon').value) || 0;
             const weights = getWeightsVector().map(w => w.toFixed(2)).join(',');
@@ -742,7 +826,105 @@ if (isset($_GET['w'])) {
                 w: weights,
                 caves: caves
             });
-            window.location.href = `results.php?${params.toString()}`;
+            diveUrl = `results.php?${params.toString()}`;
+
+            // Prefetch results.php w trakcie animacji, aby zminimalizować czarny ekran przy przejściu
+            const prefetch = document.createElement('link');
+            prefetch.rel = 'prefetch';
+            prefetch.href = diveUrl;
+            document.head.appendChild(prefetch);
+
+            // Oblicz docelowy obrót planety, aby wybrane (lat, lon) ustawiło się na wprost kamery
+            const pt = latLonToVector3(lat, lon, 1.0);
+            const desiredRotY = Math.atan2(-pt.x, pt.z);
+            const horiz = Math.sqrt(pt.x * pt.x + pt.z * pt.z);
+            const desiredRotX = Math.atan2(pt.y, horiz);
+
+            let dy = (desiredRotY - globeGroup.rotation.y) % (Math.PI * 2);
+            if (dy > Math.PI) dy -= Math.PI * 2;
+            if (dy < -Math.PI) dy += Math.PI * 2;
+
+            // Rozszerz viewport planety na cały ekran (100vw x 100vh) bez przeskoku pozycji ani rozmiaru
+            const viewport = document.querySelector('.globe-viewport');
+            const rect = viewport.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            diveStart = performance.now();
+            diveStartCamX = camera.position.x;
+            diveStartCamY = camera.position.y;
+            diveStartZ = camera.position.z * (winH / rect.height);
+            diveStartRotX = globeGroup.rotation.x;
+            diveStartRotY = globeGroup.rotation.y;
+            diveTargetRotX = desiredRotX;
+            diveTargetRotY = globeGroup.rotation.y + dy;
+
+            const dxPx = (rect.left + rect.width / 2) - (winW / 2);
+            const dyPx = -((rect.top + rect.height / 2) - (winH / 2));
+            const vFov = (camera.fov * Math.PI) / 180;
+            const worldPerPx = (2 * diveStartZ * Math.tan(vFov / 2)) / winH;
+
+            diveStartPosX = dxPx * worldPerPx;
+            diveStartPosY = dyPx * worldPerPx;
+            camera.position.z = diveStartZ;
+            globeGroup.position.set(diveStartPosX, diveStartPosY, 0);
+
+            // Zapisz aktualne pozycje paneli zanim .globe-viewport przejdzie na position: fixed,
+            // żeby żaden kontener nie przeskoczył w układzie strony
+            const navbar = document.querySelector('.navbar');
+            const leftPanel = document.querySelector('aside.hud-panel');
+            const bottomBar = document.querySelector('.target-readout-bar');
+            const hudOverlay = document.querySelector('.globe-hud-overlay');
+
+            [leftPanel, bottomBar].forEach(el => {
+                if (!el) return;
+                const r = el.getBoundingClientRect();
+                el.style.position = 'fixed';
+                el.style.top = `${r.top}px`;
+                el.style.left = `${r.left}px`;
+                el.style.width = `${r.width}px`;
+                el.style.height = `${r.height}px`;
+                el.style.zIndex = '25';
+            });
+            if (navbar) navbar.style.zIndex = '30';
+
+            viewport.style.position = 'fixed';
+            viewport.style.inset = '0';
+            viewport.style.width = '100vw';
+            viewport.style.height = '100vh';
+            viewport.style.zIndex = '5';
+            resizeGlobe();
+
+            isDiving = true;
+
+            // Płynne rozsunięcie kontenerów poza krawędzie ekranu (w następnej klatce)
+            requestAnimationFrame(() => {
+                const ease = 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease';
+                if (navbar) {
+                    navbar.style.transition = ease;
+                    navbar.style.transform = 'translateY(-110%)';
+                    navbar.style.opacity = '0';
+                    navbar.style.pointerEvents = 'none';
+                }
+                if (bottomBar) {
+                    bottomBar.style.transition = ease;
+                    bottomBar.style.transform = 'translateY(140%)';
+                    bottomBar.style.opacity = '0';
+                    bottomBar.style.pointerEvents = 'none';
+                }
+                if (leftPanel) {
+                    leftPanel.style.transition = ease;
+                    leftPanel.style.transform = 'translateX(-110%)';
+                    leftPanel.style.opacity = '0';
+                    leftPanel.style.pointerEvents = 'none';
+                }
+                if (hudOverlay) {
+                    hudOverlay.style.transition = ease;
+                    hudOverlay.style.transform = 'translateY(-20px)';
+                    hudOverlay.style.opacity = '0';
+                    hudOverlay.style.pointerEvents = 'none';
+                }
+            });
         }
 
         // Start aplikacji

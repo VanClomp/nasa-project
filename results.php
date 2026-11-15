@@ -52,15 +52,15 @@ $backQuery = http_build_query([
     <!-- GÓRNY PASEK NAWIGACYJNY -->
     <header class="navbar">
         <div class="nav-left">
-            <a href="explorer.php?<?php echo htmlspecialchars($backQuery); ?>" class="back-btn">← WRÓĆ DO KONFIGURACJI</a>
-            <a href="index.php" class="back-btn">ZMIEŃ CEL</a>
-            <span class="app-title">WYNIKI WYSZUKIWANIA // ANALOGI NA ZIEMI</span>
+            <a href="explorer.php?<?php echo htmlspecialchars($backQuery); ?>" class="back-btn">← Konfiguracja</a>
+            <a href="index.php" class="back-btn">Zmień planetę</a>
+            <span class="app-title">Wyniki analizy</span>
         </div>
 
         <div class="nav-telemetry">
-            <span id="api-latency">CZAS SZUKACZA: -- ms</span>
+            <span id="api-latency">-- ms</span>
             <span class="cpp-badge" id="target-summary-badge">
-                <?php echo strtoupper($selectedBody); ?> · <?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°
+                <?php echo $selectedBody === 'moon' ? 'Księżyc' : 'Mars'; ?> · <?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°
             </span>
         </div>
     </header>
@@ -73,10 +73,10 @@ $backQuery = http_build_query([
             <div class="globe-viewport">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill">
-                        ZIEMIA // <strong style="color:var(--emerald);">HEATMAPA TOP ANALOGÓW</strong>
+                        Ziemia — mapa dopasowania
                     </div>
                     <div class="hud-pill">
-                        NAJLEPSZY MIESIĄC GLOBALNIE: <strong style="color:var(--emerald);" id="best-month-badge">--</strong>
+                        Najlepszy okres: <strong style="color:var(--emerald);" id="best-month-badge">--</strong>
                     </div>
                 </div>
                 <div id="main-globe-canvas"></div>
@@ -85,10 +85,10 @@ $backQuery = http_build_query([
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        PROFIL CELU (<?php echo strtoupper($selectedBody); ?> // <?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°)
+                        Profil celu · <?php echo $selectedBody === 'moon' ? 'Księżyc' : 'Mars'; ?> (<?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°)
                     </span>
-                    <span style="font-family:'JetBrains Mono'; font-size:0.7rem; color:var(--cyan);" id="readout-skylight">
-                        NAJBLIŻSZY SKYLIGHT / LAVA TUBE: -- km
+                    <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
+                        Najbliższa jaskinia: -- km
                     </span>
                 </div>
                 <div class="readout-grid">
@@ -109,22 +109,22 @@ $backQuery = http_build_query([
         <!-- PRAWA KOLUMNA: RANKING ANALOGÓW NA ZIEMI + WYKRESY PORÓWNAWCZE -->
         <aside class="hud-panel">
             <div class="panel-header">
-                <div class="panel-title" style="color:var(--emerald);">
-                    <span>◉ TOP ANALOGI NA ZIEMI (SZUKACZ)</span>
+                <div class="panel-title">
+                    <span>Najlepsze analogi na Ziemi</span>
                 </div>
-                <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--emerald);" id="candidates-count">ŁADOWANIE...</span>
+                <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--emerald);" id="candidates-count">Ładowanie...</span>
             </div>
 
             <div class="panel-body">
                 <div id="candidates-list"></div>
 
                 <div class="charts-box">
-                    <span class="section-label">PORÓWNANIE PROFILU CECH (CEL vs ZIEMIA):</span>
+                    <span class="section-label">Porównanie profilu cech</span>
                     <div class="chart-wrap">
                         <canvas id="radar-chart" height="190"></canvas>
                     </div>
 
-                    <span class="section-label">KLIMATOGRAM 12-MIESIĘCZNY WYBRANEGO ANALOGU:</span>
+                    <span class="section-label">Klimatogram 12-miesięczny</span>
                     <div class="chart-wrap">
                         <canvas id="climatogram-chart" height="155"></canvas>
                     </div>
@@ -154,7 +154,7 @@ $backQuery = http_build_query([
         const globeContainer = document.getElementById('main-globe-canvas');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-        camera.position.z = 3.1;
+        camera.position.z = 1.95; // Płynne oddalenie na starcie (efekt wyjścia z podejścia)
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         globeContainer.appendChild(renderer.domElement);
@@ -232,6 +232,33 @@ $backQuery = http_build_query([
 
         let isDragging = false;
         let prevMouse = { x: 0, y: 0 };
+        let targetCamX = 0;
+        let targetCamY = 0;
+        let targetCamZ = 3.1;
+
+        renderer.domElement.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = renderer.domElement.getBoundingClientRect();
+            const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            const oldZ = targetCamZ;
+            const newZ = Math.max(1.45, Math.min(4.6, oldZ + e.deltaY * 0.0022));
+
+            const vFov = (camera.fov * Math.PI) / 180;
+            const halfHOld = oldZ * Math.tan(vFov / 2);
+            const halfWOld = halfHOld * camera.aspect;
+            const worldX = targetCamX + ndcX * halfWOld;
+            const worldY = targetCamY + ndcY * halfHOld;
+
+            const halfHNew = newZ * Math.tan(vFov / 2);
+            const halfWNew = halfHNew * camera.aspect;
+
+            targetCamZ = newZ;
+            const maxPan = Math.max(0, (3.1 - newZ) * 0.65);
+            targetCamX = Math.max(-maxPan, Math.min(maxPan, worldX - ndcX * halfWNew));
+            targetCamY = Math.max(-maxPan, Math.min(maxPan, worldY - ndcY * halfHNew));
+        }, { passive: false });
 
         renderer.domElement.addEventListener('mousedown', (e) => {
             isDragging = true;
@@ -242,8 +269,9 @@ $backQuery = http_build_query([
             if (!isDragging) return;
             const dx = e.clientX - prevMouse.x;
             const dy = e.clientY - prevMouse.y;
-            globeGroup.rotation.y += dx * 0.006;
-            globeGroup.rotation.x = Math.max(-1.2, Math.min(1.2, globeGroup.rotation.x + dy * 0.006));
+            const sensitivity = Math.max(0.0018, (camera.position.z - 1.0) * 0.0028);
+            globeGroup.rotation.y += dx * sensitivity;
+            globeGroup.rotation.x = Math.max(-1.35, Math.min(1.35, globeGroup.rotation.x + dy * sensitivity));
             prevMouse = { x: e.clientX, y: e.clientY };
         });
 
@@ -255,6 +283,13 @@ $backQuery = http_build_query([
             if (!isDragging) {
                 globeGroup.rotation.y += 0.0012;
             }
+            camera.position.x += (targetCamX - camera.position.x) * 0.065;
+            camera.position.y += (targetCamY - camera.position.y) * 0.065;
+            camera.position.z += (targetCamZ - camera.position.z) * 0.065;
+
+            const pinScale = Math.max(0.24, (camera.position.z - 1.05) / 2.05);
+            pinsGroup.children.forEach(pin => pin.scale.setScalar(pinScale));
+
             renderer.render(scene, camera);
             requestAnimationFrame(animateScene);
         }
@@ -288,14 +323,36 @@ $backQuery = http_build_query([
 
             pinsGroup.clear();
             currentCandidates.forEach((c, idx) => {
-                const pos = latLonToVector3(c.lat, c.lon, 1.14);
-                const pinGeo = new THREE.SphereGeometry(idx === selectedCandidateIndex ? 0.036 : 0.022, 16, 16);
-                const pinMat = new THREE.MeshBasicMaterial({
-                    color: idx === selectedCandidateIndex ? 0x10b981 : 0x60a5fa
+                const pos = latLonToVector3(c.lat, c.lon, 1.125);
+                const isSelected = (idx === selectedCandidateIndex);
+                const pinGroup = new THREE.Group();
+                pinGroup.position.copy(pos);
+                pinGroup.quaternion.setFromUnitVectors(
+                    new THREE.Vector3(0, 0, 1),
+                    pos.clone().normalize()
+                );
+
+                const dotGeo = new THREE.CircleGeometry(isSelected ? 0.015 : 0.010, 24);
+                const dotMat = new THREE.MeshBasicMaterial({
+                    color: isSelected ? 0x10b981 : 0x60a5fa,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: isSelected ? 1.0 : 0.85
                 });
-                const pin = new THREE.Mesh(pinGeo, pinMat);
-                pin.position.copy(pos);
-                pinsGroup.add(pin);
+                pinGroup.add(new THREE.Mesh(dotGeo, dotMat));
+
+                if (isSelected) {
+                    const ringGeo = new THREE.RingGeometry(0.028, 0.034, 32);
+                    const ringMat = new THREE.MeshBasicMaterial({
+                        color: 0x10b981,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.95
+                    });
+                    pinGroup.add(new THREE.Mesh(ringGeo, ringMat));
+                }
+
+                pinsGroup.add(pinGroup);
             });
         }
 
@@ -311,7 +368,7 @@ $backQuery = http_build_query([
             document.getElementById('raw-radiation_proxy').innerText = r.radiation_proxy;
             document.getElementById('raw-slope_deg').innerText = `${r.slope_deg} °`;
             document.getElementById('readout-skylight').innerText =
-                `NAJBLIŻSZY SKYLIGHT / LAVA TUBE: ${profile.nearest_skylight_km} km`;
+                `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
         }
 
         function renderCandidatesList() {
@@ -461,7 +518,7 @@ $backQuery = http_build_query([
                 top_k: 100
             });
 
-            document.getElementById('api-latency').innerText = `CZAS SZUKACZA: ${searchRes.execution_time_ms} ms`;
+            document.getElementById('api-latency').innerText = `${searchRes.execution_time_ms} ms`;
             const bestM = searchRes.best_global_month || 7;
             document.getElementById('best-month-badge').innerText = `${MONTH_NAMES[bestM - 1]} (M${bestM})`;
 
