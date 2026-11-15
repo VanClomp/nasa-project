@@ -273,6 +273,17 @@ $presets = [
         ['name' => 'Planum Australe (Biegun Pd.)',   'lat' => -83.5, 'lon' => 160.0,  'desc' => 'Czapa lodowa CO₂/H₂O i ekstremalnie niskie temperatury'],
     ]
 ];
+
+$initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
+$initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
+$initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
+$initialWeights = [];
+if (isset($_GET['w'])) {
+    $parts = explode(',', $_GET['w']);
+    for ($i = 0; $i < 9; $i++) {
+        $initialWeights[$i] = isset($parts[$i]) ? max(0.0, min(1.0, floatval($parts[$i]))) : $kFeatures[$i]['default_w'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pl" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
@@ -283,9 +294,8 @@ $presets = [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Three.js & Chart.js -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -296,7 +306,7 @@ $presets = [
     <header class="navbar">
         <div class="nav-left">
             <a href="index.php" class="back-btn">← ZMIEŃ CEL (KAFELKI)</a>
-            <span class="app-title">MISSION CONTROL // ANALOG FINDER</span>
+            <span class="app-title">MISSION CONTROL // KONFIGURACJA CELU</span>
         </div>
 
         <div class="mode-switcher">
@@ -306,21 +316,18 @@ $presets = [
             <button class="mode-btn <?php echo !$isMoon ? 'active' : ''; ?>" id="btn-mode-mars" onclick="switchCelestialBody('mars')">
                 02 // MARS
             </button>
-            <button class="mode-btn earth-mode" id="btn-mode-earth" onclick="switchGlobeToEarth()">
-                03 // ZIEMIA (HEATMAPA ANALOGÓW)
-            </button>
         </div>
 
         <div class="nav-telemetry">
-            <span id="api-latency">CZAS SZUKACZA: 11.4 ms</span>
-            <span class="cpp-badge">⚡ C++ / SIMD LIVE SCORER: 60 FPS</span>
+            <span id="api-latency">CHARAKTERYZATOR: GOTOWY</span>
+            <span class="cpp-badge">9 CECH (K_FEATURES)</span>
         </div>
     </header>
 
-    <!-- GŁÓWNA PRZESTRZEŃ ROBOCZA -->
-    <main class="workspace">
+    <!-- GŁÓWNA PRZESTRZEŃ ROBOCZA (2 KOLUMNY: KONFIGURACJA + GLOBUS 3D) -->
+    <main class="workspace workspace-config">
 
-        <!-- LEWA KOLUMNA: WYBÓR PUNKTU + 9 SUWAKÓW WAG (K_FEATURES) -->
+        <!-- LEWA KOLUMNA: WYBÓR PUNKTU + 9 SUWAKÓW WAG (K_FEATURES) + PRZYCISK DO WYNIKÓW -->
         <aside class="hud-panel">
             <div class="panel-header">
                 <div class="panel-title">
@@ -345,30 +352,31 @@ $presets = [
                 <div class="coords-row">
                     <div class="hud-input-group">
                         <label>LATITUDE (°)</label>
-                        <input type="number" id="input-lat" step="0.1" min="-90" max="90" value="<?php echo $presets[$selectedBody][0]['lat']; ?>">
+                        <input type="number" id="input-lat" step="0.1" min="-90" max="90" value="<?php echo $initialLat; ?>">
                     </div>
                     <div class="hud-input-group">
                         <label>LONGITUDE (°)</label>
-                        <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $presets[$selectedBody][0]['lon']; ?>">
+                        <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
-                    <button class="scan-btn" onclick="triggerCharacterizeAndSearch()">SKANUJ</button>
+                    <button class="scan-btn" onclick="triggerCharacterize()">SKANUJ</button>
                 </div>
 
                 <span class="section-label">3. Wektor wag dopasowania [0.0 – 1.0]:</span>
                 <div id="sliders-container">
                     <?php foreach ($kFeatures as $f): ?>
+                        <?php $wVal = $initialWeights[$f['idx']] ?? $f['default_w']; ?>
                         <div class="slider-item">
                             <div class="slider-top">
                                 <span class="slider-name"><?php echo htmlspecialchars($f['label']); ?></span>
                                 <span class="slider-meta" id="weight-val-<?php echo $f['idx']; ?>">
-                                    <?php echo number_format($f['default_w'], 2); ?>
+                                    <?php echo number_format($wVal, 2); ?>
                                 </span>
                             </div>
                             <input type="range"
                                    class="hud-slider weight-slider"
                                    data-idx="<?php echo $f['idx']; ?>"
                                    min="0" max="1" step="0.05"
-                                   value="<?php echo $f['default_w']; ?>"
+                                   value="<?php echo $wVal; ?>"
                                    oninput="onWeightSliderChange(this)">
                         </div>
                     <?php endforeach; ?>
@@ -376,21 +384,28 @@ $presets = [
 
                 <label class="cave-toggle">
                     <span>Wymagaj bliskości jaskiń / tuneli lawowych (&lt; 15 km)</span>
-                    <input type="checkbox" id="require-caves" onchange="triggerSearchOnly()">
+                    <input type="checkbox" id="require-caves" <?php echo $initialCaves ? 'checked' : ''; ?>>
                 </label>
+            </div>
+
+            <div class="panel-footer">
+                <button type="button" class="find-analogs-btn" onclick="openResultsPage()">
+                    <span>Znajdź analogi na Ziemi</span>
+                    <span>→</span>
+                </button>
             </div>
         </aside>
 
         <!-- ŚRODKOWA KOLUMNA: GLOBUS 3D + ODCZYT CHARAKTERYZATORA -->
         <section class="center-stage">
-            <div class="hud-panel globe-viewport">
+            <div class="globe-viewport">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill" id="globe-status-pill">
                         TRYB GLOBUSU: <strong style="color:var(--accent-primary);" id="globe-mode-label"><?php echo strtoupper($selectedBody); ?></strong>
                         (Kliknij na globus, aby pobrać profil z COG)
                     </div>
                     <div class="hud-pill">
-                        NAJLEPSZY MIESIĄC GLOBALNIE: <strong style="color:var(--emerald);" id="best-month-badge">LIPIEC (M7)</strong>
+                        KROK 1/2: WYBÓR PUNKTU I WAG
                     </div>
                 </div>
                 <div id="main-globe-canvas"></div>
@@ -400,10 +415,10 @@ $presets = [
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        ODCZYT Z CHARAKTERYZATORA (TARGET PROFILE // <span id="readout-coords">-89.9°, 0.0°</span>)
+                        ODCZYT Z CHARAKTERYZATORA (TARGET PROFILE // <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span>)
                     </span>
                     <span style="font-family:'JetBrains Mono'; font-size:0.7rem; color:var(--cyan);" id="readout-skylight">
-                        NAJBLIŻSZY SKYLIGHT / LAVA TUBE: 12.4 km
+                        NAJBLIŻSZY SKYLIGHT / LAVA TUBE: -- km
                     </span>
                 </div>
                 <div class="readout-grid">
@@ -420,32 +435,6 @@ $presets = [
                 </div>
             </div>
         </section>
-
-        <!-- PRAWA KOLUMNA: RANKING ANALOGÓW NA ZIEMI + WYKRESY PORÓWNAWCZE -->
-        <aside class="hud-panel">
-            <div class="panel-header">
-                <div class="panel-title" style="color:var(--emerald);">
-                    <span>◉ TOP ANALOGI NA ZIEMI (SZUKACZ)</span>
-                </div>
-                <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--emerald);" id="candidates-count">6 WYNIKÓW</span>
-            </div>
-
-            <div class="panel-body">
-                <div id="candidates-list"></div>
-
-                <div class="charts-box">
-                    <span class="section-label">PORÓWNANIE PROFILU CECH (CEL vs ZIEMIA):</span>
-                    <div class="chart-wrap">
-                        <canvas id="radar-chart" height="190"></canvas>
-                    </div>
-
-                    <span class="section-label">KLIMATOGRAM 12-MIESIĘCZNY WYBRANEGO ANALOGU:</span>
-                    <div class="chart-wrap">
-                        <canvas id="climatogram-chart" height="155"></canvas>
-                    </div>
-                </div>
-            </div>
-        </aside>
 
     </main>
 
@@ -481,6 +470,7 @@ $presets = [
 
         const textureLoader = new THREE.TextureLoader();
         let moonPhotoTexture = null;
+        let marsPhotoTexture = null;
 
         function generateBodyTexture(mode, candidates = []) {
             if (mode === 'moon') {
@@ -489,30 +479,19 @@ $presets = [
                 }
                 return moonPhotoTexture;
             }
+            if (mode === 'mars') {
+                if (!marsPhotoTexture) {
+                    marsPhotoTexture = textureLoader.load('mars_photo.jpg');
+                }
+                return marsPhotoTexture;
+            }
 
             const c = document.createElement('canvas');
             c.width = 1024;
             c.height = 512;
             const ctx = c.getContext('2d');
 
-            if (mode === 'mars') {
-                const grad = ctx.createLinearGradient(0, 0, 0, 512);
-                grad.addColorStop(0, '#f8fafc');
-                grad.addColorStop(0.07, '#b45309');
-                grad.addColorStop(0.5, '#ea580c');
-                grad.addColorStop(0.93, '#9a3412');
-                grad.addColorStop(1, '#f8fafc');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, 1024, 512);
-                for (let i = 0; i < 60; i++) {
-                    const x = Math.random() * 1024, y = 40 + Math.random() * 432, r = Math.random() * 75 + 15;
-                    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
-                    g.addColorStop(0, 'rgba(67,20,7,0.55)');
-                    g.addColorStop(1, 'rgba(67,20,7,0)');
-                    ctx.fillStyle = g;
-                    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-                }
-            } else {
+            {
                 // ZIEMIA + HEATMAPA DOPASOWANIA
                 ctx.fillStyle = '#091526';
                 ctx.fillRect(0, 0, 1024, 512);
@@ -626,7 +605,7 @@ $presets = [
                     const normLon = lon < -180 ? lon + 360 : (lon > 180 ? lon - 360 : lon);
                     document.getElementById('input-lat').value = lat.toFixed(1);
                     document.getElementById('input-lon').value = normLon.toFixed(1);
-                    triggerCharacterizeAndSearch();
+                    triggerCharacterize();
                 }
             }
             isDragging = false;
@@ -673,14 +652,14 @@ $presets = [
             return weights;
         }
 
-        async function triggerCharacterizeAndSearch() {
+        async function triggerCharacterize() {
             const lat = parseFloat(document.getElementById('input-lat').value) || 0;
             const lon = parseFloat(document.getElementById('input-lon').value) || 0;
 
             updateMarkerPosition(lat, lon);
             document.getElementById('readout-coords').innerText = `${lat.toFixed(1)}°, ${lon.toFixed(1)}°`;
+            document.getElementById('api-latency').innerText = 'CHARAKTERYZATOR: POBIERANIE...';
 
-            // Krok 1: POST /api/v1/characterize
             const profile = await callApi('characterize', {
                 target_body: currentBody,
                 lat: lat,
@@ -689,70 +668,14 @@ $presets = [
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);
-
-            // Krok 2: POST /api/v1/search
-            await triggerSearchOnly();
+            document.getElementById('api-latency').innerText = 'CHARAKTERYZATOR: GOTOWY';
         }
 
-        async function triggerSearchOnly() {
-            if (!currentTargetProfile) return;
-            const weights = getWeightsVector();
-            const requireCaves = document.getElementById('require-caves').checked;
-
-            const searchRes = await callApi('search', {
-                features_norm: currentTargetProfile.features_norm,
-                weights: weights,
-                require_caves: requireCaves,
-                top_k: 100
-            });
-
-            document.getElementById('api-latency').innerText = `CZAS SZUKACZA: ${searchRes.execution_time_ms} ms`;
-            const bestM = searchRes.best_global_month || 7;
-            document.getElementById('best-month-badge').innerText = `${MONTH_NAMES[bestM - 1]} (M${bestM})`;
-
-            currentCandidates = searchRes.candidates || [];
-            selectedCandidateIndex = 0;
-            renderCandidatesList();
-            updateCharts();
-
-            if (globeViewMode === 'earth') {
-                refreshEarthGlobePins();
-            }
-        }
-
-        // =========================================================================
-        // 3. NATYCHMIASTOWE PRZELICZANIE WAG W CZASIE RZECZYWISTYM (60 FPS)
-        // =========================================================================
         function onWeightSliderChange(slider) {
             const idx = slider.dataset.idx;
             document.getElementById(`weight-val-${idx}`).innerText = parseFloat(slider.value).toFixed(2);
-
-            if (!currentTargetProfile || currentCandidates.length === 0) return;
-
-            // Błyskawiczne przeliczenie wzoru Score(n, m) = 1 - sum(w_k * |X - y|) / sum(w_k)
-            const weights = getWeightsVector();
-            let wSum = weights.reduce((a, b) => a + b, 0);
-            if (wSum <= 0.0001) wSum = 1.0;
-
-            const y = currentTargetProfile.features_norm;
-            currentCandidates.forEach(c => {
-                let diff = 0.0;
-                for (let k = 0; k < 9; k++) {
-                    diff += weights[k] * Math.abs((c.features_norm[k] || 0) - (y[k] || 0));
-                }
-                c.score = Math.max(0.05, Math.min(0.99, 1.0 - (diff / wSum)));
-            });
-
-            currentCandidates.sort((a, b) => b.score - a.score);
-            currentCandidates.forEach((c, i) => c.rank = i + 1);
-            selectedCandidateIndex = 0;
-            renderCandidatesList();
-            updateCharts();
         }
 
-        // =========================================================================
-        // 4. RENDEROWANIE UI, KART KANDYDATÓW ORAZ WYKRESÓW (CHART.JS)
-        // =========================================================================
         function renderTargetProfileReadout(profile) {
             const r = profile.features_raw;
             document.getElementById('raw-temp_mean').innerText = `${r.temp_mean} °C`;
@@ -768,141 +691,12 @@ $presets = [
                 `NAJBLIŻSZY SKYLIGHT / LAVA TUBE: ${profile.nearest_skylight_km} km`;
         }
 
-        function renderCandidatesList() {
-            const container = document.getElementById('candidates-list');
-            document.getElementById('candidates-count').innerText = `${currentCandidates.length} WYNIKÓW`;
-
-            container.innerHTML = currentCandidates.map((c, idx) => {
-                const pct = (c.score * 100).toFixed(1);
-                const isSel = idx === selectedCandidateIndex ? 'selected' : '';
-                const mName = MONTH_NAMES[(c.best_month || 1) - 1];
-                return `
-                    <div class="candidate-card ${isSel}" onclick="selectCandidate(${idx})">
-                        <div class="cand-top">
-                            <span class="cand-rank">RANK #0${c.rank} // ID:${c.id}</span>
-                            <span class="cand-score">${pct}% MATCH</span>
-                        </div>
-                        <div class="cand-name">${c.name_hint}</div>
-                        <div class="cand-meta">
-                            <span>LAT: ${c.lat}°, LON: ${c.lon}°</span>
-                            <span>MIESIĄC: ${mName}</span>
-                            <span>JASKINIA: ${c.nearest_cave_km} km</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function selectCandidate(idx) {
-            selectedCandidateIndex = idx;
-            renderCandidatesList();
-            updateCharts();
-        }
-
-        // Wykresy Chart.js: Radar porównawczy 9 cech + Klimatogram 12 miesięcy
-        let radarChart = null;
-        let climatogramChart = null;
-
-        function initCharts() {
-            const rCtx = document.getElementById('radar-chart').getContext('2d');
-            radarChart = new Chart(rCtx, {
-                type: 'radar',
-                data: {
-                    labels: ['Temp', 'Amplituda', 'Bezwładność', 'Chropowatość', 'Lód/Woda', 'Pył AOD', 'Kąt Słońca', 'Promieniow.', 'Nachylenie'],
-                    datasets: [
-                        {
-                            label: 'Cel (Księżyc/Mars)',
-                            data: [0,0,0,0,0,0,0,0,0],
-                            borderColor: '#00F0FF',
-                            backgroundColor: 'rgba(0, 240, 255, 0.18)',
-                            borderWidth: 2
-                        },
-                        {
-                            label: 'Analog na Ziemi',
-                            data: [0,0,0,0,0,0,0,0,0],
-                            borderColor: '#00FF9D',
-                            backgroundColor: 'rgba(0, 255, 157, 0.18)',
-                            borderWidth: 2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 10 } } } },
-                    scales: {
-                        r: {
-                            min: 0, max: 1,
-                            grid: { color: 'rgba(255,255,255,0.08)' },
-                            angleLines: { color: 'rgba(255,255,255,0.08)' },
-                            pointLabels: { color: '#94a3b8', font: { size: 9 } },
-                            ticks: { display: false }
-                        }
-                    }
-                }
-            });
-
-            const cCtx = document.getElementById('climatogram-chart').getContext('2d');
-            climatogramChart = new Chart(cCtx, {
-                type: 'line',
-                data: {
-                    labels: MONTH_NAMES,
-                    datasets: [
-                        {
-                            label: 'Temp. średnia (°C)',
-                            data: [],
-                            borderColor: '#FF4D2A',
-                            backgroundColor: 'rgba(255, 77, 42, 0.15)',
-                            tension: 0.35,
-                            fill: true
-                        },
-                        {
-                            label: 'Wilgotność (%)',
-                            data: [],
-                            borderColor: '#38BDF8',
-                            tension: 0.35
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 10 } } } },
-                    scales: {
-                        x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
-                        y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
-                    }
-                }
-            });
-        }
-
-        function updateCharts() {
-            if (!radarChart || !climatogramChart || !currentTargetProfile) return;
-            const cand = currentCandidates[selectedCandidateIndex];
-            if (!cand) return;
-
-            radarChart.data.datasets[0].data = currentTargetProfile.features_norm;
-            radarChart.data.datasets[1].data = cand.features_norm || [0.2, 0.5, 0.3, 0.4, 0.1, 0.1, 0.3, 0.8, 0.2];
-            radarChart.update();
-
-            if (cand.climatogram_12m) {
-                climatogramChart.data.datasets[0].data = cand.climatogram_12m.temp_mean;
-                climatogramChart.data.datasets[1].data = cand.climatogram_12m.soil_moisture;
-                climatogramChart.update();
-            }
-        }
-
-        // =========================================================================
-        // 5. PRZEŁĄCZANIE KSIĘŻYC / MARS / ZIEMIA (HEATMAPA)
-        // =========================================================================
         function selectPreset(lat, lon, btnEl) {
             document.querySelectorAll('.preset-chip').forEach(b => b.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
             document.getElementById('input-lat').value = lat;
             document.getElementById('input-lon').value = lon;
-            if (globeViewMode === 'earth') {
-                switchCelestialBody(currentBody);
-            } else {
-                triggerCharacterizeAndSearch();
-            }
+            triggerCharacterize();
         }
 
         function switchCelestialBody(body) {
@@ -912,10 +706,8 @@ $presets = [
 
             document.getElementById('btn-mode-moon').classList.toggle('active', body === 'moon');
             document.getElementById('btn-mode-mars').classList.toggle('active', body === 'mars');
-            document.getElementById('btn-mode-earth').classList.remove('active');
             document.getElementById('globe-mode-label').innerText = body.toUpperCase();
 
-            // Przebudowa presetów dla wybranego ciała niebieskiego
             const pList = PRESETS[body];
             const pContainer = document.getElementById('presets-container');
             pContainer.innerHTML = pList.map((p, idx) => `
@@ -934,41 +726,28 @@ $presets = [
             sphereMat.map = generateBodyTexture(body);
             sphereMat.needsUpdate = true;
 
-            triggerCharacterizeAndSearch();
+            triggerCharacterize();
         }
 
-        function switchGlobeToEarth() {
-            globeViewMode = 'earth';
-            document.getElementById('btn-mode-moon').classList.remove('active');
-            document.getElementById('btn-mode-mars').classList.remove('active');
-            document.getElementById('btn-mode-earth').classList.add('active');
-            document.getElementById('globe-mode-label').innerText = 'ZIEMIA (HEATMAPA TOP ANALOGÓW)';
+        function openResultsPage() {
+            const lat = parseFloat(document.getElementById('input-lat').value) || 0;
+            const lon = parseFloat(document.getElementById('input-lon').value) || 0;
+            const weights = getWeightsVector().map(w => w.toFixed(2)).join(',');
+            const caves = document.getElementById('require-caves').checked ? '1' : '0';
 
-            targetMarker.visible = false;
-            refreshEarthGlobePins();
-        }
-
-        function refreshEarthGlobePins() {
-            sphereMat.map = generateBodyTexture('earth', currentCandidates);
-            sphereMat.needsUpdate = true;
-
-            pinsGroup.clear();
-            currentCandidates.forEach((c, idx) => {
-                const pos = latLonToVector3(c.lat, c.lon, 1.14);
-                const pinGeo = new THREE.SphereGeometry(idx === 0 ? 0.032 : 0.022, 16, 16);
-                const pinMat = new THREE.MeshBasicMaterial({
-                    color: idx === 0 ? 0x00ff9d : 0x00f0ff
-                });
-                const pin = new THREE.Mesh(pinGeo, pinMat);
-                pin.position.copy(pos);
-                pinsGroup.add(pin);
+            const params = new URLSearchParams({
+                body: currentBody,
+                lat: lat.toFixed(2),
+                lon: lon.toFixed(2),
+                w: weights,
+                caves: caves
             });
+            window.location.href = `results.php?${params.toString()}`;
         }
 
         // Start aplikacji
         window.addEventListener('DOMContentLoaded', () => {
-            initCharts();
-            triggerCharacterizeAndSearch();
+            triggerCharacterize();
         });
     </script>
 </body>

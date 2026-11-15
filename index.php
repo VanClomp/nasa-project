@@ -195,12 +195,7 @@
                 float diff = max(dot(vNormal, lightDir), 0.0);
                 float terminator = smoothstep(-0.08, 0.25, dot(vNormal, lightDir));
 
-                // Efekt Fresnela na krawędziach sfery (subtelna atmosfera / rim light)
-                vec3 viewDir = normalize(-vPosition);
-                float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.4);
-
                 vec3 color = albedo * (0.08 + diff * 0.95 * terminator);
-                color += uRimColor * fresnel * (0.28 + uHover * 0.35);
 
                 gl_FragColor = vec4(color, 1.0);
             }
@@ -245,20 +240,8 @@
             const sphere = new THREE.Mesh(geo, mat);
             group.add(sphere);
 
-            // Ultracienki, ascetyczny pierścień równikowy
-            const ringGeo = new THREE.RingGeometry(1.26, 1.264, 96);
-            const ringMat = new THREE.MeshBasicMaterial({
-                color: config.rimColor,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0.12
-            });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = Math.PI / 2.25;
-            group.add(ring);
-
             return {
-                scene, camera, renderer, sphere, ring, ringMat, group, uniforms,
+                scene, camera, renderer, sphere, group, uniforms,
                 hovered: false,
                 targetRotX: 0,
                 targetRotZ: 0
@@ -277,7 +260,8 @@
             baseColor: '#EA580C',
             darkColor: '#431407',
             rimColor:  '#F97316',
-            seed: 7.4
+            seed: 7.4,
+            textureUrl: 'mars_photo.jpg'
         });
 
         function animate() {
@@ -287,7 +271,6 @@
 
                 const targetHover = p.hovered ? 1.0 : 0.0;
                 p.uniforms.uHover.value += (targetHover - p.uniforms.uHover.value) * 0.06;
-                p.ringMat.opacity += ((p.hovered ? 0.32 : 0.10) - p.ringMat.opacity) * 0.06;
 
                 p.group.rotation.x += (p.targetRotX - p.group.rotation.x) * 0.06;
                 p.group.rotation.z += (p.targetRotZ - p.group.rotation.z) * 0.06;
