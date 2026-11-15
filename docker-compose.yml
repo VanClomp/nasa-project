@@ -1,7 +1,7 @@
 services:
   # ---------------------------------------------------------------------------
   # 1. Frontend (PHP 8.3 + Apache)
-  # Korzysta z plików w głównym katalogu repozytorium (bez ich przenoszenia).
+  # Built from the pages in 1-webpage/ and the images in images/ (see 2-networker/Dockerfile.frontend).
   # ---------------------------------------------------------------------------
   frontend:
     build:
@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # 3. Charakteryzator (Księżyc / Mars -> TargetProfile)
+  # 3. Charakteryzator (Moon / Mars -> TargetProfile)
   # ---------------------------------------------------------------------------
   charakteryzator:
     build: ./3-charakteryzator
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # 4. Szukacz (Wyszukiwanie wektorowe na macierzach Ziemi w RAM / mmap)
+  # 4. Szukacz (vector search over the Earth matrices in RAM / mmap)
   # ---------------------------------------------------------------------------
   szukacz:
     build: ./4-szukacz
@@ -42,7 +42,7 @@ services:
 
   # ---------------------------------------------------------------------------
   # 2. Networker (Nginx Reverse Proxy + FastAPI API Gateway)
-  # Główny punkt wejścia (porty 80 i 443).
+  # Main entry point (ports 80 and 443).
   # ---------------------------------------------------------------------------
   networker:
     build: ./2-networker

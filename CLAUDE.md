@@ -1,1 +1,1 @@
-Przed rozpoczęciem jakiejkolwiek pracy przeczytaj i stosuj się do wszystkich zasad z pliku CONTEXT.md.
+Before starting any work, read and follow all the rules in CONTEXT.md.

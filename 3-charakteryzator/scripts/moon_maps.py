@@ -188,7 +188,12 @@ def elements(lat, lon):
 # ---------------- pits / lava-tube skylights
 @lru_cache(None)
 def _pits():
+    """Volcanic pits only: the LROC Lunar Pit Atlas (Wagner & Robinson 2021) Terrain = 'Mare' entries, i.e. collapse
+    pits in mare basalt that are candidate lava-tube skylights (Marius Hills, Mare Tranquillitatis, Mare Ingenii,
+    Lacus Mortis, ...). 'Impact Melt' pits (257 of 278, inside impact craters' melt sheets) and 'Highland' pits are
+    not volcanic and are excluded."""
     p = pd.read_csv(os.path.join(MOON, 'pits', 'LUNAR_PIT_LOCATIONS.CSV'), encoding='latin-1')
+    p = p[p['Terrain'].astype(str).str.strip() == 'Mare']
     return p[['Name', 'Terrain', 'Latitude', 'Longitude_360']].dropna(subset=['Latitude', 'Longitude_360'])
 def nearest_pit(lat, lon):
     p = _pits(); la, lo = np.radians(p.Latitude.to_numpy()), np.radians(p.Longitude_360.to_numpy())

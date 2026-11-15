@@ -1,10 +1,10 @@
-"""Odczyt precomputowanych tablic 3-charakteryzator (outputs/mars_sites.json i moon_sites.json).
+"""Reads the precomputed 3-charakteryzator tables (outputs/mars_sites.json and moon_sites.json).
 
-Gdy w katalogach `/data/mars` lub `/data/moon` nie pobrano jeszcze surowych map
-binarnych PDS (.img, ~3.1 GB), kontener `3-charakteryzator` rzuca FileNotFoundError.
-W takiej sytuacji `2-networker` korzysta bezpośrednio z oficjalnych, wyliczonych
-przez `3-charakteryzator` profili w `3-charakteryzator/outputs/mars_sites.json`
-oraz `3-charakteryzator/outputs/moon_sites.json` i zakresów normalizacji z
+When the raw binary PDS maps (.img, ~3.1 GB) have not been downloaded to `/data/mars` or
+`/data/moon`, the `3-charakteryzator` container raises FileNotFoundError.
+In that case `2-networker` uses the profiles that `3-charakteryzator` precomputed
+in `3-charakteryzator/outputs/mars_sites.json` and
+`3-charakteryzator/outputs/moon_sites.json`, with the normalisation ranges from
 `3-charakteryzator/service/norm_ranges.json`.
 """
 
@@ -42,7 +42,7 @@ def _load_norm_ranges() -> dict[str, Any]:
     ):
         if candidate.exists():
             return json.loads(candidate.read_text(encoding="utf-8"))
-    raise FileNotFoundError("Brak pliku norm_ranges.json z 3-charakteryzator")
+    raise FileNotFoundError("norm_ranges.json from 3-charakteryzator not found")
 
 
 @lru_cache(maxsize=2)
@@ -55,7 +55,7 @@ def _load_sites_file(body: str) -> list[dict[str, Any]]:
         if candidate.exists():
             data = json.loads(candidate.read_text(encoding="utf-8"))
             return data.get("results", [])
-    raise FileNotFoundError(f"Brak pliku {filename} w outputs 3-charakteryzator")
+    raise FileNotFoundError(f"{filename} not found in the 3-charakteryzator outputs")
 
 
 def _normalise_from_ranges(raw: dict[str, Any], ranges: dict[str, Any]) -> list[float]:
@@ -89,7 +89,7 @@ def characterize_from_precomputed_outputs(
     lon: float,
     timestamp_iso: str | None = None,
 ) -> dict[str, Any]:
-    """Zwraca profil z wyliczonych wcześniej danych 3-charakteryzator (outputs/*_sites.json)."""
+    """Returns a profile from the precomputed 3-charakteryzator data (outputs/*_sites.json)."""
     body = target_body.lower().strip()
     if body not in ("mars", "moon"):
         raise ValueError("target_body must be 'mars' or 'moon'")
@@ -99,7 +99,7 @@ def characterize_from_precomputed_outputs(
     order: list[str] = ranges["order"]
     month_idx = _month_from_iso(timestamp_iso)
 
-    # Znajdź najbliższe stanowisko z precomputowanych wyników 3-charakteryzator
+    # Find the nearest site in the precomputed 3-charakteryzator results
     best_site = min(
         sites,
         key=lambda s: _great_circle_deg(
@@ -118,8 +118,8 @@ def characterize_from_precomputed_outputs(
     tp = month_entry["target_profile"]
     raw_in = tp["features_raw"]
 
-    # Dla UI (explorer.php / results.php) zastępujemy null w soil_moisture/nearest_skylight_km wartością 0.0,
-    # zachowując flagę w extra.null_features, aby Szukacz nadal nadał brakującym cechom wagę 0.
+    # For the UI (explorer.php / results.php) null soil_moisture / nearest_skylight_km become 0.0,
+    # keeping the flag in extra.null_features so the Szukacz still gives the missing features weight 0.
     null_features = [k for k in order if raw_in.get(k) is None]
     raw_clean: dict[str, float] = {}
     for k in order:
@@ -134,6 +134,10 @@ def characterize_from_precomputed_outputs(
         "features_norm": _normalise_from_ranges(raw_in, ranges),
         "nearest_skylight_km": 0.0 if skylight is None else float(skylight),
         "extra": {
+            # Fallback = values of the NEAREST known site, not the clicked point: always "global"
+            # (uncertain), even if that site has station data. Matches extra.model from 3-charakteryzator.
+            "model": "global",
+            "model_basis": "characterizer unavailable: values of the nearest precomputed site, not this point",
             "matched_site": best_site.get("site"),
             "month": month_idx,
             "features_measured": tp.get("features_measured"),

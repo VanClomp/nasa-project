@@ -1,6 +1,6 @@
-"""Testy Szukacza na małych danych syntetycznych.
+"""Szukacz tests on small synthetic data.
 
-Uruchomienie z katalogu 4-szukacz:  python -m unittest discover -s tests -v
+Run from the 4-szukacz folder:  python -m unittest discover -s tests -v
 """
 
 import base64
@@ -28,14 +28,14 @@ META_DTYPE = [
 
 
 def heatmap_pixels(lat, lon):
-    """Piksel siatki 1024x512, w którym leży punkt: (px_x, px_y)."""
+    """Pixel of the 1024x512 grid that contains the point: (px_x, px_y)."""
     px_x = np.clip(((np.asarray(lon) + 180) / 360 * 1024).astype(int), 0, 1023)
     px_y = np.clip(((90 - np.asarray(lat)) / 180 * 512).astype(int), 0, 511)
     return px_x, px_y
 
 
 def write_dataset(directory, lat, lon, norm, raw=None, cave_km=None):
-    """Zapisuje dane Ziemi w formacie z punktu 4.1 specyfikacji (metadane jako .npy)."""
+    """Writes Earth data in the format of spec section 4.1 (metadata as .npy)."""
     n = len(lat)
     meta = np.zeros(n, dtype=META_DTYPE)
     meta["id"] = np.arange(n) + 1000
@@ -59,7 +59,7 @@ def pair_distances_km(lat, lon):
 
 
 def decode_error_map(data_uri):
-    """Obraz mapy błędu (PNG z paletą) jako tablica (H, W, 4) RGBA."""
+    """Error-map image (palette PNG) as an (H, W, 4) RGBA array."""
     prefix = "data:image/png;base64,"
     assert data_uri.startswith(prefix), data_uri[:40]
     image = Image.open(io.BytesIO(base64.b64decode(data_uri[len(prefix):])))
@@ -68,7 +68,7 @@ def decode_error_map(data_uri):
 
 
 def one_feature_dataset(directory, lat, lon, error):
-    """Punkty o zadanym błędzie: liczy się tylko cecha 0, cel = 1.0, wszystkie miesiące równe."""
+    """Points with a given error: only feature 0 counts, target = 1.0, all months equal."""
     norm = np.zeros((len(lat), 12, 9), dtype=np.float32)
     norm[:, :, 0] = (1.0 - np.asarray(error))[:, None]
     return write_dataset(directory, np.asarray(lat), np.asarray(lon), norm)
@@ -78,23 +78,23 @@ ONE_FEATURE = {"features_norm": [1.0] + [0.0] * 8, "weights": [1.0] + [0.0] * 8}
 
 
 def reference_detail(detail, lat, lon, error, center_lon):
-    """Wzorzec mapki szczegółowej liczony wprost: każdy piksel sprawdza wszystkie punkty.
+    """Reference detailed map computed directly: every pixel checks every point.
 
-    Piksel dostaje błąd punktu najbliższego jego środkowi (|dlon| + |dlat|), o ile
-    ten punkt leży nie dalej niż detail.reach_deg w każdej osi. Zwraca (oczekiwana
-    siatka, maska pikseli jednoznacznych). Niejednoznaczne są piksele leżące
-    bliżej niż ok. piksel od granicy między dwoma punktami albo od granicy
-    zasięgu: tam o wyniku decyduje zaokrąglenie położenia punktu do piksela.
+    A pixel gets the error of the point nearest to its centre (|dlon| + |dlat|), as long as
+    that point is no farther than detail.reach_deg in each axis. Returns (expected
+    grid, mask of unambiguous pixels). Ambiguous are the pixels lying
+    closer than about one pixel to the border between two points or to the border
+    of the reach: there the result depends on rounding the point position to a pixel.
     """
     height, width = detail.errors.shape
     half_lon, half_lat = (detail.lon_max - detail.lon_min) / 2, (detail.lat_max - detail.lat_min) / 2
     deg_x, deg_y = 2 * half_lon / width, 2 * half_lat / height
     pixel_lon = detail.lon_min + (np.arange(width) + 0.5) * deg_x
     pixel_lat = detail.lat_max - (np.arange(height) + 0.5) * deg_y
-    # Długość punktów w ciągłym zakresie wokół środka okna (zawinięcie na południku 180).
+    # Point longitudes in a continuous range around the window centre (wrapping at the 180th meridian).
     lon = center_lon + (np.asarray(lon) - center_lon + 180.0) % 360.0 - 180.0
-    # Punkt dalszy niż 2 * reach_deg nie zmienia wyniku żadnego piksela, a reach_deg
-    # to najwyżej ćwierć połowy okna; pas 0.8 połowy wokół okna bierze je z zapasem.
+    # A point farther than 2 * reach_deg changes no pixel, and reach_deg
+    # is at most a quarter of the window's half; a band of 0.8 half around the window takes them with margin.
     close = (
         (np.abs(lon - center_lon) <= 1.8 * half_lon)
         & (lat >= detail.lat_min - 0.8 * half_lat)
@@ -125,7 +125,7 @@ def reference_detail(detail, lat, lon, error, center_lon):
 
 
 class RandomWorld(unittest.TestCase):
-    """6000 losowych punktów na całej kuli, losowe cechy."""
+    """6000 random points over the whole sphere, random features."""
 
     @classmethod
     def setUpClass(cls):
@@ -145,7 +145,7 @@ class RandomWorld(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        del cls.data  # zwalnia mmap przed usunięciem katalogu
+        del cls.data  # releases the mmap before the folder is deleted
         cls.tmp.cleanup()
 
     def test_scores_match_formula(self):
@@ -171,15 +171,15 @@ class RandomWorld(unittest.TestCase):
         chosen = np.array([c["id"] for c in cands]) - 1000
         self.assertGreater(pair_distances_km(self.lat[chosen], self.lon[chosen]).min(), limit)
 
-        # Każdy pominięty punkt lepszy od ostatniego zwróconego musi leżeć
-        # w zasięgu limitu od zwróconego punktu o wyniku co najmniej tak dobrym.
+        # Every skipped point better than the last returned one must lie
+        # within the limit of a returned point with a score at least as good.
         best = self.expected.max(axis=1)
         xyz = scoring.latlon_to_unit_xyz(self.lat, self.lon)
         skipped = np.setdiff1d(np.flatnonzero(best > best[chosen[-1]]), chosen)
         self.assertGreater(skipped.size, 0)
         for point in skipped:
             near = scoring.great_circle_km(xyz[chosen], xyz[point]) <= limit
-            self.assertTrue((best[chosen][near] >= best[point]).any(), f"punkt {point}")
+            self.assertTrue((best[chosen][near] >= best[point]).any(), f"point {point}")
 
     def test_selection_matches_simple_greedy_when_pool_has_to_grow(self):
         best = self.expected.max(axis=1).astype(np.float32)
@@ -191,7 +191,7 @@ class RandomWorld(unittest.TestCase):
                     break
                 if all(scoring.great_circle_km(xyz[point], xyz[kept]) > limit for kept in reference):
                     reference.append(int(point))
-            # Mała pula startowa wymusza kilkukrotne pogłębianie przeszukiwania.
+            # A small starting pool forces the search to go deeper several times.
             with mock.patch.object(scoring, "_MIN_POOL", 8), mock.patch.object(scoring, "_POOL_GROWTH", 2):
                 small_pool = scoring.select_diverse_top_k(best, xyz, top_k, limit)[:top_k]
             default_pool = scoring.select_diverse_top_k(best, xyz, top_k, limit)
@@ -245,12 +245,12 @@ class RandomWorld(unittest.TestCase):
         best_point = int(self.expected.max(axis=1).argmax())
         x = min(int((self.lon[best_point] + 180) / 360 * 1024), 1023)
         y = min(int((90 - self.lat[best_point]) / 180 * 512), 511)
-        self.assertEqual(pixels[y, x, 3], 255)  # najlepszy punkt w pełni kryjący
+        self.assertEqual(pixels[y, x, 3], 255)  # best point fully opaque
         self.assertEqual(pixels[..., 3].min(), 0)
-        self.assertGreater(len(np.unique(pixels[..., 3])), 50)  # płynna skala krycia
+        self.assertGreater(len(np.unique(pixels[..., 3])), 50)  # smooth opacity scale
         empty = np.ones(1024 * 512, dtype=bool)
         empty[self.data.pixel_flat] = False
-        self.assertTrue((pixels[..., 3].reshape(-1)[empty] == 0).all())  # brak punktów = przezroczyste
+        self.assertTrue((pixels[..., 3].reshape(-1)[empty] == 0).all())  # no points = transparent
 
     def test_error_map_covers_whole_earth(self):
         result = search(self.data, self.target, self.weights)
@@ -262,8 +262,8 @@ class RandomWorld(unittest.TestCase):
         )
         self.assertEqual(error_map["scale"], {"min": 0.0, "max": 0.5, "colors": list(maps.ERROR_COLORS)})
 
-        # Wzorzec ze wzoru: błąd punktu = 1 - dopasowanie w najlepszym miesiącu,
-        # piksel bierze najmniejszy błąd spośród swoich punktów.
+        # Reference from the formula: point error = 1 - match in the best month,
+        # a pixel takes the smallest error of its points.
         point_error = 1.0 - self.expected.max(axis=1)
         px_x, px_y = heatmap_pixels(self.lat, self.lon)
         expected_grid = np.full(512 * 1024, np.inf)
@@ -280,7 +280,7 @@ class RandomWorld(unittest.TestCase):
         pixels = decode_error_map(error_map["image_base64"])
         self.assertEqual(pixels.shape, (512, 1024, 4))
         np.testing.assert_array_equal(pixels, maps.colorize_error(grid, 0.5))
-        np.testing.assert_array_equal(pixels[..., 3] == 255, np.isfinite(grid))  # dane = pełne krycie
+        np.testing.assert_array_equal(pixels[..., 3] == 255, np.isfinite(grid))  # data = fully opaque
 
         stats = error_map["stats"]
         self.assertEqual(stats["n_points"], self.n)
@@ -289,7 +289,7 @@ class RandomWorld(unittest.TestCase):
         self.assertAlmostEqual(stats["max"], point_error.max(), delta=1e-4)
 
     def test_error_map_scale_is_fixed_and_adjustable(self):
-        # Ta sama skala niezależnie od zapytania; zmiana error_scale_max zmienia tylko kolory.
+        # The same scale for every query; changing error_scale_max only changes the colours.
         narrow = search(self.data, self.target, self.weights, error_scale_max=0.25)["error_map"]
         self.assertEqual(narrow["scale"]["max"], 0.25)
         best, _ = scoring.score_all(
@@ -303,14 +303,14 @@ class RandomWorld(unittest.TestCase):
     def test_detail_map_matches_direct_computation(self):
         target, weights = np.float32(self.target), scoring.normalize_weights(self.weights)
         point_error = 1.0 - self.expected.max(axis=1)
-        # (lat, lon, promień): środek kontynentu, okno przez południk 180, wysoka szerokość.
+        # (lat, lon, radius): middle of a continent, window across the 180th meridian, high latitude.
         for lat, lon, radius_km in ((20.0, 30.0, 1500.0), (-60.0, 179.0, 1500.0), (75.0, -100.0, 1000.0)):
             with self.subTest(lat=lat, lon=lon):
                 detail = maps.detail_error_grid(self.data, target, weights, lat, lon, radius_km, 192)
                 self.assertEqual(detail.errors.shape, (192, 192))
                 expected, clear = reference_detail(detail, self.lat, self.lon, point_error, lon)
                 np.testing.assert_allclose(detail.errors[clear], expected[clear], atol=1e-5)
-                # Test ma obejmować większość mapki, w tym piksele z danymi i bez.
+                # The test must cover most of the map, including pixels with and without data.
                 self.assertGreater(clear.mean(), 0.6)
                 self.assertGreater(int(np.isfinite(expected[clear]).sum()), 5000)
                 self.assertGreater(int(np.isnan(expected[clear]).sum()), 100)
@@ -326,7 +326,7 @@ class RandomWorld(unittest.TestCase):
         detail = maps.detail_error_grid(
             self.data, np.float32(self.target), scoring.normalize_weights(self.weights), 60.0, 10.0, 500.0, 128
         )
-        half_lat = 500.0 / 111.195  # okno to kwadrat w km: 500 km w każdą stronę
+        half_lat = 500.0 / 111.195  # the window is a square in km: 500 km in every direction
         self.assertAlmostEqual(detail.lat_min, 60.0 - half_lat, places=3)
         self.assertAlmostEqual(detail.lat_max, 60.0 + half_lat, places=3)
         self.assertAlmostEqual(detail.lon_min, 10.0 - 2.0 * half_lat, places=3)  # cos(60) = 0.5
@@ -370,9 +370,9 @@ class RandomWorld(unittest.TestCase):
 
 
 class HandBuiltWorld(unittest.TestCase):
-    """Kilka punktów o znanym położeniu i wyniku (jedna cecha rządzi rankingiem)."""
+    """A few points with known positions and scores (one feature decides the ranking)."""
 
-    # nazwa: (lat, lon, wartość cechy 0 w najlepszym miesiącu); cel = 1.0
+    # name: (lat, lon, value of feature 0 in the best month); target = 1.0
     POINTS = {
         "A_best": (10.0, 20.0, 0.99),
         "A_near_30km": (10.27, 20.0, 0.98),
@@ -389,7 +389,7 @@ class HandBuiltWorld(unittest.TestCase):
         lon = np.array([self.POINTS[n][1] for n in names])
         norm = np.zeros((len(names), 12, 9), dtype=np.float32)
         for i, name in enumerate(names):
-            norm[i, 6, 0] = self.POINTS[name][2]  # lipiec (indeks 6) najlepszy
+            norm[i, 6, 0] = self.POINTS[name][2]  # July (index 6) is best
         self.data = write_dataset(self.tmp.name, lat, lon, norm)
         self.names = {1000 + i: name for i, name in enumerate(names)}
         self.target = [1.0] + [0.0] * 8
@@ -420,7 +420,7 @@ class HandBuiltWorld(unittest.TestCase):
 
     def test_fewer_results_when_not_enough_separate_places(self):
         names, result = self.found(top_k=100, min_distance_km=100.0)
-        # D_gap ma NaN tylko w lipcu, więc wygrywa innym miesiącem z wynikiem 0.
+        # D_gap has NaN only in July, so it wins with another month with score 0.
         self.assertEqual(names, ["A_best", "B_far", "C_far", "D_gap"])
         gap = result["candidates"][3]
         self.assertEqual(gap["score"], 0.0)
@@ -431,19 +431,19 @@ class HandBuiltWorld(unittest.TestCase):
         names, result = self.found(require_caves=True, cave_max_km=1.0)
         self.assertEqual(names, [])
         self.assertIsNone(result["best_global_month"])
-        # Filtr jaskiń nie dotyczy map: błąd jest liczony dla wszystkich punktów.
+        # The cave filter does not apply to the maps: the error is computed for all points.
         self.assertEqual(result["error_map"]["stats"]["n_points"], len(self.POINTS))
 
     def test_detail_around_lonely_point(self):
-        # D_gap: w lipcu brak danych, w pozostałych miesiącach cecha 0 = 0, czyli błąd 1.0.
+        # D_gap: no data in July, feature 0 = 0 in the other months, i.e. error 1.0.
         result = error_map_detail(self.data, self.target, self.weights, 0.0, -30.0, radius_km=100.0, size_px=64)
         json.dumps(result, allow_nan=False)
         self.assertEqual(result["error_map"]["stats"], {"n_points": 1, "min": 1.0, "mean": 1.0, "max": 1.0})
         pixels = decode_error_map(result["error_map"]["image_base64"])
         self.assertEqual(pixels.shape, (64, 64, 4))
-        # Błąd powyżej końca skali: ostatni kolor (#FFE5D9), w pełni kryjący.
+        # Error above the end of the scale: the last colour (#FFE5D9), fully opaque.
         self.assertEqual(tuple(pixels[32, 32]), (0xFF, 0xE5, 0xD9, 255))
-        # Samotny punkt nie zalewa mapki: wypełnia co najwyżej 1/8 jej szerokości w każdą stronę.
+        # A single point does not flood the map: it fills at most 1/8 of its width in each direction.
         filled = pixels[..., 3] == 255
         self.assertTrue(filled[26:38, 26:38].all())
         self.assertFalse(filled[:22].any() or filled[42:].any() or filled[:, :22].any() or filled[:, 42:].any())
@@ -460,10 +460,10 @@ class HandBuiltWorld(unittest.TestCase):
 
 
 class LatticeWorld(unittest.TestCase):
-    """Regularna siatka punktów co 0.25 stopnia z dziurą 3x3 (ląd z jeziorem).
+    """A regular grid of points every 0.25 degree with a 3x3 hole (land with a lake).
 
-    Oczko siatki jest mniejsze niż piksel mapy globalnej (ok. 0.35 stopnia),
-    więc mapa globalna skleja sąsiednie punkty, a mapka szczegółowa nie powinna.
+    The grid cell is smaller than a global-map pixel (about 0.35 degree),
+    so the global map merges neighbouring points, and the detailed map should not.
     """
 
     @classmethod
@@ -472,7 +472,7 @@ class LatticeWorld(unittest.TestCase):
         lat, lon = np.meshgrid(9.0 + 0.25 * np.arange(9), 19.0 + 0.25 * np.arange(9), indexing="ij")
         hole = (np.abs(lat - 10.0) < 0.3) & (np.abs(lon - 20.5) < 0.3)
         cls.lat, cls.lon = lat[~hole], lon[~hole]
-        cls.error = 0.05 + 0.005 * np.arange(cls.lat.size)  # każdy punkt ma inny błąd
+        cls.error = 0.05 + 0.005 * np.arange(cls.lat.size)  # every point has a different error
         cls.data = one_feature_dataset(cls.tmp.name, cls.lat, cls.lon, cls.error)
         cls.detail = maps.detail_error_grid(
             cls.data, np.float32(ONE_FEATURE["features_norm"]),
@@ -502,7 +502,7 @@ class LatticeWorld(unittest.TestCase):
         shown = np.unique(np.round(self.detail.errors[np.isfinite(self.detail.errors)], 5))
         np.testing.assert_allclose(shown, self.error, atol=1e-5)
 
-        # Na mapie globalnej te same punkty zajmują mniej pikseli, niż jest punktów.
+        # On the global map the same points take fewer pixels than there are points.
         best, _ = scoring.score_all(
             self.data.features_norm, np.float32(ONE_FEATURE["features_norm"]),
             scoring.normalize_weights(ONE_FEATURE["weights"]),
@@ -517,10 +517,10 @@ class LatticeWorld(unittest.TestCase):
 
     def test_gaps_stay_empty(self):
         errors = self.detail.errors
-        self.assertTrue(np.isnan(errors[self.pixel(10.0, 20.5)]))  # środek jeziora
-        self.assertTrue(np.isnan(errors[self.pixel(8.7, 18.7)]))  # poza lądem
+        self.assertTrue(np.isnan(errors[self.pixel(10.0, 20.5)]))  # middle of the lake
+        self.assertTrue(np.isnan(errors[self.pixel(8.7, 18.7)]))  # off the land
         self.assertTrue(np.isnan(errors[0]).all() and np.isnan(errors[:, 0]).all())
-        # Komórka skrajnego punktu kończy się tuż za połową oczka (0.75 zamiast 0.5 oczka).
+        # The cell of an edge point ends just past half a cell (0.75 instead of 0.5 cell).
         self.assertAlmostEqual(float(errors[self.pixel(8.85, 20.0)]), float(errors[self.pixel(9.0, 20.0)]))
         self.assertTrue(np.isnan(errors[self.pixel(8.78, 20.0)]))
 
@@ -555,18 +555,18 @@ class LatticeWorld(unittest.TestCase):
 
 
 class DetailEdgeCases(unittest.TestCase):
-    """Mapka szczegółowa: południk 180, biegun, kilka punktów w jednym pikselu."""
+    """Detailed map: 180th meridian, pole, several points in one pixel."""
 
     def test_points_sharing_a_pixel_keep_the_smaller_error(self):
         with tempfile.TemporaryDirectory() as tmp:
-            # Dwa punkty ok. 300 m od siebie; piksel mapki ma ok. 3 km.
+            # Two points about 300 m apart; a map pixel is about 3 km.
             data = one_feature_dataset(tmp, [0.010, 0.012], [0.012, 0.010], [0.3, 0.1])
             detail = maps.detail_error_grid(
                 data, np.float32(ONE_FEATURE["features_norm"]),
                 scoring.normalize_weights(ONE_FEATURE["weights"]), 0.0, 0.0, 100.0, 64,
             )
             shown = np.unique(np.round(detail.errors[np.isfinite(detail.errors)], 5))
-            np.testing.assert_allclose(shown, [0.1], atol=1e-5)  # ta sama reguła co na mapie globalnej
+            np.testing.assert_allclose(shown, [0.1], atol=1e-5)  # the same rule as on the global map
             np.testing.assert_allclose(np.sort(detail.point_errors), [0.1, 0.3], atol=1e-5)
             del data, detail
 
@@ -576,7 +576,7 @@ class DetailEdgeCases(unittest.TestCase):
             result = error_map_detail(data, **ONE_FEATURE, lat=0.0, lon=180.0, radius_km=100.0, size_px=64)
             bounds = result["error_map"]["bounds"]
             self.assertAlmostEqual(bounds["lon_min"], 180.0 - 100.0 / 111.195, places=3)
-            self.assertAlmostEqual(bounds["lon_max"], 180.0 + 100.0 / 111.195, places=3)  # powyżej 180
+            self.assertAlmostEqual(bounds["lon_max"], 180.0 + 100.0 / 111.195, places=3)  # beyond 180
             self.assertEqual(result["error_map"]["stats"]["n_points"], 2)
 
             detail = maps.detail_error_grid(
@@ -584,7 +584,7 @@ class DetailEdgeCases(unittest.TestCase):
                 scoring.normalize_weights(ONE_FEATURE["weights"]), 0.0, 180.0, 100.0, 64,
             )
             deg_x = (detail.lon_max - detail.lon_min) / 64
-            west = int((179.8 - detail.lon_min) / deg_x)  # lon 179.8: na lewo od środka
+            west = int((179.8 - detail.lon_min) / deg_x)  # lon 179.8: left of the centre
             east = int((180.2 - detail.lon_min) / deg_x)  # lon -179.8 to 180.2: na prawo
             self.assertLess(west, 32)
             self.assertGreater(east, 32)
@@ -600,7 +600,7 @@ class DetailEdgeCases(unittest.TestCase):
             error_map = result["error_map"]
             self.assertEqual(error_map["bounds"]["lat_min"], -90.0)
             self.assertAlmostEqual(error_map["bounds"]["lat_max"], -89.5 + 200.0 / 111.195, places=3)
-            # Okno obejmuje biegun: pełny zakres długości, wysokość przycięta.
+            # The window includes the pole: full longitude range, height clipped.
             self.assertAlmostEqual(error_map["bounds"]["lon_max"] - error_map["bounds"]["lon_min"], 360.0)
             self.assertEqual(error_map["width"], 64)
             self.assertEqual(error_map["height"], 41)
@@ -610,7 +610,7 @@ class DetailEdgeCases(unittest.TestCase):
 
 
 class MapPieces(unittest.TestCase):
-    """Części map, które da się sprawdzić bez danych Ziemi."""
+    """Parts of the maps that can be checked without Earth data."""
 
     def test_nearest_source_matches_brute_force(self):
         rng = np.random.default_rng(3)
@@ -624,7 +624,7 @@ class MapPieces(unittest.TestCase):
                 + step_y * np.abs(np.arange(height)[:, None, None] - rows[None, None, :])
             )
             with self.subTest(height=height, width=width, count=count):
-                # argmin bierze pierwsze minimum, czyli przy remisie niższy numer źródła.
+                # argmin takes the first minimum, i.e. on a tie the lower source number.
                 np.testing.assert_array_equal(
                     maps._nearest_source(height, width, flat, step_x, step_y), distance.argmin(axis=2)
                 )
@@ -635,13 +635,13 @@ class MapPieces(unittest.TestCase):
         grid = np.array([[0.0, 0.5, 0.9, np.nan], [0.1, 0.2, 0.3, 0.4]], dtype=np.float32)
         rgba = maps.colorize_error(grid, 0.5)
         self.assertEqual((rgba.shape, rgba.dtype), ((2, 4, 4), np.uint8))
-        self.assertEqual(tuple(rgba[0, 0]), (0x37, 0x13, 0x00, 255))  # błąd 0: pierwszy kolor skali
-        self.assertEqual(tuple(rgba[0, 1]), (0xFF, 0xE5, 0xD9, 255))  # koniec skali: ostatni kolor
-        self.assertEqual(tuple(rgba[0, 2]), (0xFF, 0xE5, 0xD9, 255))  # ponad skalę: nadal ostatni
-        self.assertEqual(rgba[0, 3, 3], 0)  # brak danych: przezroczysty
+        self.assertEqual(tuple(rgba[0, 0]), (0x37, 0x13, 0x00, 255))  # error 0: first scale colour
+        self.assertEqual(tuple(rgba[0, 1]), (0xFF, 0xE5, 0xD9, 255))  # end of the scale: last colour
+        self.assertEqual(tuple(rgba[0, 2]), (0xFF, 0xE5, 0xD9, 255))  # above the scale: still the last
+        self.assertEqual(rgba[0, 3, 3], 0)  # no data: transparent
         self.assertTrue((rgba[1, :, 3] == 255).all())
 
-        # 255 różnych kolorów, coraz jaśniejszych: z koloru da się odczytać błąd.
+        # 255 distinct colours, increasingly bright: the error can be read from the colour.
         ramp = maps.colorize_error(np.linspace(0.0, 0.5, 255)[None, :], 0.5)[0, :, :3].astype(int)
         self.assertTrue((np.diff(ramp, axis=0) >= 0).all())
         self.assertTrue((np.diff(ramp.sum(axis=1)) > 0).all())
@@ -673,11 +673,11 @@ class LoadErrors(unittest.TestCase):
 
 try:
     from fastapi.testclient import TestClient
-except ImportError:  # brak fastapi/httpx w środowisku
+except ImportError:  # no fastapi/httpx in the environment
     TestClient = None
 
 
-@unittest.skipIf(TestClient is None, "wymaga pakietów fastapi i httpx")
+@unittest.skipIf(TestClient is None, "needs the fastapi and httpx packages")
 class HttpApi(unittest.TestCase):
     def test_search_endpoint(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -720,11 +720,11 @@ class HttpApi(unittest.TestCase):
                 response = client.post("/error-map", json=body)
                 self.assertEqual(response.status_code, 200)
                 result = response.json()
-                self.assertEqual(result["radius_km"], 250.0)  # wartości domyślne
+                self.assertEqual(result["radius_km"], 250.0)  # default values
                 self.assertEqual(decode_error_map(result["error_map"]["image_base64"]).shape, (512, 512, 4))
                 self.assertEqual(result["error_map"]["stats"]["n_points"], 81)
-                self.assertEqual(result["error_map"]["scale"]["max"], 0.4)  # ze zmiennej środowiskowej
-                # Mapa z /search używa tej samej skali.
+                self.assertEqual(result["error_map"]["scale"]["max"], 0.4)  # from the environment variable
+                # The map from /search uses the same scale.
                 found = client.post("/search", json={**ONE_FEATURE, "top_k": 5}).json()
                 self.assertEqual(found["error_map"]["scale"], result["error_map"]["scale"])
 

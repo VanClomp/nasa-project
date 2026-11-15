@@ -1,14 +1,14 @@
-"""Serwis HTTP Szukacza (FastAPI, port wewnętrzny 8002).
+"""Szukacz HTTP service (FastAPI, internal port 8002).
 
-Uruchomienie z katalogu 4-szukacz:
+Run from the 4-szukacz folder:
     uvicorn szukacz.api:app --host 0.0.0.0 --port 8002
 
-Zmienne środowiskowe:
-    SZUKACZ_DATA_DIR         katalog z danymi Ziemi (domyślnie /data/earth)
-    SZUKACZ_MIN_DISTANCE_KM  odległość używana, gdy zapytanie nie poda min_distance_km (100)
-    SZUKACZ_CAVE_MAX_KM      próg filtra require_caves w km (15)
-    SZUKACZ_ERROR_SCALE_MAX  błąd, na którym kończy się skala kolorów map błędu (0.5)
-    SZUKACZ_THREADS          liczba wątków liczących (domyślnie liczba rdzeni, najwyżej 16)
+Environment variables:
+    SZUKACZ_DATA_DIR         folder with the Earth data (default /data/earth)
+    SZUKACZ_MIN_DISTANCE_KM  distance used when the request gives no min_distance_km (100)
+    SZUKACZ_CAVE_MAX_KM      require_caves filter threshold in km (15)
+    SZUKACZ_ERROR_SCALE_MAX  error at which the error-map colour scale ends (0.5)
+    SZUKACZ_THREADS          number of worker threads (default: number of cores, at most 16)
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ class SearchRequest(BaseModel):
     weights: list[float]
     require_caves: bool = False
     top_k: int = Field(DEFAULT_TOP_K, ge=1, le=MAX_TOP_K)
-    # Brak pola oznacza wartość z SZUKACZ_MIN_DISTANCE_KM; 0 wyłącza odsiewanie.
+    # A missing field means the SZUKACZ_MIN_DISTANCE_KM value; 0 turns the filtering off.
     min_distance_km: float | None = Field(None, ge=0)
 
 
@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
         os.environ.get("SZUKACZ_ERROR_SCALE_MAX", DEFAULT_ERROR_SCALE_MAX)
     )
     if not app.state.error_scale_max > 0:
-        raise ValueError("SZUKACZ_ERROR_SCALE_MAX: oczekiwano liczby > 0")
+        raise ValueError("SZUKACZ_ERROR_SCALE_MAX: expected a number > 0")
     yield
 
 
@@ -83,8 +83,8 @@ def health(request: Request) -> dict:
     return {"status": "ok", "n_points": earth.n_points, "n_features": earth.n_features}
 
 
-# Zwykła funkcja (nie async): FastAPI wykonuje ją w puli wątków, więc długie
-# liczenie nie blokuje pętli zdarzeń.
+# A plain (non-async) function: FastAPI runs it in a thread pool, so the long
+# computation does not block the event loop.
 @app.post("/search")
 def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse:
     state = request.app.state
@@ -102,7 +102,7 @@ def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse:
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
-    # JSONResponse wprost: wynik to już typy JSON, pomijamy drugą walidację FastAPI.
+    # JSONResponse directly: the result is already JSON types, skipping FastAPI's second validation.
     return JSONResponse(result)
 
 

@@ -83,7 +83,7 @@ def _moon_point(p, radius):
     if p.get('timestamp_iso'):
         t = dt.datetime.fromisoformat(p['timestamp_iso'].replace('Z', '+00:00')).replace(tzinfo=None); dates = [(None, t)]
     else:
-        t = None; dates = mo.months_of_year(dt.datetime.utcnow().year)
+        t = None; dates = mo.months_of_year(int(p.get('year') or dt.datetime.utcnow().year))
         if 'months' in p: dates = [d for d in dates if d[0] in [int(k) for k in p['months']]]
     st = mo.point_static(lat, lon); ns = mo.nearest_site(lat, lon, radius)
     site = None if not ns else dict(id=ns[0]['id'], name=ns[0]['name'], kind=ns[0]['kind'], distance_km=round(ns[1], 2), coord_quality=ns[0]['coord_quality'])

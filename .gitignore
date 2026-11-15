@@ -1,4 +1,4 @@
-# Surowe mapy binarne Marsa i Księżyca (3+ GB, pobierane skryptami fetch_*.sh)
+# Raw binary Mars and Moon maps (1.3+ GB; prepared with 3-charakteryzator/scripts/pack_server_data.sh)
 data/mars/*
 !data/mars/.gitkeep
 data/moon/*

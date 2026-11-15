@@ -1,14 +1,14 @@
-"""Serwis HTTP Networkera (FastAPI + httpx async, port wewnętrzny 8000).
+"""Networker HTTP service (FastAPI + async httpx, internal port 8000).
 
-Odpowiada za:
-1. Wystawienie publicznych endpointów `/api/v1/characterize`, `/api/v1/search`
-   oraz `/api/v1/error-map`.
-2. Orkiestrację zapytań do `3-charakteryzator` (domyślnie http://charakteryzator:8001)
-   oraz `4-szukacz` (domyślnie http://szukacz:8002).
-3. Jeśli na maszynie nie pobrano jeszcze surowych map binarnych PDS (.img) do
-   `/data/mars` i `/data/moon`, korzysta z precomputowanych tablic wynikowych
+Responsible for:
+1. Exposing the public endpoints `/api/v1/characterize`, `/api/v1/search`
+   and `/api/v1/error-map`.
+2. Orchestrating requests to `3-charakteryzator` (default http://charakteryzator:8001)
+   and `4-szukacz` (default http://szukacz:8002).
+3. If the raw binary PDS maps (.img) have not been downloaded to `/data/mars` and
+   `/data/moon` on this machine, using the precomputed result tables
    `3-charakteryzator/outputs/{mars,moon}_sites.json`.
-4. Wzbogacanie wyników z `4-szukacz` o pole `name_hint` (pkt 3 z todo_list.txt).
+4. Adding the `name_hint` field to the `4-szukacz` results (item 3 of todo_list.txt).
 """
 
 from __future__ import annotations
@@ -43,6 +43,7 @@ class CharacterizeRequest(BaseModel):
     lat: float = Field(..., ge=-90.0, le=90.0)
     lon: float = Field(...)
     timestamp_iso: str | None = "2026-11-14T12:00:00Z"
+    series: bool = False  # passed to 3-charakteryzator: also return extra.series (12-month p(t))
 
 
 class SearchRequest(BaseModel):
@@ -65,7 +66,7 @@ class ErrorMapRequest(BaseModel):
 def _sanitize_null_features(
     features_norm: list[float | None], weights: list[float]
 ) -> tuple[list[float], list[float]]:
-    """Zgodnie z kontraktem 3-charakteryzator (service/contract.py):
+    """Per the 3-charakteryzator contract (service/contract.py):
     'Missing values are null in features_raw and features_norm; the search should give them zero weight.'
     """
     clean_features: list[float] = []
@@ -81,8 +82,8 @@ def _sanitize_null_features(
 
 
 def _sanitize_characterize_response(data: dict[str, Any]) -> dict[str, Any]:
-    """Zastępuje wartości null w features_raw, features_norm i nearest_skylight_km wartością 0.0,
-    aby explorer.php i results.php nie wyświetlały 'null' w interfejsie użytkownika.
+    """Replaces null values in features_raw, features_norm and nearest_skylight_km with 0.0,
+    so that explorer.php and results.php do not show 'null' in the user interface.
     """
     raw = data.get("features_raw")
     if isinstance(raw, dict):
@@ -126,7 +127,7 @@ app.add_middleware(
 @app.get("/health")
 @app.get("/api/v1/health")
 async def health(request: Request) -> dict[str, Any]:
-    """Sprawdza stan Networkera oraz mikroserwisów Charakteryzator i Szukacz."""
+    """Checks the state of the Networker and of the Charakteryzator and Szukacz microservices."""
     client: httpx.AsyncClient = request.app.state.http_client
     char_url = request.app.state.charakteryzator_url
     szuk_url = request.app.state.szukacz_url
@@ -154,8 +155,8 @@ async def health(request: Request) -> dict[str, Any]:
 
 @app.post("/api/v1/characterize")
 async def characterize_endpoint(body: CharacterizeRequest, request: Request) -> JSONResponse:
-    """Przekazuje zapytanie do 3-charakteryzator (lub czyta z 3-charakteryzator/outputs/*_sites.json,
-    gdy mapy binarne .img w /data/mars i /data/moon nie są pobrane na dysk).
+    """Forwards the request to 3-charakteryzator (or reads 3-charakteryzator/outputs/*_sites.json
+    when the binary .img maps in /data/mars and /data/moon have not been downloaded).
     """
     client: httpx.AsyncClient = request.app.state.http_client
     char_url = f"{request.app.state.charakteryzator_url}/characterize"
@@ -171,7 +172,7 @@ async def characterize_endpoint(body: CharacterizeRequest, request: Request) -> 
         if resp.status_code in (400, 422):
             return JSONResponse(content=resp.json(), status_code=resp.status_code)
     except httpx.HTTPError as exc:
-        logger.warning("Brak odpowiedzi z 3-charakteryzator (%s): %s", char_url, exc)
+        logger.warning("No response from 3-charakteryzator (%s): %s", char_url, exc)
 
     try:
         fallback_data = characterize_from_precomputed_outputs(
@@ -184,13 +185,13 @@ async def characterize_endpoint(body: CharacterizeRequest, request: Request) -> 
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        logger.error("Błąd odczytu precomputowanych tablic 3-charakteryzator: %s", exc)
+        logger.error("Error reading the precomputed 3-charakteryzator tables: %s", exc)
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post("/api/v1/search")
 async def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse:
-    """Przekazuje zapytanie do 4-szukacz i uzupełnia brakujące pole `name_hint`."""
+    """Forwards the request to 4-szukacz and fills in the missing `name_hint` field."""
     client: httpx.AsyncClient = request.app.state.http_client
     szuk_url = f"{request.app.state.szukacz_url}/search"
 
@@ -207,10 +208,10 @@ async def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse
     try:
         resp = await client.post(szuk_url, json=payload)
     except httpx.HTTPError as exc:
-        logger.error("Błąd połączenia z 4-szukacz (%s): %s", szuk_url, exc)
+        logger.error("Cannot connect to 4-szukacz (%s): %s", szuk_url, exc)
         raise HTTPException(
             status_code=503,
-            detail=f"Serwis 4-szukacz jest niedostępny: {exc}",
+            detail=f"The 4-szukacz service is unavailable: {exc}",
         ) from exc
 
     if resp.status_code != 200:
@@ -222,7 +223,7 @@ async def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse
 
     data = resp.json()
 
-    # Uzupełnienie `name_hint` (punkt 3 z todo_list.txt), jeśli Szukacz go nie zwrócił
+    # Fill in `name_hint` (item 3 of todo_list.txt) when the Szukacz did not return it
     candidates = data.get("candidates")
     if isinstance(candidates, list):
         for cand in candidates:
@@ -236,7 +237,7 @@ async def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse
 
 @app.post("/api/v1/error-map")
 async def error_map_endpoint(body: ErrorMapRequest, request: Request) -> JSONResponse:
-    """Przekazuje zapytanie o szczegółową mapę błędu do 4-szukacz (pkt 18 z todo_list.txt)."""
+    """Forwards the detailed error-map request to 4-szukacz (item 18 of todo_list.txt)."""
     client: httpx.AsyncClient = request.app.state.http_client
     szuk_url = f"{request.app.state.szukacz_url}/error-map"
 
@@ -253,10 +254,10 @@ async def error_map_endpoint(body: ErrorMapRequest, request: Request) -> JSONRes
     try:
         resp = await client.post(szuk_url, json=payload)
     except httpx.HTTPError as exc:
-        logger.error("Błąd połączenia z 4-szukacz (%s): %s", szuk_url, exc)
+        logger.error("Cannot connect to 4-szukacz (%s): %s", szuk_url, exc)
         raise HTTPException(
             status_code=503,
-            detail=f"Serwis 4-szukacz jest niedostępny: {exc}",
+            detail=f"The 4-szukacz service is unavailable: {exc}",
         ) from exc
 
     try:

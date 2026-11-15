@@ -1,190 +1,195 @@
-TODO DLA INNYCH MODUŁÓW (zostawione przez Szukacza, 4-szukacz/)
-================================================================
+TODO FOR OTHER MODULES (left by the Szukacz, 4-szukacz/)
+=======================================================
 
-Szukacz jest zaimplementowany w katalogu 4-szukacz/. Pełny opis wejścia
-i wyjścia: 4-szukacz/README.md. Poniżej rzeczy, które wymagają zmian albo
-decyzji w innych modułach. Szukacz nie zmienił żadnego pliku poza swoim
-katalogiem, tym plikiem i LICENCES.md.
+The Szukacz is implemented in the 4-szukacz/ folder. Full description of the input
+and output: 4-szukacz/README.md. Below are the things that need changes or
+decisions in other modules. The Szukacz did not change any file outside its own
+folder, this file and LICENCES.md.
 
 
-NETWORKER i FRONTEND (zapytanie POST /search)
+NETWORKER and FRONTEND (POST /search request)
 ---------------------------------------------
 
-1. Nowe pole wejściowe: min_distance_km (liczba >= 0).
-   Minimalna odległość w km między zwracanymi lokalizacjami. Z dwóch punktów
-   leżących bliżej siebie Szukacz bierze tylko lepszy, a i tak zwraca top_k
-   wyników. Szukacz zakłada, że dostaje tę wartość w zapytaniu.
-   - Do zrobienia: Frontend zbiera wartość od użytkownika (albo ustala stałą),
-     Networker przekazuje ją bez zmian do http://szukacz:8002/search.
-   - Dopóki pola nie ma w zapytaniu, Szukacz przyjmuje 100 km
-     (zmienna SZUKACZ_MIN_DISTANCE_KM). Wartość 0 wyłącza odsiewanie.
+1. New input field: min_distance_km (number >= 0).
+   Minimum distance in km between the returned locations. Of two points lying
+   closer together the Szukacz takes only the better one, and still returns top_k
+   results. The Szukacz assumes it receives this value in the request.
+   - To do: the Frontend collects the value from the user (or fixes a constant),
+     the Networker forwards it unchanged to http://szukacz:8002/search.
+   - While the field is missing from the request, the Szukacz uses 100 km
+     (the SZUKACZ_MIN_DISTANCE_KM variable). The value 0 turns the filtering off.
 
-2. Pozostałe pola zapytania są bez zmian: features_norm, weights,
+2. The other request fields are unchanged: features_norm, weights,
    require_caves, top_k.
 
 
-NETWORKER i FRONTEND (odpowiedź POST /search)
----------------------------------------------
+NETWORKER and FRONTEND (POST /search response)
+----------------------------------------------
 
-3. Brak pola name_hint.
-   Szukacz nie zwraca nazwy regionu. explorer.php wstawia c.name_hint do karty
-   kandydata (linia ok. 791) i pokaże "undefined".
-   - Do zrobienia: frontend pokazuje coś innego (np. współrzędne) albo inny
-     moduł dopisuje nazwę.
+3. No name_hint field.
+   The Szukacz does not return a region name. explorer.php puts c.name_hint into the
+   candidate card (around line 791) and will show "undefined".
+   - To do: the frontend shows something else (e.g. coordinates) or another
+     module adds the name.
 
-4. Dodatkowe pole kandydata: features_norm.
-   9 znormalizowanych cech punktu w jego najlepszym miesiącu. Frontend już
-   z niego korzysta przy przeliczaniu suwaków na żywo. Nic do zrobienia,
-   tylko informacja, że pole jest poza specyfikacją.
+4. Extra candidate field: features_norm.
+   The point's 9 normalised features in its best month. The frontend already
+   uses it when re-scoring the sliders live. Nothing to do, just a note that the
+   field is outside the spec.
 
-5. heatmap_base64 to gotowa tekstura.
-   "data:image/webp;base64,...", obraz RGBA 1024x512, kolor #10B981, krycie
-   rośnie z dopasowaniem, piksele bez danych przezroczyste. Skala krycia jest
-   względna dla danego zapytania (najlepszy punkt = pełne krycie).
-   - Do zrobienia: frontend rysuje teraz własną heatmapę z plam wokół
-     kandydatów (explorer.php, linia ok. 536) i tego pola nie czyta. Żeby
-     pokazać prawdziwą mapę, trzeba nałożyć ten obraz na globus Ziemi.
+5. heatmap_base64 is a ready-made texture.
+   "data:image/webp;base64,...", an RGBA 1024x512 image, colour #10B981, opacity
+   grows with the match, pixels without data are transparent. The opacity scale is
+   relative to the query (best point = fully opaque).
+   - To do: the frontend currently draws its own heatmap from blobs around the
+     candidates (explorer.php, around line 536) and does not read this field. To
+     show the real map, this image has to be laid over the Earth globe.
 
-6. Miesiące są liczone od 1 (best_month, best_global_month: 1..12).
-   monthly_scores i tablice w climatogram_12m mają 12 pozycji, indeks 0 to
-   styczeń. Zgodne z tym, jak czyta je explorer.php.
+6. Months are counted from 1 (best_month, best_global_month: 1..12).
+   monthly_scores and the arrays in climatogram_12m have 12 entries, index 0 is
+   January. Consistent with how explorer.php reads them.
 
-7. Przypadki brzegowe, które frontend powinien znieść:
-   - candidates może mieć mniej niż top_k pozycji albo być puste
-     (np. require_caves bez jaskiń w pobliżu); wtedy best_global_month = null.
-   - Brak danych w macierzach wychodzi jako null (w monthly_scores,
+7. Edge cases the frontend should handle:
+   - candidates can have fewer than top_k entries or be empty
+     (e.g. require_caves with no caves nearby); then best_global_month = null.
+   - Missing data in the matrices comes out as null (in monthly_scores,
      features_raw_best_month, climatogram_12m, nearest_cave_km).
-   - Błędne zapytanie daje status 422 z opisem w polu "detail". Uwaga:
-     callApi w explorer.php przy każdym statusie innym niż 200 po cichu
-     przełącza się na wbudowany mock PHP, więc błąd nie będzie widoczny.
+   - An invalid request gives status 422 with a description in the "detail" field.
+     Note: callApi in explorer.php silently switches to the built-in PHP mock on
+     any status other than 200, so the error will not be visible.
 
-8. climatogram_12m zawiera wszystkie 9 cech, nie tylko temp_mean
-   i soil_moisture. Odpowiedź dla 100 kandydatów ma ok. 270 kB plus heatmapa
-   ok. 110 kB (pomiar na danych syntetycznych).
+8. climatogram_12m contains all 9 features, not just temp_mean
+   and soil_moisture. The response for 100 candidates is about 270 kB plus a
+   heatmap of about 110 kB (measured on synthetic data).
 
-9. Filtr require_caves używa progu 15 km (ta sama wartość co w mocku
-   w explorer.php). Zmiana przez zmienną SZUKACZ_CAVE_MAX_KM.
-
-
-PRECOMPUTER (pliki w /data/earth)
----------------------------------
-
-10. Szukacz czyta dokładnie to, co opisuje punkt 4.1 specyfikacji:
-    - earth_features_norm.npy  (N_POINTS, 12, 9) float32, wartości [0, 1]
-    - earth_features_raw.npy   ten sam kształt, wartości fizyczne
-    - earth_metadata.parquet albo earth_metadata.npy (tablica strukturalna)
-      z kolumnami: id, lat, lon, px_x (0..1023), px_y (0..511),
-      nearest_cave_km. Wiersze w tej samej kolejności co macierze.
-    Przy innym kształcie albo brakującej kolumnie serwis nie wystartuje
-    i wypisze, czego brakuje.
-
-11. Braki danych: najlepiej, żeby macierze nie zawierały NaN. Jeśli zawierają,
-    miesiąc z NaN w którejkolwiek cesze (także o wadze 0) przegrywa
-    z pozostałymi, a punkt bez żadnego pełnego miesiąca nie trafia do wyników.
-
-12. [Stan na 2026-11-14] Generator mocka kończy się błędem.
-    5-precomputer/MOCK_HEURYSTYKA_generate_earth_data.py zatrzymuje się na
-    np.stack (ok. linii 252): "ValueError: all input arrays must have the
-    same shape". Tablica thermal_inertia (linia 214) ma kształt (N, 1),
-    pozostałe cechy (N, 12).
-    - Skutek: przy pustym ./data kontener precomputer-mock-init kończy się
-      błędem, a szukacz czeka na jego poprawne zakończenie (depends_on
-      w docker-compose.yml), więc nie wystartuje. Z tego samego powodu nie
-      przechodzi test test_mock_precomputer_integrates_with_szukacz
-      w 2-networker/tests.
-    - Do zrobienia (Precomputer): rozciągnąć thermal_inertia do (N, 12), tak
-      jak zrobiono to dla surface_roughness i slope_deg (np.broadcast_to).
-    - Szukacz był sprawdzony na danych z tego generatora uruchomionego z taką
-      poprawką w pamięci, bez zmiany pliku: 60 000 i 400 000 punktów,
-      metadane w .npy i .parquet. Odczyt .parquet działa.
+9. The require_caves filter uses a 15 km threshold (the same value as in the mock
+   in explorer.php). Change it with the SZUKACZ_CAVE_MAX_KM variable.
 
 
-INFRASTRUKTURA (docker-compose.yml)
+PRECOMPUTER (files in /data/earth)
+----------------------------------
+
+10. The Szukacz reads exactly what section 4.1 of the spec describes:
+    - earth_features_norm.npy  (N_POINTS, 12, 9) float32, values [0, 1]
+    - earth_features_raw.npy   the same shape, physical values
+    - earth_metadata.parquet or earth_metadata.npy (structured array)
+      with the columns: id, lat, lon, px_x (0..1023), px_y (0..511),
+      nearest_cave_km. Rows in the same order as the matrices.
+    With a different shape or a missing column the service will not start
+    and will print what is missing.
+
+11. Missing data: ideally the matrices contain no NaN. If they do,
+    a month with NaN in any feature (even one with weight 0) loses
+    to the others, and a point without a single complete month is left out of the results.
+
+12. [As of 2026-11-14] The mock generator fails.
+    5-precomputer/MOCK_HEURYSTYKA_generate_earth_data.py stops at
+    np.stack (around line 252): "ValueError: all input arrays must have the
+    same shape". The thermal_inertia array (line 214) has shape (N, 1),
+    the other features (N, 12).
+    - Effect: with an empty ./data the precomputer-mock-init container fails,
+      and the szukacz waits for it to finish successfully (depends_on
+      in docker-compose.yml), so it will not start. For the same reason the
+      test_mock_precomputer_integrates_with_szukacz test in 2-networker/tests
+      fails.
+    - To do (Precomputer): stretch thermal_inertia to (N, 12), as was
+      done for surface_roughness and slope_deg (np.broadcast_to).
+    - The Szukacz was checked on data from this generator run with that
+      fix in memory, without changing the file: 60,000 and 400,000 points,
+      metadata in .npy and .parquet. Reading .parquet works.
+    - [Update 2026-11-15] Obsolete: the mock generator was removed and
+      5-precomputer/build_earth.py now builds the real Earth data.
+
+
+INFRASTRUCTURE (docker-compose.yml)
 -----------------------------------
 
-13. [Stan na 2026-11-14] docker-compose.yml istnieje i ma wpis szukacz
-    (build ./4-szukacz, wolumen ./data:/data:ro, port 8002). Nic do zrobienia.
-    Obraz z 4-szukacz/Dockerfile nadal nie był budowany po stronie Szukacza
-    (brak Dockera na maszynie).
+13. [As of 2026-11-14] docker-compose.yml exists and has a szukacz entry
+    (build ./4-szukacz, volume ./data:/data:ro, port 8002). Nothing to do.
+    The image from 4-szukacz/Dockerfile had still not been built on the Szukacz side
+    (no Docker on that machine).
 
 
-SZUKACZ (do zrobienia później, celowo pominięte)
-------------------------------------------------
+SZUKACZ (to do later, deliberately left out)
+--------------------------------------------
 
-14. Dalsze badanie wynikowych punktów: raycasting po DEM dla Top 5-10
-    (profil zasłonięcia Słońca przez góry), punkt 5.4 zadań Szukacza
-    w specyfikacji.
+14. Further study of the result points: DEM raycasting for the Top 5-10
+    (profile of mountains blocking the Sun), item 5.4 of the Szukacz tasks
+    in the spec.
 
-15. [Stan na 2026-11-14] Zrobione. Warstwa HTTP (4-szukacz/szukacz/api.py)
-    została uruchomiona z fastapi 0.163 i httpx 0.28: testy endpointów
-    /search i /error-map przechodzą, serwer uvicorn odpowiada na /health,
-    /search i /error-map.
+15. [As of 2026-11-14] Done. The HTTP layer (4-szukacz/szukacz/api.py)
+    was run with fastapi 0.163 and httpx 0.28: the endpoint tests for
+    /search and /error-map pass, and the uvicorn server answers /health,
+    /search and /error-map.
 
-16. Wydajność: ok. 105 ms na zapytanie /search przy 400 000 punktów
-    (8 rdzeni), w tym ok. 11 ms na mapę błędu z punktu 17. Specyfikacja
-    zakłada poniżej 15 ms. Możliwy kierunek: jądro liczące w numba zamiast
+16. Performance: about 105 ms per /search query with 400,000 points
+    (8 cores), including about 11 ms for the error map from item 17. The spec
+    assumes under 15 ms. A possible direction: a numba kernel instead of
     numpy.
 
 
-MAPA BŁĘDU (dodane 2026-11-14, pełny opis w 4-szukacz/README.md)
------------------------------------------------------------------
+ERROR MAP (added 2026-11-14, full description in 4-szukacz/README.md)
+---------------------------------------------------------------------
 
-Błąd to ważona różnica między profilem celu a cechami miejsca na Ziemi
-(liczba od 0 do 1, błąd = 1 - score). Szukacz zwraca go teraz jako mapę
-całej Ziemi i, na żądanie, jako szczegółową mapkę okolicy punktu.
+The error is the weighted difference between the target profile and the features of a place on Earth
+(a number from 0 to 1, error = 1 - score). The Szukacz now returns it as a map
+of the whole Earth and, on request, as a detailed map of the area around a point.
 
-17. Nowe pole w odpowiedzi POST /search: error_map.
-    Obiekt z polami image_base64, width, height, bounds, scale, stats.
-    - Networker: nic do zrobienia. /api/v1/search oddaje odpowiedź Szukacza
-      w całości, więc pole przechodzi dalej. Wynika to z kodu
-      2-networker/networker/api.py; nie było sprawdzane na działającym
-      klastrze.
-    - Frontend: do zrobienia, jeśli mapa ma być widoczna. image_base64 to
-      "data:image/png;base64,..." (PNG, nie WebP jak heatmapa), obraz
-      1024x512 nakładany na globus Ziemi tak samo jak heatmap_base64.
-      Piksel przezroczysty = brak danych. Legendę rysuje się z pola scale:
-      9 kolorów rozłożonych równo od scale.min (0) do scale.max (0.5),
-      ciemny = mały błąd, jasny = duży. Skala jest stała dla wszystkich
-      zapytań, inaczej niż w heatmapie.
-    - Odpowiedź /search urosła o 90-130 kB (dane mockowe, 60 000
-      i 400 000 punktów).
-    - Koniec skali kolorów ustawia zmienna SZUKACZ_ERROR_SCALE_MAX
-      (domyślnie 0.5). Bez zmian w docker-compose.yml działa wartość
-      domyślna.
+17. New field in the POST /search response: error_map.
+    An object with the fields image_base64, width, height, bounds, scale, stats.
+    - Networker: nothing to do. /api/v1/search passes the Szukacz response through
+      whole, so the field goes through. This follows from the code of
+      2-networker/networker/api.py; it was not checked on a running
+      cluster.
+    - Frontend: to do, if the map should be visible. image_base64 is
+      "data:image/png;base64,..." (PNG, not WebP like the heatmap), a
+      1024x512 image laid over the Earth globe in the same way as heatmap_base64.
+      A transparent pixel = no data. The legend is drawn from the scale field:
+      9 colours spread evenly from scale.min (0) to scale.max (0.5),
+      dark = small error, bright = large. The scale is fixed for all
+      queries, unlike in the heatmap.
+    - The /search response grew by 90-130 kB (mock data, 60,000
+      and 400,000 points).
+    - The end of the colour scale is set by the SZUKACZ_ERROR_SCALE_MAX variable
+      (default 0.5). Without changes to docker-compose.yml the default
+      value is used.
 
-18. Nowy endpoint Szukacza: POST /error-map (szczegółowa mapka wokół punktu).
-    Zapytanie: features_norm i weights (te same co w /search), lat, lon,
-    opcjonalnie radius_km (1..2000, domyślnie 250) i size_px (64..1024,
-    domyślnie 512). Odpowiedź: execution_time_ms, center, radius_km,
-    km_per_px, error_map (ten sam format co w punkcie 17).
-    - Networker: do zrobienia. Potrzebna publiczna trasa, np.
-      POST /api/v1/error-map, która przekazuje zapytanie bez zmian do
-      http://szukacz:8002/error-map i oddaje odpowiedź oraz status 422 bez
-      zmian. Dopóki jej nie ma, frontend nie ma dostępu do mapki.
-    - Frontend: do zrobienia. Wywołanie po wyborze kandydata albo kliknięciu
-      w globus Ziemi, z tymi samymi features_norm i weights co ostatnie
-      /search. Gdzie leży obraz, mówi error_map.bounds (stopnie).
+18. New Szukacz endpoint: POST /error-map (detailed map around a point).
+    Request: features_norm and weights (the same as in /search), lat, lon,
+    optionally radius_km (1..2000, default 250) and size_px (64..1024,
+    default 512). Response: execution_time_ms, center, radius_km,
+    km_per_px, error_map (the same format as in item 17).
+    - Networker: to do. A public route is needed, e.g.
+      POST /api/v1/error-map, that forwards the request unchanged to
+      http://szukacz:8002/error-map and returns the response and status 422
+      unchanged. Until it exists, the frontend has no access to the map.
+      [Update 2026-11-15] Done: 2-networker/networker/api.py has POST /api/v1/error-map.
+    - Frontend: to do. Call it after choosing a candidate or clicking
+      the Earth globe, with the same features_norm and weights as the last
+      /search. Where the image lies is given by error_map.bounds (degrees).
 
-19. Przypadki, które frontend powinien znieść w mapce z punktu 18:
-    - bounds.lon_min i lon_max wychodzą poza [-180, 180], gdy okno przecina
-      południk 180 (np. 170..190).
-    - height jest mniejsze niż size_px, gdy okno sięga bieguna.
-    - Okolica bez danych (ocean) daje obraz w całości przezroczysty,
-      a w stats: n_points = 0 oraz null w min, mean i max.
-    - Czas odpowiedzi: ok. 27 ms przy wartościach domyślnych, do ok. 160 ms
-      przy radius_km = 2000 i size_px = 1024 (400 000 punktów).
+19. Cases the frontend should handle in the map from item 18:
+    - bounds.lon_min and lon_max go beyond [-180, 180] when the window crosses
+      the 180th meridian (e.g. 170..190).
+    - height is smaller than size_px when the window reaches a pole.
+    - An area without data (ocean) gives a fully transparent image,
+      and in stats: n_points = 0 and null in min, mean and max.
+    - Response time: about 27 ms with the default values, up to about 160 ms
+      with radius_km = 2000 and size_px = 1024 (400,000 points).
 
-20. PRECOMPUTER: szczegółowość mapki z punktu 18 zależy od gęstości punktów.
-    Mapka nie interpoluje: piksel pokazuje błąd najbliższego punktu danych.
-    Mock z 60 000 punktów ma ich ok. 1.4 na piksel siatki 1024x512, więc
-    mapka pokazuje niewiele więcej niż mapa całej Ziemi; zysk pojawia się
-    dopiero przy gęstszych danych (400 000 punktów to ok. 3.7 na piksel).
-    Szukacz zakłada punkty rozłożone równomiernie w stopniach (regularna
-    siatka lat/lon). Jeśli docelowa siatka będzie inna, np.
-    równopowierzchniowa, przy biegunach w mapce pojawią się przerwy między
-    punktami i regułę wypełniania trzeba będzie dostosować.
+20. PRECOMPUTER: the detail of the map from item 18 depends on the point density.
+    The map does not interpolate: a pixel shows the error of the nearest data point.
+    The 60,000-point mock has about 1.4 points per pixel of the 1024x512 grid, so
+    the map shows little more than the whole-Earth map; the gain appears
+    only with denser data (400,000 points is about 3.7 per pixel).
+    The Szukacz assumes points spread evenly in degrees (a regular
+    lat/lon grid). If the target grid is different, e.g.
+    equal-area, gaps between points will appear in the map near the poles
+    and the fill rule will need adjusting.
+    [Update 2026-11-15] The real Earth data is a regular 0.2 deg lat/lon grid
+    (551,832 land points), as assumed here.
 
-21. Specyfikacja (punkt 5, Komponent 4) i CONTEXT.md (punkt 5) nie opisują
-    pola error_map ani endpointu /error-map. Szukacz tych plików nie
-    zmieniał. Do decyzji zespołu, czy dopisać tam nowy kontrakt; jego opis
-    jest w 4-szukacz/README.md.
+21. The spec (section 5, Component 4) and CONTEXT.md (section 5) do not describe
+    the error_map field or the /error-map endpoint. The Szukacz did not change
+    those files. It is up to the team whether to add the new contract there; its description
+    is in 4-szukacz/README.md.

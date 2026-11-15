@@ -1,13 +1,13 @@
 <?php
 /**
- * explorer.php - Główny terminal Mission Control (Komponent 1: 1-frontend)
- * Zgodny ze specyfikacją: POST /api/v1/characterize oraz POST /api/v1/search
- * Posiada wbudowany fallback mock API w PHP (+ opcjonalne wywołanie natywnego C++),
- * dzięki czemu działa od razu lokalnie oraz w środowisku Docker Compose z Networkerem.
+ * explorer.php - Main Mission Control terminal (Component 1: 1-frontend)
+ * Follows the spec: POST /api/v1/characterize and POST /api/v1/search
+ * Has a built-in fallback mock API in PHP (+ an optional native C++ call),
+ * so it works straight away locally and under Docker Compose with the Networker.
  */
 
 // ============================================================================
-// 1. WBUDOWANY ENDPOINT MOCK / PROXY API W PHP (gdy wywołany z ?mock_api=1)
+// 1. BUILT-IN MOCK / PROXY API ENDPOINT IN PHP (when called with ?mock_api=1)
 // ============================================================================
 if (isset($_GET['mock_api'])) {
     header('Content-Type: application/json; charset=utf-8');
@@ -20,7 +20,7 @@ if (isset($_GET['mock_api'])) {
         $lat = floatval($payload['lat'] ?? -85.2);
         $lon = floatval($payload['lon'] ?? 31.4);
 
-        // Realistyczne wyliczenie parametrów na podstawie (lat, lon) i ciała niebieskiego
+        // Realistic parameter estimate from (lat, lon) and the celestial body
         $latRad = deg2rad(abs($lat));
         if ($body === 'moon') {
             $tempMean = round(-50.0 - 140.0 * sin($latRad) + 15.0 * cos(deg2rad($lon)), 1);
@@ -45,7 +45,7 @@ if (isset($_GET['mock_api'])) {
             $slope = round(3.0 + 18.0 * abs(sin(deg2rad($lon * 1.5))), 1);
         }
 
-        // Normalizacja [0..1] zgodna z 9 cechami K_FEATURES
+        // [0..1] normalisation matching the 9 K_FEATURES
         $norm = [
             round(max(0.0, min(1.0, ($tempMean + 190.0) / 230.0)), 3),
             round(max(0.0, min(1.0, $diurnalAmp / 250.0)), 3),
@@ -84,11 +84,11 @@ if (isset($_GET['mock_api'])) {
         $weights = $payload['weights'] ?? [1, 1, 1, 1, 1, 1, 1, 1, 1];
         $requireCaves = !empty($payload['require_caves']);
 
-        // Katalog referencyjnych ziemskich analogów NASA/ESA
+        // Catalogue of reference Earth analogs (NASA/ESA)
         $earthAnalogs = [
             [
                 'id' => 104921,
-                'name_hint' => 'McMurdo Dry Valleys, Antarktyda',
+                'name_hint' => 'McMurdo Dry Valleys, Antarctica',
                 'lat' => -77.55, 'lon' => 161.80,
                 'best_month' => 7,
                 'nearest_cave_km' => 18.4,
@@ -105,7 +105,7 @@ if (isset($_GET['mock_api'])) {
             ],
             [
                 'id' => 208314,
-                'name_hint' => 'Pustynia Atacama (Yungay), Chile',
+                'name_hint' => 'Atacama Desert (Yungay), Chile',
                 'lat' => -24.08, 'lon' => -69.92,
                 'best_month' => 6,
                 'nearest_cave_km' => 31.0,
@@ -122,7 +122,7 @@ if (isset($_GET['mock_api'])) {
             ],
             [
                 'id' => 309112,
-                'name_hint' => 'Wulkan Mauna Loa (HI-SEAS), Hawaje',
+                'name_hint' => 'Mauna Loa volcano (HI-SEAS), Hawaii',
                 'lat' => 19.47, 'lon' => -155.59,
                 'best_month' => 2,
                 'nearest_cave_km' => 1.2,
@@ -139,7 +139,7 @@ if (isset($_GET['mock_api'])) {
             ],
             [
                 'id' => 412008,
-                'name_hint' => 'Krater Haughton (Devon Island), Kanada',
+                'name_hint' => 'Haughton Crater (Devon Island), Canada',
                 'lat' => 75.38, 'lon' => -89.68,
                 'best_month' => 1,
                 'nearest_cave_km' => 24.5,
@@ -156,7 +156,7 @@ if (isset($_GET['mock_api'])) {
             ],
             [
                 'id' => 518920,
-                'name_hint' => 'Płaskowyż Holuhraun (Jaskinie Lawowe), Islandia',
+                'name_hint' => 'Holuhraun lava plateau (lava caves), Iceland',
                 'lat' => 64.87, 'lon' => -16.83,
                 'best_month' => 12,
                 'nearest_cave_km' => 0.6,
@@ -173,7 +173,7 @@ if (isset($_GET['mock_api'])) {
             ],
             [
                 'id' => 619402,
-                'name_hint' => 'Kotlina Qaidam (Wydmy Marsjańskie), Tybet',
+                'name_hint' => 'Qaidam Basin (Martian dunes), Tibet',
                 'lat' => 37.25, 'lon' => 93.45,
                 'best_month' => 11,
                 'nearest_cave_km' => 54.0,
@@ -207,7 +207,7 @@ if (isset($_GET['mock_api'])) {
             }
             $score = max(0.05, min(0.99, 1.0 - ($diffSum / $wSum)));
 
-            // Generowanie 12 miesięcznych wyników
+            // Generate 12 monthly results
             $monthlyScores = [];
             for ($m = 1; $m <= 12; $m++) {
                 $distM = min(abs($m - $item['best_month']), 12 - abs($m - $item['best_month']));
@@ -228,7 +228,7 @@ if (isset($_GET['mock_api'])) {
         echo json_encode([
             'execution_time_ms' => $execMs,
             'best_global_month' => $candidates[0]['best_month'] ?? 7,
-            'heatmap_base64' => '', // Na frontendzie generowana dynamicznie na teksturze Canvas/WebGL
+            'heatmap_base64' => '', // generated dynamically on the frontend as a Canvas/WebGL texture
             'candidates' => $candidates
         ]);
         exit;
@@ -236,7 +236,7 @@ if (isset($_GET['mock_api'])) {
 }
 
 // ============================================================================
-// 2. KONFIGURACJA WIDOKU PHP (KSIĘŻYC vs MARS + 9 CECH K_FEATURES)
+// 2. PHP VIEW SETUP (MOON vs MARS + 9 K_FEATURES)
 // ============================================================================
 $selectedBody = strtolower($_GET['body'] ?? 'moon');
 if (!in_array($selectedBody, ['moon', 'mars'])) {
@@ -245,38 +245,27 @@ if (!in_array($selectedBody, ['moon', 'mars'])) {
 
 $isMoon = ($selectedBody === 'moon');
 
-// Definicja 9 cech K_FEATURES dokładnie wg specyfikacji (sekcja 4.2)
+// The 9 K_FEATURES exactly as in the spec (section 4.2)
 $kFeatures = [
-    ['idx' => 0, 'key' => 'temp_mean',           'label' => 'Średnia temp. powierzchni', 'unit' => '°C',     'default_w' => 0.90],
-    ['idx' => 1, 'key' => 'temp_diurnal_amp',    'label' => 'Dobowa amplituda temp.',    'unit' => '°C',     'default_w' => 0.70],
-    ['idx' => 2, 'key' => 'thermal_inertia',     'label' => 'Bezwładność cieplna gruntu','unit' => 'TIU',    'default_w' => 0.85],
-    ['idx' => 3, 'key' => 'surface_roughness',   'label' => 'Chropowatość (SAR / DEM)',  'unit' => 'indeks', 'default_w' => 0.65],
-    ['idx' => 4, 'key' => 'soil_moisture',       'label' => 'Wilgotność / lód wodny',    'unit' => '%',      'default_w' => 0.80],
-    ['idx' => 5, 'key' => 'dust_aerosol',        'label' => 'Zapylenie atmosfery (AOD)', 'unit' => 'AOD',    'default_w' => 0.50],
-    ['idx' => 6, 'key' => 'solar_elevation_max', 'label' => 'Maks. kąt Słońca',          'unit' => '°',      'default_w' => 0.95],
-    ['idx' => 7, 'key' => 'radiation_proxy',     'label' => 'Promieniowanie (UV/DEM)',   'unit' => 'indeks', 'default_w' => 0.60],
-    ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Nachylenie terenu',         'unit' => '°',      'default_w' => 0.75],
+    ['idx' => 0, 'key' => 'temp_mean',           'label' => 'Mean surface temp.',        'unit' => '°C',     'default_w' => 0.90],
+    ['idx' => 1, 'key' => 'temp_diurnal_amp',    'label' => 'Diurnal temp. range',       'unit' => '°C',     'default_w' => 0.70],
+    ['idx' => 2, 'key' => 'thermal_inertia',     'label' => 'Ground thermal inertia',    'unit' => 'TIU',    'default_w' => 0.85],
+    ['idx' => 3, 'key' => 'surface_roughness',   'label' => 'Roughness (SAR / DEM)',     'unit' => 'index',  'default_w' => 0.65],
+    ['idx' => 4, 'key' => 'soil_moisture',       'label' => 'Moisture / water ice',      'unit' => '%',      'default_w' => 0.80],
+    ['idx' => 5, 'key' => 'dust_aerosol',        'label' => 'Atmospheric dust (AOD)',    'unit' => 'AOD',    'default_w' => 0.50],
+    ['idx' => 6, 'key' => 'solar_elevation_max', 'label' => 'Max. Sun elevation',        'unit' => '°',      'default_w' => 0.95],
+    ['idx' => 7, 'key' => 'radiation_proxy',     'label' => 'Radiation (UV/DEM)',        'unit' => 'index',  'default_w' => 0.60],
+    ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Terrain slope',             'unit' => '°',      'default_w' => 0.75],
 ];
 
-// Presety słynnych punktów lądowania NASA dla Księżyca i Marsa
-$presets = [
-    'moon' => [
-        ['name' => 'Krater Shackleton (Biegun Pd.)', 'lat' => -89.9, 'lon' => 0.0,   'desc' => 'Baza Artemis III – krater wiecznego cienia i lód wodny'],
-        ['name' => 'Marius Hills Skylight',          'lat' => 14.1,  'lon' => -56.8, 'desc' => 'Zapadnięty strop podpowierzchniowego tunelu lawowego'],
-        ['name' => 'Mare Tranquillitatis',           'lat' => 0.67,  'lon' => 23.47, 'desc' => 'Równina bazaltowa Apollo 11 – wysoka amplituda dobowa'],
-        ['name' => 'Płaskowyż Aristarchus',          'lat' => 23.7,  'lon' => -47.4, 'desc' => 'Złoża piroklastyczne i urozmaicona rzeźba wulkaniczna'],
-    ],
-    'mars' => [
-        ['name' => 'Krater Jezero (Perseverance)',   'lat' => 18.38, 'lon' => 77.58,  'desc' => 'Dawna delta rzeczna z osadami ilastymi i węglanami'],
-        ['name' => 'Olympus Mons (Kaldera)',         'lat' => 18.65, 'lon' => -133.8, 'desc' => 'Najwyższy wulkan Układu Słonecznego, tunele lawowe'],
-        ['name' => 'Valles Marineris (Coprates)',    'lat' => -13.9, 'lon' => -60.5,  'desc' => 'Głęboki system kanionów tektonicznych i strome zbocza'],
-        ['name' => 'Planum Australe (Biegun Pd.)',   'lat' => -83.5, 'lon' => 160.0,  'desc' => 'Czapa lodowa CO₂/H₂O i ekstremalnie niskie temperatury'],
-    ]
-];
+// Landing sites: generated from the 3-charakteryzator data (scripts/export_presets.py)
+$presets = require __DIR__ . '/presets.php';
 
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
+$initialDate = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
+    ? $_GET['date'] : gmdate('Y-m-d');   // landing date (UTC), today by default
 $initialRotX = isset($_GET['rotX']) && is_numeric($_GET['rotX']) ? floatval($_GET['rotX']) : null;
 $initialRotY = isset($_GET['rotY']) && is_numeric($_GET['rotY']) ? floatval($_GET['rotY']) : null;
 $initialWeights = [];
@@ -288,7 +277,7 @@ if (isset($_GET['w'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="pl" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
+<html lang="en" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -304,22 +293,22 @@ if (isset($_GET['w'])) {
 
     <div class="hud-bg"></div>
 
-    <!-- GÓRNY PASEK NAWIGACYJNY -->
+    <!-- TOP NAVIGATION BAR -->
     <header class="navbar">
         <div class="nav-left">
-            <a href="index.php" class="back-btn">← Powrót</a>
+            <a href="index.php" class="back-btn">← Back</a>
             <span class="app-title">Planetary Analog Finder</span>
         </div>
 
         <div class="nav-right">
             <div class="mode-switcher">
-                <button class="mode-btn active" type="button">Pojedynczy</button>
-                <button class="mode-btn" type="button" onclick="switchToDualView()">Dwie planety</button>
+                <button class="mode-btn active" type="button">Single</button>
+                <button class="mode-btn" type="button" onclick="switchToDualView()">Two planets</button>
             </div>
 
             <div class="mode-switcher">
                 <button class="mode-btn <?php echo $isMoon ? 'active' : ''; ?>" id="btn-mode-moon" onclick="switchCelestialBody('moon')">
-                    Księżyc
+                    Moon
                 </button>
                 <button class="mode-btn <?php echo !$isMoon ? 'active' : ''; ?>" id="btn-mode-mars" onclick="switchCelestialBody('mars')">
                     Mars
@@ -328,30 +317,28 @@ if (isset($_GET['w'])) {
         </div>
     </header>
 
-    <!-- GŁÓWNA PRZESTRZEŃ ROBOCZA (2 KOLUMNY: KONFIGURACJA + GLOBUS 3D) -->
+    <!-- MAIN WORKSPACE (2 COLUMNS: SETUP + 3D GLOBE) -->
     <main class="workspace workspace-config">
 
-        <!-- LEWA KOLUMNA: WYBÓR PUNKTU + 9 SUWAKÓW WAG (K_FEATURES) + PRZYCISK DO WYNIKÓW -->
+        <!-- LEFT COLUMN: POINT SELECTION + 9 WEIGHT SLIDERS (K_FEATURES) + RESULTS BUTTON -->
         <aside class="hud-panel">
             <div class="panel-header">
                 <div class="panel-title">
-                    <span>Parametry i wagi</span>
+                    <span>Parameters and weights</span>
                 </div>
             </div>
 
             <div class="panel-body">
-                <span class="section-label">Lokalizacje referencyjne</span>
-                <div class="presets-list" id="presets-container">
-                    <?php foreach ($presets[$selectedBody] as $idx => $p): ?>
-                        <button class="preset-chip <?php echo $idx === 0 ? 'active' : ''; ?>"
-                                onclick="selectPreset(<?php echo $p['lat']; ?>, <?php echo $p['lon']; ?>, this)">
-                            <strong><?php echo htmlspecialchars($p['name']); ?></strong>
-                            <span><?php echo $p['lat']; ?>°, <?php echo $p['lon']; ?>°</span>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
+                <span class="section-label">Landing site</span>
+                <button type="button" class="site-picker-btn" id="site-picker-btn" onclick="SitePicker.open()" aria-haspopup="dialog">
+                    <span class="site-picker-btn-text">
+                        <strong id="site-picker-current">&nbsp;</strong>
+                        <span id="site-picker-coords">&nbsp;</span>
+                    </span>
+                    <span class="site-picker-btn-cta">Change ▾</span>
+                </button>
 
-                <span class="section-label">Współrzędne</span>
+                <span class="section-label">Coordinates</span>
                 <div class="coords-row">
                     <div class="hud-input-group">
                         <label>LAT (°)</label>
@@ -362,9 +349,17 @@ if (isset($_GET['w'])) {
                         <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
                 </div>
-                <button type="button" class="center-pin-btn" onclick="centerGlobeOnPin()">Wyśrodkuj</button>
+                <button type="button" class="center-pin-btn" onclick="centerGlobeOnPin()">Center</button>
 
-                <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
+                <span class="section-label">Landing date</span>
+                <div class="coords-row">
+                    <div class="hud-input-group">
+                        <label>DATA (UTC)</label>
+                        <input type="date" id="input-date" min="1990-01-01" max="2100-12-31" value="<?php echo htmlspecialchars($initialDate); ?>" onchange="triggerCharacterize()">
+                    </div>
+                </div>
+
+                <span class="section-label">Match weights (0.0 – 1.0)</span>
                 <div id="sliders-container">
                     <?php foreach ($kFeatures as $f): ?>
                         <?php $wVal = $initialWeights[$f['idx']] ?? $f['default_w']; ?>
@@ -386,51 +381,54 @@ if (isset($_GET['w'])) {
                 </div>
 
                 <label class="cave-toggle">
-                    <span>Wymagaj bliskości jaskiń / tuneli lawowych (&lt; 15 km)</span>
+                    <span>Require a nearby cave / lava tube (&lt; 15 km)</span>
                     <input type="checkbox" id="require-caves" <?php echo $initialCaves ? 'checked' : ''; ?>>
                 </label>
             </div>
 
             <div class="panel-footer">
                 <button type="button" class="find-analogs-btn" onclick="openResultsPage()">
-                    <span>Znajdź analogi na Ziemi</span>
+                    <span>Find analogs on Earth</span>
                     <span>→</span>
                 </button>
             </div>
         </aside>
 
-        <!-- ŚRODKOWA KOLUMNA: GLOBUS 3D + ODCZYT CHARAKTERYZATORA -->
+        <!-- MIDDLE COLUMN: 3D GLOBE + CHARACTERIZER READOUT -->
         <section class="center-stage">
             <div class="globe-viewport">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill" id="globe-status-pill">
-                        Kliknij powierzchnię, aby wybrać punkt · Scroll, aby przybliżyć
+                        Click the surface to pick a point · Scroll to zoom
                     </div>
                 </div>
                 <div id="main-globe-canvas"></div>
             </div>
 
-            <!-- Dolny pasek z odczytem z Charakteryzatora (POST /api/v1/characterize) -->
+            <!-- Bottom bar with the Characterizer readout (POST /api/v1/characterize) -->
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        Dane lokalizacji · <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span>
+                        Location data · <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span><span id="readout-season"></span>
                     </span>
-                    <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
-                        Najbliższa jaskinia: -- km
-                    </span>
+                    <div class="readout-meta">
+                        <span class="model-badge" id="model-badge" title="Data source">Model: --</span>
+                        <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
+                            Nearest cave: -- km
+                        </span>
+                    </div>
                 </div>
                 <div class="readout-grid">
-                    <div class="readout-box"><span>TEMP. ŚREDNIA</span><strong id="raw-temp_mean">-- °C</strong></div>
-                    <div class="readout-box"><span>AMPLITUDA DOBOWA</span><strong id="raw-temp_diurnal_amp">-- °C</strong></div>
-                    <div class="readout-box"><span>BEZWŁADNOŚĆ CIEPLNA</span><strong id="raw-thermal_inertia">-- TIU</strong></div>
-                    <div class="readout-box"><span>CHROPOWATOŚĆ</span><strong id="raw-surface_roughness">--</strong></div>
-                    <div class="readout-box"><span>WILGOTNOŚĆ / LÓD</span><strong id="raw-soil_moisture">-- %</strong></div>
-                    <div class="readout-box"><span>ZAPYLENIE (AOD)</span><strong id="raw-dust_aerosol">--</strong></div>
-                    <div class="readout-box"><span>MAKS. KĄT SŁOŃCA</span><strong id="raw-solar_elevation_max">-- °</strong></div>
-                    <div class="readout-box"><span>PROMIENIOWANIE</span><strong id="raw-radiation_proxy">--</strong></div>
-                    <div class="readout-box"><span>NACHYLENIE STOKU</span><strong id="raw-slope_deg">-- °</strong></div>
-                    <div class="readout-box"><span>STATUS</span><strong style="color:var(--emerald);">Gotowy</strong></div>
+                    <div class="readout-box"><span>MEAN TEMP.</span><strong id="raw-temp_mean">-- °C</strong></div>
+                    <div class="readout-box"><span>DIURNAL RANGE</span><strong id="raw-temp_diurnal_amp">-- °C</strong></div>
+                    <div class="readout-box"><span>THERMAL INERTIA</span><strong id="raw-thermal_inertia">-- TIU</strong></div>
+                    <div class="readout-box"><span>ROUGHNESS</span><strong id="raw-surface_roughness">--</strong></div>
+                    <div class="readout-box"><span>MOISTURE / ICE</span><strong id="raw-soil_moisture">-- %</strong></div>
+                    <div class="readout-box"><span>DUST (AOD)</span><strong id="raw-dust_aerosol">--</strong></div>
+                    <div class="readout-box"><span>MAX. SUN ELEVATION</span><strong id="raw-solar_elevation_max">-- °</strong></div>
+                    <div class="readout-box"><span>RADIATION</span><strong id="raw-radiation_proxy">--</strong></div>
+                    <div class="readout-box"><span>TERRAIN SLOPE</span><strong id="raw-slope_deg">-- °</strong></div>
+                    <div class="readout-box"><span>STATUS</span><strong style="color:var(--emerald);">Ready</strong></div>
                 </div>
             </div>
         </section>
@@ -439,10 +437,10 @@ if (isset($_GET['w'])) {
 
     <script>
         // =========================================================================
-        // STAN APLIKACJI I PRESETY Z PHP
+        // APP STATE AND PRESETS FROM PHP
         // =========================================================================
         const PRESETS = <?php echo json_encode($presets); ?>;
-        const MONTH_NAMES = ['STY', 'LUT', 'MAR', 'KWI', 'MAJ', 'CZE', 'LIP', 'SIE', 'WRZ', 'PAŹ', 'LIS', 'GRU'];
+        const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
         let currentBody = <?php echo json_encode($selectedBody); ?>; // 'moon' | 'mars'
         let globeViewMode = currentBody; // 'moon' | 'mars' | 'earth'
@@ -451,7 +449,7 @@ if (isset($_GET['w'])) {
         let selectedCandidateIndex = 0;
 
         // =========================================================================
-        // 1. SCENA 3D THREE.JS (GLOBUS KSIĘŻYCA / MARSA / ZIEMI Z HEATMAPĄ I PINEZKAMI)
+        // 1. THREE.JS 3D SCENE (MOON / MARS / EARTH GLOBE WITH HEATMAP AND PINS)
         // =========================================================================
         const globeContainer = document.getElementById('main-globe-canvas');
         const scene = new THREE.Scene();
@@ -513,7 +511,7 @@ if (isset($_GET['w'])) {
             globeGroup.rotation.y = INITIAL_ROT_Y;
         }
 
-        // Subtelna, ale wyraźna pinezka powierzchniowa (kropka + cienki pierścień)
+        // Subtle but clear surface pin (dot + thin ring)
         const targetMarker = new THREE.Group();
         const markerDotGeo = new THREE.CircleGeometry(0.013, 24);
         const markerDotMat = new THREE.MeshBasicMaterial({ color: 0xf4f4f6, side: THREE.DoubleSide });
@@ -545,7 +543,7 @@ if (isset($_GET['w'])) {
         window.addEventListener('resize', resizeGlobe);
         setTimeout(resizeGlobe, 50);
 
-        // Konwersja (lat, lon) na wektor 3D na sferze
+        // Convert (lat, lon) to a 3D vector on the sphere
         function latLonToVector3(lat, lon, radius = 1.13) {
             const phi = (90 - lat) * (Math.PI / 180);
             const theta = (lon + 180) * (Math.PI / 180);
@@ -564,7 +562,7 @@ if (isset($_GET['w'])) {
             );
         }
 
-        // Obracanie globusa myszką, płynny zoom w stronę kursora (jak Google Maps) + Raycasting kliknięcia
+        // Rotate the globe with the mouse, smooth zoom towards the cursor (like Google Maps) + click raycasting
         let isDragging = false;
         let dragMoved = false;
         let prevMouse = { x: 0, y: 0 };
@@ -701,7 +699,7 @@ if (isset($_GET['w'])) {
             isDragging = false;
         });
 
-        // Obsługa dotyku (obrót 1 palcem, tapnięcie, pinch-to-zoom 2 palcami)
+        // Touch support (1-finger rotate, tap, 2-finger pinch-to-zoom)
         let prevPinchDist = 0;
         renderer.domElement.addEventListener('touchstart', (e) => {
             if (isDiving) return;
@@ -850,7 +848,7 @@ if (isset($_GET['w'])) {
                 camera.position.y += (targetCamY - camera.position.y) * 0.08;
                 camera.position.z += (targetCamZ - camera.position.z) * 0.08;
             }
-            // Skalowanie pinezki proporcjonalnie do przybliżenia widoku planety
+            // Scale the pin with the planet view's zoom level
             const markerScale = isDiving
                 ? Math.max(0.12, (camera.position.z - 1.05) / 2.05)
                 : Math.max(0.22, (camera.position.z - 1.05) / 2.05);
@@ -866,7 +864,7 @@ if (isset($_GET['w'])) {
         // =========================================================================
         async function callApi(endpoint, payload) {
             try {
-                // Najpierw próbujemy docelowego endpointu z kontenera 2-networker (/api/v1/...)
+                // First try the real endpoint of the 2-networker container (/api/v1/...)
                 const res = await fetch(`/api/v1/${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -874,7 +872,7 @@ if (isset($_GET['w'])) {
                 });
                 if (res.ok) return await res.json();
             } catch (err) {
-                // Brak uruchomionego Dockera -> używamy wbudowanego endpointu PHP
+                // Docker not running -> use the built-in PHP endpoint
             }
             const fallbackRes = await fetch(`explorer.php?mock_api=${endpoint}`, {
                 method: 'POST',
@@ -904,7 +902,7 @@ if (isset($_GET['w'])) {
                 target_body: currentBody,
                 lat: lat,
                 lon: lon,
-                timestamp_iso: new Date().toISOString()
+                timestamp_iso: landingTimestamp()
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);
@@ -913,6 +911,32 @@ if (isset($_GET['w'])) {
         function onWeightSliderChange(slider) {
             const idx = slider.dataset.idx;
             document.getElementById(`weight-val-${idx}`).innerText = parseFloat(slider.value).toFixed(2);
+        }
+
+
+        // Landing date from #input-date -> timestamp_iso for /api/v1/characterize (noon UTC that day).
+        // Conditions on Mars / the Moon (season Ls, dust, temperatures, Sun position) depend on this date.
+        function landingTimestamp() {
+            const el = document.getElementById('input-date');
+            const d = el ? el.value : '';
+            return /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T12:00:00Z` : new Date().toISOString();
+        }
+        function landingDate() {
+            return landingTimestamp().slice(0, 10);
+        }
+
+        // Season for the chosen date (extra.season from 3-charakteryzator)
+        function renderSeason(profile) {
+            const el = document.getElementById('readout-season');
+            if (!el) return;
+            const s = (profile && profile.extra && profile.extra.season) || null;
+            if (s && s.ls !== undefined) {
+                el.innerText = ` · Ls ${Number(s.ls).toFixed(0)}° (Mars year ${s.mars_year})`;
+            } else if (s && s.local_lunar_hour !== undefined) {
+                el.innerText = ` · lunar hour ${Number(s.local_lunar_hour).toFixed(1)}`;
+            } else {
+                el.innerText = '';
+            }
         }
 
         function renderTargetProfileReadout(profile) {
@@ -927,7 +951,57 @@ if (isset($_GET['w'])) {
             document.getElementById('raw-radiation_proxy').innerText = r.radiation_proxy;
             document.getElementById('raw-slope_deg').innerText = `${r.slope_deg} °`;
             document.getElementById('readout-skylight').innerText =
-                `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
+                `Nearest cave: ${profile.nearest_skylight_km} km`;
+            renderModelBadge(profile);
+            renderSeason(profile);
+            renderFeatureFlags(profile);
+        }
+
+        // extra.model from 3-charakteryzator: "local" = station data for this date (Mars), "orbital" = orbital measurements
+        // at this point (Moon), "global" = global model (uncertain). Missing field (e.g. the PHP mock) = global.
+        const MODEL_LABELS = {
+            local:   'Local model · station data',
+            orbital: 'Orbital measurements · this point',
+            global:  'Global model · uncertain'
+        };
+        function renderModelBadge(profile) {
+            const badge = document.getElementById('model-badge');
+            if (!badge) return;
+            const extra = (profile && profile.extra) || {};
+            const model = MODEL_LABELS[extra.model] ? extra.model : 'global';
+            ['local', 'orbital', 'global'].forEach(m => badge.classList.toggle(m, m === model));
+            badge.innerText = MODEL_LABELS[model];
+            badge.title = extra.model_basis || MODEL_LABELS[model];
+        }
+
+        // For every parameter: where the value at THIS place comes from (extra.features_measured) and whether it changes
+        // with the landing date (extra.features_time_varying). Parameter docs: 3-charakteryzator/PARAMETERS.md.
+        const FEATURE_KEYS = ['temp_mean', 'temp_diurnal_amp', 'thermal_inertia', 'surface_roughness', 'soil_moisture',
+                              'dust_aerosol', 'solar_elevation_max', 'radiation_proxy', 'slope_deg'];
+        function renderFeatureFlags(profile) {
+            const extra = (profile && profile.extra) || {};
+            const meas = extra.features_measured || [];
+            const tv = extra.features_time_varying || [];
+            const raw = (profile && profile.features_raw) || {};
+            FEATURE_KEYS.forEach((k, i) => {
+                const valueEl = document.getElementById(`raw-${k}`);
+                if (!valueEl) return;
+                const box = valueEl.parentElement;
+                let flags = box.querySelector('.feat-flags');
+                if (!flags) { flags = document.createElement('span'); flags.className = 'feat-flags'; box.appendChild(flags); }
+                let src;
+                if (raw[k] === null || raw[k] === undefined || (extra.null_features || []).includes(k)) {
+                    src = '<i class="feat-src none" title="No data for this place">no data</i>';
+                } else if (meas[i] === true) {
+                    src = '<i class="feat-src local" title="Measured at this place (station, orbital map at this pixel or exact geometry)">measured</i>';
+                } else {
+                    src = '<i class="feat-src global" title="Predicted by the global model (latitude, elevation, maps) - uncertain">model</i>';
+                }
+                const time = tv[i] === true
+                    ? '<i class="feat-time varies" title="Changes with the landing date (season, Sun position, dust season)">◷ by date</i>'
+                    : (tv[i] === false ? '<i class="feat-time fixed" title="Fixed property of the place, does not depend on the date">fixed</i>' : '');
+                flags.innerHTML = src + time;
+            });
         }
 
         function selectPreset(lat, lon, btnEl) {
@@ -947,14 +1021,6 @@ if (isset($_GET['w'])) {
             document.getElementById('btn-mode-mars').classList.toggle('active', body === 'mars');
 
             const pList = PRESETS[body];
-            const pContainer = document.getElementById('presets-container');
-            pContainer.innerHTML = pList.map((p, idx) => `
-                <button class="preset-chip ${idx === 0 ? 'active' : ''}"
-                        onclick="selectPreset(${p.lat}, ${p.lon}, this)">
-                    <strong>${p.name}</strong>
-                    <span>${p.lat}°, ${p.lon}°</span>
-                </button>
-            `).join('');
 
             document.getElementById('input-lat').value = pList[0].lat;
             document.getElementById('input-lon').value = pList[0].lon;
@@ -980,6 +1046,7 @@ if (isset($_GET['w'])) {
                 lon: lon.toFixed(2),
                 w: weights,
                 caves: caves,
+                date: landingDate(),
                 rotX: globeGroup.rotation.x.toFixed(4),
                 rotY: globeGroup.rotation.y.toFixed(4)
             });
@@ -995,7 +1062,7 @@ if (isset($_GET['w'])) {
             prefetch.href = targetUrl;
             document.head.appendChild(prefetch);
 
-            // Zaktualizuj aktywny przycisk w pasku nawigacji
+            // Update the active button in the navigation bar
             const modeBtns = document.querySelectorAll('.nav-right .mode-switcher:first-child .mode-btn');
             if (modeBtns.length >= 2) {
                 modeBtns[0].classList.remove('active');
@@ -1013,14 +1080,14 @@ if (isset($_GET['w'])) {
             const winW = window.innerWidth;
             const winH = window.innerHeight;
 
-            // Aktualna pozycja i rozmiar planety w pikselach przed zmianą układu
+            // Current planet position and size in pixels before the layout change
             const vFov = (camera.fov * Math.PI) / 180;
             const startWorldPerPx = (2 * camera.position.z * Math.tan(vFov / 2)) / rect.height;
             const startRadiusPx = 1.12 / startWorldPerPx;
             const startCenterX = rect.left + rect.width / 2 - (camera.position.x / startWorldPerPx);
             const startCenterY = rect.top + rect.height / 2 + (camera.position.y / startWorldPerPx);
 
-            // Dokładna docelowa geometria lewej i prawej kolumny w dual.php
+            // Exact target geometry of the left and right columns in dual.php
             const dualDrawerW = Math.min(310, Math.max(270, winW * 0.19));
             const gap = Math.min(48, Math.max(24, winW * 0.028));
             const innerStageW = winW - dualDrawerW - 44;
@@ -1032,7 +1099,7 @@ if (isset($_GET['w'])) {
             const hHalfDual = 1.22 / Math.min(1, colW / colH);
             const targetRadiusPx = (1.12 / hHalfDual) * (colH / 2);
 
-            // Zamroź aktualne pozycje paneli przed wyjęciem viewportu z gridu
+            // Freeze the current panel positions before taking the viewport out of the grid
             const frozenRects = [leftPanel, bottomBar].map(el => el ? el.getBoundingClientRect() : null);
             [leftPanel, bottomBar].forEach((el, i) => {
                 const r = frozenRects[i];
@@ -1383,17 +1450,18 @@ if (isset($_GET['w'])) {
                 lat: lat.toFixed(2),
                 lon: lon.toFixed(2),
                 w: weights,
-                caves: caves
+                caves: caves,
+                date: landingDate()
             });
             diveUrl = `results.php?${params.toString()}`;
 
-            // Prefetch results.php w trakcie animacji, aby zminimalizować czarny ekran przy przejściu
+            // Prefetch results.php during the animation to minimise the black screen during the transition
             const prefetch = document.createElement('link');
             prefetch.rel = 'prefetch';
             prefetch.href = diveUrl;
             document.head.appendChild(prefetch);
 
-            // Oblicz docelowy obrót planety, aby wybrane (lat, lon) ustawiło się na wprost kamery
+            // Work out the target planet rotation so that the chosen (lat, lon) faces the camera
             const pt = latLonToVector3(lat, lon, 1.0);
             const desiredRotY = Math.atan2(-pt.x, pt.z);
             const horiz = Math.sqrt(pt.x * pt.x + pt.z * pt.z);
@@ -1403,7 +1471,7 @@ if (isset($_GET['w'])) {
             if (dy > Math.PI) dy -= Math.PI * 2;
             if (dy < -Math.PI) dy += Math.PI * 2;
 
-            // Rozszerz viewport planety na cały ekran (100vw x 100vh) bez przeskoku pozycji ani rozmiaru
+            // Expand the planet viewport to the full screen (100vw x 100vh) without a jump in position or size
             const viewport = document.querySelector('.globe-viewport');
             const rect = viewport.getBoundingClientRect();
             const winW = window.innerWidth;
@@ -1428,8 +1496,8 @@ if (isset($_GET['w'])) {
             camera.position.z = diveStartZ;
             globeGroup.position.set(diveStartPosX, diveStartPosY, 0);
 
-            // Zapisz aktualne pozycje paneli zanim .globe-viewport przejdzie na position: fixed,
-            // żeby żaden kontener nie przeskoczył w układzie strony
+            // Save the current panel positions before .globe-viewport switches to position: fixed,
+            // so that no container jumps in the page layout
             const navbar = document.querySelector('.navbar');
             const leftPanel = document.querySelector('aside.hud-panel');
             const bottomBar = document.querySelector('.target-readout-bar');
@@ -1456,7 +1524,7 @@ if (isset($_GET['w'])) {
 
             isDiving = true;
 
-            // Płynne rozsunięcie kontenerów poza krawędzie ekranu (w następnej klatce)
+            // Smoothly slide the containers off the screen edges (in the next frame)
             requestAnimationFrame(() => {
                 const ease = 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease';
                 if (navbar) {
@@ -1486,7 +1554,7 @@ if (isset($_GET['w'])) {
             });
         }
 
-        // Start aplikacji + automatyczne przeliczanie po zmianie współrzędnych
+        // Start the app + automatic recalculation after the coordinates change
         window.addEventListener('DOMContentLoaded', () => {
             const latInput = document.getElementById('input-lat');
             const lonInput = document.getElementById('input-lon');
@@ -1517,5 +1585,6 @@ if (isset($_GET['w'])) {
             triggerCharacterize();
         });
     </script>
+    <?php include __DIR__ . '/site_picker.php'; ?>
 </body>
 </html>
