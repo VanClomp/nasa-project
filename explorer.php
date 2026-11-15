@@ -472,13 +472,13 @@ if (isset($_GET['w'])) {
         function generateBodyTexture(mode, candidates = []) {
             if (mode === 'moon') {
                 if (!moonPhotoTexture) {
-                    moonPhotoTexture = textureLoader.load('moon_photo.jpg');
+                    moonPhotoTexture = textureLoader.load('images/moon_photo.jpg');
                 }
                 return moonPhotoTexture;
             }
             if (mode === 'mars') {
                 if (!marsPhotoTexture) {
-                    marsPhotoTexture = textureLoader.load('mars_photo.jpg');
+                    marsPhotoTexture = textureLoader.load('images/mars_photo.jpg');
                 }
                 return marsPhotoTexture;
             }
