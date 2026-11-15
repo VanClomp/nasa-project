@@ -55,7 +55,7 @@ $backQuery = http_build_query([
     <!-- GÓRNY PASEK NAWIGACYJNY -->
     <header class="navbar">
         <div class="nav-left">
-            <a href="explorer.php?<?php echo htmlspecialchars($backQuery); ?>" class="back-btn">← Konfiguracja</a>
+            <a href="explorer.php?<?php echo htmlspecialchars($backQuery); ?>" class="back-btn" id="btn-back-config" onclick="return returnToConfig(event);">← Konfiguracja</a>
             <a href="index.php" class="back-btn">Zmień planetę</a>
             <span class="app-title">Wyniki analizy</span>
         </div>
@@ -287,6 +287,14 @@ $backQuery = http_build_query([
         let targetCamY = 0;
         let targetCamZ = 3.1;
         let pauseAutoRotateUntil = 0;
+        let isReturning = false;
+        let retStart = 0;
+        let retStartCamX = 0;
+        let retStartCamY = 0;
+        let retStartZ = 3.1;
+        let retStartPosX = 0;
+        let retStartPosY = 0;
+        let retUrl = '';
 
         function pauseAutoRotate(ms = 8000) {
             pauseAutoRotateUntil = performance.now() + ms;
@@ -400,17 +408,141 @@ $backQuery = http_build_query([
             }
         }, { passive: false });
 
-        function animateScene() {
-            if (!isDragging) {
-                const now = performance.now();
-                if (now >= pauseAutoRotateUntil) {
-                    const resumeFactor = Math.min(1, (now - pauseAutoRotateUntil) / 800);
-                    globeGroup.rotation.y += 0.0012 * resumeFactor;
-                }
+        function easeInOutQuart(t) {
+            return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+        }
+
+        function returnToConfig(e) {
+            if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)) {
+                return true;
             }
-            camera.position.x += (targetCamX - camera.position.x) * 0.065;
-            camera.position.y += (targetCamY - camera.position.y) * 0.065;
-            camera.position.z += (targetCamZ - camera.position.z) * 0.065;
+            if (e) e.preventDefault();
+            if (isReturning) return false;
+
+            const btn = document.getElementById('btn-back-config');
+            retUrl = btn ? btn.href : 'explorer.php';
+
+            const prefetch = document.createElement('link');
+            prefetch.rel = 'prefetch';
+            prefetch.href = retUrl;
+            document.head.appendChild(prefetch);
+
+            const viewport = document.querySelector('.globe-viewport');
+            const rect = viewport.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            retStart = performance.now();
+            retStartCamX = camera.position.x;
+            retStartCamY = camera.position.y;
+            retStartZ = camera.position.z * (winH / rect.height);
+
+            const dxPx = (rect.left + rect.width / 2) - (winW / 2);
+            const dyPx = -((rect.top + rect.height / 2) - (winH / 2));
+            const vFov = (camera.fov * Math.PI) / 180;
+            const worldPerPx = (2 * retStartZ * Math.tan(vFov / 2)) / winH;
+
+            retStartPosX = dxPx * worldPerPx;
+            retStartPosY = dyPx * worldPerPx;
+            camera.position.z = retStartZ;
+            globeGroup.position.set(retStartPosX, retStartPosY, 0);
+
+            const navbar = document.querySelector('.navbar');
+            const rightPanel = document.querySelector('aside.hud-panel');
+            const bottomBar = document.querySelector('.target-readout-bar');
+            const hudOverlay = document.querySelector('.globe-hud-overlay');
+
+            [rightPanel, bottomBar].forEach(el => {
+                if (!el) return;
+                const r = el.getBoundingClientRect();
+                el.style.position = 'fixed';
+                el.style.top = `${r.top}px`;
+                el.style.left = `${r.left}px`;
+                el.style.width = `${r.width}px`;
+                el.style.height = `${r.height}px`;
+                el.style.zIndex = '25';
+            });
+            if (navbar) navbar.style.zIndex = '30';
+
+            viewport.style.position = 'fixed';
+            viewport.style.inset = '0';
+            viewport.style.width = '100vw';
+            viewport.style.height = '100vh';
+            viewport.style.zIndex = '5';
+            resizeGlobe();
+
+            isReturning = true;
+
+            requestAnimationFrame(() => {
+                const ease = 'transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease';
+                if (navbar) {
+                    navbar.style.transition = ease;
+                    navbar.style.transform = 'translateY(-110%)';
+                    navbar.style.opacity = '0';
+                    navbar.style.pointerEvents = 'none';
+                }
+                if (bottomBar) {
+                    bottomBar.style.transition = ease;
+                    bottomBar.style.transform = 'translateY(140%)';
+                    bottomBar.style.opacity = '0';
+                    bottomBar.style.pointerEvents = 'none';
+                }
+                if (rightPanel) {
+                    rightPanel.style.transition = ease;
+                    rightPanel.style.transform = 'translateX(110%)';
+                    rightPanel.style.opacity = '0';
+                    rightPanel.style.pointerEvents = 'none';
+                }
+                if (hudOverlay) {
+                    hudOverlay.style.transition = ease;
+                    hudOverlay.style.transform = 'translateY(-20px)';
+                    hudOverlay.style.opacity = '0';
+                    hudOverlay.style.pointerEvents = 'none';
+                }
+            });
+
+            return false;
+        }
+
+        function animateScene(now) {
+            if (isReturning) {
+                const elapsed = now - retStart;
+                const progress = Math.min(1, elapsed / 1050);
+                const eased = easeInOutQuart(progress);
+
+                camera.position.x = retStartCamX * (1 - eased);
+                camera.position.y = retStartCamY * (1 - eased);
+                camera.position.z = retStartZ + (1.16 - retStartZ) * eased;
+                globeGroup.position.x = retStartPosX * (1 - eased);
+                globeGroup.position.y = retStartPosY * (1 - eased);
+                globeGroup.rotation.y += 0.0006 * (1 - eased);
+
+                if (progress > 0.88) {
+                    document.body.style.transition = 'opacity 0.14s ease';
+                    document.body.style.opacity = '0';
+                }
+                if (progress >= 1) {
+                    try {
+                        sessionStorage.setItem('paf_view_transition', JSON.stringify({
+                            dir: 'from_results',
+                            startEpoch: Date.now()
+                        }));
+                    } catch (e) {}
+                    window.location.href = retUrl;
+                    return;
+                }
+            } else {
+                if (!isDragging) {
+                    const tNow = performance.now();
+                    if (tNow >= pauseAutoRotateUntil) {
+                        const resumeFactor = Math.min(1, (tNow - pauseAutoRotateUntil) / 800);
+                        globeGroup.rotation.y += 0.0012 * resumeFactor;
+                    }
+                }
+                camera.position.x += (targetCamX - camera.position.x) * 0.065;
+                camera.position.y += (targetCamY - camera.position.y) * 0.065;
+                camera.position.z += (targetCamZ - camera.position.z) * 0.065;
+            }
 
             const pinScale = Math.max(0.24, (camera.position.z - 1.05) / 2.05);
             pinsGroup.children.forEach(pin => pin.scale.setScalar(pinScale));
@@ -418,7 +550,71 @@ $backQuery = http_build_query([
             renderer.render(scene, camera);
             requestAnimationFrame(animateScene);
         }
-        animateScene();
+        requestAnimationFrame(animateScene);
+
+        (function initResultsEnterAnimation() {
+            if (window.innerWidth <= 1024) return;
+
+            const navbar = document.querySelector('.navbar');
+            const rightPanel = document.querySelector('aside.hud-panel');
+            const bottomBar = document.querySelector('.target-readout-bar');
+            const hudOverlay = document.querySelector('.globe-hud-overlay');
+
+            document.body.style.opacity = '0';
+            if (navbar) {
+                navbar.style.transform = 'translateY(-100%)';
+                navbar.style.opacity = '0';
+            }
+            if (rightPanel) {
+                rightPanel.style.transform = 'translateX(110%)';
+                rightPanel.style.opacity = '0';
+            }
+            if (bottomBar) {
+                bottomBar.style.transform = 'translateY(125%)';
+                bottomBar.style.opacity = '0';
+            }
+            if (hudOverlay) {
+                hudOverlay.style.transform = 'translateY(-16px)';
+                hudOverlay.style.opacity = '0';
+            }
+
+            requestAnimationFrame(() => {
+                document.body.style.transition = 'opacity 0.25s ease';
+                document.body.style.opacity = '1';
+
+                const navEase = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease';
+                const panelEase = 'transform 0.68s cubic-bezier(0.22, 1, 0.36, 1) 0.06s, opacity 0.5s ease 0.06s';
+
+                if (navbar) {
+                    navbar.style.transition = navEase;
+                    navbar.style.transform = 'translate(0, 0)';
+                    navbar.style.opacity = '1';
+                }
+                if (hudOverlay) {
+                    hudOverlay.style.transition = navEase;
+                    hudOverlay.style.transform = 'translate(0, 0)';
+                    hudOverlay.style.opacity = '1';
+                }
+                [rightPanel, bottomBar].forEach(el => {
+                    if (!el) return;
+                    el.style.transition = panelEase;
+                    el.style.transform = 'translate(0, 0)';
+                    el.style.opacity = '1';
+                });
+
+                setTimeout(() => {
+                    if (isReturning) return;
+                    document.body.style.transition = '';
+                    document.body.style.opacity = '';
+                    [navbar, rightPanel, bottomBar, hudOverlay].forEach(el => {
+                        if (!el) return;
+                        el.style.transition = '';
+                        el.style.transform = '';
+                        el.style.opacity = '';
+                    });
+                }, 780);
+            });
+        })();
 
         // =========================================================================
         // 2. API CALLS (CHARACTERIZE + SEARCH)

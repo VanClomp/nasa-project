@@ -266,6 +266,8 @@ $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedB
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
 $initialDate = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
     ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC), domyślnie dziś
+$initialRotX = isset($_GET['rotX']) && is_numeric($_GET['rotX']) ? floatval($_GET['rotX']) : null;
+$initialRotY = isset($_GET['rotY']) && is_numeric($_GET['rotY']) ? floatval($_GET['rotY']) : null;
 $initialWeights = [];
 if (isset($_GET['w'])) {
     $parts = explode(',', $_GET['w']);
@@ -452,7 +454,7 @@ if (isset($_GET['w'])) {
         const globeContainer = document.getElementById('main-globe-canvas');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-        camera.position.z = 3.1;
+        camera.position.z = 3.45;
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         globeContainer.appendChild(renderer.domElement);
@@ -474,6 +476,7 @@ if (isset($_GET['w'])) {
         }
         let moonPhotoTexture = loadBodyTexture('images/moon_photo.jpg');
         let marsPhotoTexture = loadBodyTexture('images/mars_photo.jpg');
+        const earthPhotoTexture = textureLoader.load('images/earth_photo.jpg');
 
         function generateBodyTexture(mode, candidates = []) {
             if (mode === 'moon') {
@@ -500,6 +503,13 @@ if (isset($_GET['w'])) {
         });
         const globeMesh = new THREE.Mesh(sphereGeo, sphereMat);
         globeGroup.add(globeMesh);
+
+        const INITIAL_ROT_X = <?php echo json_encode($initialRotX); ?>;
+        const INITIAL_ROT_Y = <?php echo json_encode($initialRotY); ?>;
+        if (INITIAL_ROT_X !== null && INITIAL_ROT_Y !== null) {
+            globeGroup.rotation.x = INITIAL_ROT_X;
+            globeGroup.rotation.y = INITIAL_ROT_Y;
+        }
 
         // Subtelna, ale wyraźna pinezka powierzchniowa (kropka + cienki pierścień)
         const targetMarker = new THREE.Group();
@@ -558,12 +568,12 @@ if (isset($_GET['w'])) {
         let prevMouse = { x: 0, y: 0 };
         let targetCamX = 0;
         let targetCamY = 0;
-        let targetCamZ = 3.1;
+        let targetCamZ = 3.45;
         let isDiving = false;
         let diveStart = 0;
         let diveStartCamX = 0;
         let diveStartCamY = 0;
-        let diveStartZ = 3.1;
+        let diveStartZ = 3.45;
         let diveStartPosX = 0;
         let diveStartPosY = 0;
         let diveStartRotX = 0;
@@ -571,6 +581,9 @@ if (isset($_GET['w'])) {
         let diveTargetRotX = 0;
         let diveTargetRotY = 0;
         let diveUrl = '';
+        let dualTrans = null;
+        let earthTransGroup = null;
+        let earthTransMat = null;
 
         const raycaster = new THREE.Raycaster();
         const mouseVec = new THREE.Vector2();
@@ -595,7 +608,7 @@ if (isset($_GET['w'])) {
             const halfWNew = halfHNew * camera.aspect;
 
             targetCamZ = newZ;
-            const maxPan = Math.max(0, (3.1 - newZ) * 0.65);
+            const maxPan = Math.max(0, (3.45 - newZ) * 0.65);
             targetCamX = Math.max(-maxPan, Math.min(maxPan, worldX - ndcX * halfWNew));
             targetCamY = Math.max(-maxPan, Math.min(maxPan, worldY - ndcY * halfHNew));
         }
@@ -757,7 +770,43 @@ if (isset($_GET['w'])) {
         }
 
         function animateScene(now) {
-            if (isDiving) {
+            if (dualTrans) {
+                const elapsed = now - dualTrans.start;
+                const progress = Math.min(1, elapsed / dualTrans.duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                globeGroup.position.x = dualTrans.startPosX + (dualTrans.endPosX - dualTrans.startPosX) * eased;
+                globeGroup.position.y = dualTrans.startPosY + (dualTrans.endPosY - dualTrans.startPosY) * eased;
+                const curScale = dualTrans.startScale + (dualTrans.endScale - dualTrans.startScale) * eased;
+                globeGroup.scale.setScalar(curScale);
+
+                if (earthTransGroup) {
+                    earthTransGroup.position.x = dualTrans.earthStartX + (dualTrans.earthEndX - dualTrans.earthStartX) * eased;
+                    earthTransGroup.position.y = dualTrans.endPosY;
+                    earthTransGroup.scale.setScalar(dualTrans.endScale * (0.9 + 0.1 * eased));
+                    earthTransGroup.rotation.y += 0.0008;
+                    earthTransMat.opacity = Math.min(1, eased * 1.45);
+                }
+
+                if (dualTrans.mode === 'out' && elapsed >= dualTrans.reloadAt && !dualTrans.navigated) {
+                    dualTrans.navigated = true;
+                    try {
+                        sessionStorage.setItem('paf_view_transition', JSON.stringify({
+                            dir: 'to_dual',
+                            startEpoch: Date.now() - elapsed,
+                            duration: dualTrans.duration,
+                            rotX: globeGroup.rotation.x,
+                            rotY: globeGroup.rotation.y
+                        }));
+                    } catch (e) {}
+                    window.location.href = dualTrans.url;
+                    return;
+                }
+
+                if (dualTrans.mode === 'in' && progress >= 1) {
+                    finishEnterSingleView();
+                }
+            } else if (isDiving) {
                 const elapsed = now - diveStart;
                 const progress = Math.min(1, elapsed / 1250);
                 const eased = easeInOutQuart(progress);
@@ -986,6 +1035,7 @@ if (isset($_GET['w'])) {
         }
 
         function switchToDualView() {
+            if (isDiving || dualTrans) return;
             const lat = parseFloat(document.getElementById('input-lat').value) || 0;
             const lon = parseFloat(document.getElementById('input-lon').value) || 0;
             const weights = getWeightsVector().map(w => w.toFixed(2)).join(',');
@@ -996,10 +1046,397 @@ if (isset($_GET['w'])) {
                 lon: lon.toFixed(2),
                 w: weights,
                 caves: caves,
-                date: landingDate()
+                date: landingDate(),
+                rotX: globeGroup.rotation.x.toFixed(4),
+                rotY: globeGroup.rotation.y.toFixed(4)
             });
-            window.location.href = `dual.php?${params.toString()}`;
+            const targetUrl = `dual.php?${params.toString()}`;
+
+            if (window.innerWidth <= 1024) {
+                window.location.href = targetUrl;
+                return;
+            }
+
+            const prefetch = document.createElement('link');
+            prefetch.rel = 'prefetch';
+            prefetch.href = targetUrl;
+            document.head.appendChild(prefetch);
+
+            // Zaktualizuj aktywny przycisk w pasku nawigacji
+            const modeBtns = document.querySelectorAll('.nav-right .mode-switcher:first-child .mode-btn');
+            if (modeBtns.length >= 2) {
+                modeBtns[0].classList.remove('active');
+                modeBtns[1].classList.add('active');
+            }
+
+            const navbar = document.querySelector('.navbar');
+            const leftPanel = document.querySelector('aside.hud-panel');
+            const bottomBar = document.querySelector('.target-readout-bar');
+            const hudOverlay = document.querySelector('.globe-hud-overlay');
+            const viewport = document.querySelector('.globe-viewport');
+
+            const rect = viewport.getBoundingClientRect();
+            const navH = navbar ? navbar.getBoundingClientRect().height : 0;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            // Aktualna pozycja i rozmiar planety w pikselach przed zmianą układu
+            const vFov = (camera.fov * Math.PI) / 180;
+            const startWorldPerPx = (2 * camera.position.z * Math.tan(vFov / 2)) / rect.height;
+            const startRadiusPx = 1.12 / startWorldPerPx;
+            const startCenterX = rect.left + rect.width / 2 - (camera.position.x / startWorldPerPx);
+            const startCenterY = rect.top + rect.height / 2 + (camera.position.y / startWorldPerPx);
+
+            // Dokładna docelowa geometria lewej i prawej kolumny w dual.php
+            const dualDrawerW = Math.min(310, Math.max(270, winW * 0.19));
+            const gap = Math.min(48, Math.max(24, winW * 0.028));
+            const innerStageW = winW - dualDrawerW - 44;
+            const colW = (innerStageW - gap) / 2;
+            const colH = winH - navH - 16;
+            const leftColCenterX = dualDrawerW + 24 + colW / 2;
+            const leftColCenterY = navH + 8 + colH / 2;
+            const rightColCenterX = leftColCenterX + colW + gap;
+            const hHalfDual = 1.22 / Math.min(1, colW / colH);
+            const targetRadiusPx = (1.12 / hHalfDual) * (colH / 2);
+
+            // Zamroź aktualne pozycje paneli przed wyjęciem viewportu z gridu
+            const frozenRects = [leftPanel, bottomBar].map(el => el ? el.getBoundingClientRect() : null);
+            [leftPanel, bottomBar].forEach((el, i) => {
+                const r = frozenRects[i];
+                if (!el || !r) return;
+                el.style.position = 'fixed';
+                el.style.top = `${r.top}px`;
+                el.style.left = `${r.left}px`;
+                el.style.width = `${r.width}px`;
+                el.style.height = `${r.height}px`;
+                el.style.zIndex = '25';
+            });
+            if (navbar) navbar.style.zIndex = '30';
+
+            const vpH = winH - navH;
+            viewport.style.position = 'fixed';
+            viewport.style.top = `${navH}px`;
+            viewport.style.left = '0';
+            viewport.style.width = `${winW}px`;
+            viewport.style.height = `${vpH}px`;
+            viewport.style.zIndex = '5';
+
+            renderer.setSize(winW, vpH);
+            camera.aspect = winW / vpH;
+            camera.position.set(0, 0, 4.3);
+            camera.updateProjectionMatrix();
+
+            const newWorldPerPx = (2 * 4.3 * Math.tan(vFov / 2)) / vpH;
+            const vpCenterY = navH + vpH / 2;
+            const startPosX = (startCenterX - winW / 2) * newWorldPerPx;
+            const startPosY = -(startCenterY - vpCenterY) * newWorldPerPx;
+            const startScale = (startRadiusPx * newWorldPerPx) / 1.12;
+
+            const endPosX = (leftColCenterX - winW / 2) * newWorldPerPx;
+            const endPosY = -(leftColCenterY - vpCenterY) * newWorldPerPx;
+            const endScale = (targetRadiusPx * newWorldPerPx) / 1.12;
+
+            const earthEndX = (rightColCenterX - winW / 2) * newWorldPerPx;
+            const earthStartX = (winW + targetRadiusPx * 1.4 - winW / 2) * newWorldPerPx;
+
+            globeGroup.position.set(startPosX, startPosY, 0);
+            globeGroup.scale.setScalar(startScale);
+
+            earthTransGroup = new THREE.Group();
+            earthTransMat = new THREE.MeshStandardMaterial({
+                map: earthPhotoTexture,
+                roughness: 0.96,
+                metalness: 0.0,
+                transparent: true,
+                opacity: 0
+            });
+            earthTransGroup.add(new THREE.Mesh(sphereGeo, earthTransMat));
+            earthTransGroup.position.set(earthStartX, endPosY, 0);
+            earthTransGroup.scale.setScalar(endScale * 0.9);
+            scene.add(earthTransGroup);
+
+            dualTrans = {
+                mode: 'out',
+                start: performance.now(),
+                duration: 720,
+                reloadAt: 220,
+                navigated: false,
+                startPosX, startPosY, startScale,
+                endPosX, endPosY, endScale,
+                earthStartX, earthEndX,
+                url: targetUrl
+            };
+
+            requestAnimationFrame(() => {
+                const panelEase = 'all 0.72s cubic-bezier(0.22, 1, 0.36, 1)';
+                if (leftPanel) {
+                    leftPanel.style.transition = panelEase;
+                    leftPanel.style.left = '8px';
+                    leftPanel.style.top = `${navH + 8}px`;
+                    leftPanel.style.width = `${dualDrawerW}px`;
+                    leftPanel.style.height = `${winH - navH - 16}px`;
+                }
+                if (bottomBar) {
+                    bottomBar.style.transition = 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease';
+                    bottomBar.style.transform = 'translateY(125%)';
+                    bottomBar.style.opacity = '0';
+                    bottomBar.style.pointerEvents = 'none';
+                }
+                if (hudOverlay) {
+                    hudOverlay.style.transition = 'opacity 0.2s ease';
+                    hudOverlay.style.opacity = '0';
+                }
+            });
         }
+
+        function finishEnterSingleView() {
+            const leftPanel = document.querySelector('aside.hud-panel');
+            const bottomBar = document.querySelector('.target-readout-bar');
+            const hudOverlay = document.querySelector('.globe-hud-overlay');
+            const viewport = document.querySelector('.globe-viewport');
+
+            if (leftPanel) {
+                leftPanel.style.position = '';
+                leftPanel.style.top = '';
+                leftPanel.style.left = '';
+                leftPanel.style.width = '';
+                leftPanel.style.height = '';
+                leftPanel.style.zIndex = '';
+                leftPanel.style.transition = '';
+            }
+            if (bottomBar) {
+                bottomBar.style.position = '';
+                bottomBar.style.top = '';
+                bottomBar.style.left = '';
+                bottomBar.style.width = '';
+                bottomBar.style.height = '';
+                bottomBar.style.zIndex = '';
+                bottomBar.style.transition = '';
+                bottomBar.style.transform = '';
+                bottomBar.style.opacity = '';
+            }
+            if (hudOverlay) {
+                hudOverlay.style.transition = '';
+                hudOverlay.style.opacity = '';
+            }
+            if (viewport) {
+                viewport.style.position = '';
+                viewport.style.top = '';
+                viewport.style.left = '';
+                viewport.style.width = '';
+                viewport.style.height = '';
+                viewport.style.zIndex = '';
+            }
+            globeGroup.position.set(0, 0, 0);
+            globeGroup.scale.setScalar(1);
+            dualTrans = null;
+            resizeGlobe();
+        }
+
+        (function initEnterSingleTransition() {
+            let raw = null;
+            try {
+                raw = sessionStorage.getItem('paf_view_transition');
+                if (raw) sessionStorage.removeItem('paf_view_transition');
+            } catch (e) {}
+            if (!raw || window.innerWidth <= 1024) return;
+
+            let data = null;
+            try { data = JSON.parse(raw); } catch (e) {}
+            if (!data) return;
+
+            if (data.dir === 'from_results') {
+                const elapsedRes = Math.max(0, Date.now() - (data.startEpoch || Date.now()));
+                if (elapsedRes > 2500) return;
+
+                const lat = parseFloat(document.getElementById('input-lat').value) || 0;
+                const lon = parseFloat(document.getElementById('input-lon').value) || 0;
+                const pt = latLonToVector3(lat, lon, 1.0);
+                globeGroup.rotation.y = Math.atan2(-pt.x, pt.z);
+                globeGroup.rotation.x = Math.atan2(pt.y, Math.hypot(pt.x, pt.z));
+                camera.position.z = 1.75;
+                pauseAutoRotate(1200);
+
+                const navbar = document.querySelector('.navbar');
+                const leftPanel = document.querySelector('aside.hud-panel');
+                const bottomBar = document.querySelector('.target-readout-bar');
+                const hudOverlay = document.querySelector('.globe-hud-overlay');
+
+                document.body.style.opacity = '0';
+                if (navbar) {
+                    navbar.style.transform = 'translateY(-100%)';
+                    navbar.style.opacity = '0';
+                }
+                if (leftPanel) {
+                    leftPanel.style.transform = 'translateX(-110%)';
+                    leftPanel.style.opacity = '0';
+                }
+                if (bottomBar) {
+                    bottomBar.style.transform = 'translateY(125%)';
+                    bottomBar.style.opacity = '0';
+                }
+                if (hudOverlay) {
+                    hudOverlay.style.transform = 'translateY(-16px)';
+                    hudOverlay.style.opacity = '0';
+                }
+
+                requestAnimationFrame(() => {
+                    document.body.style.transition = 'opacity 0.25s ease';
+                    document.body.style.opacity = '1';
+                    const ease = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease';
+                    [navbar, leftPanel, bottomBar, hudOverlay].forEach(el => {
+                        if (!el) return;
+                        el.style.transition = ease;
+                        el.style.transform = 'translate(0, 0)';
+                        el.style.opacity = '1';
+                    });
+                    setTimeout(() => {
+                        document.body.style.transition = '';
+                        document.body.style.opacity = '';
+                        [navbar, leftPanel, bottomBar, hudOverlay].forEach(el => {
+                            if (!el) return;
+                            el.style.transition = '';
+                            el.style.transform = '';
+                            el.style.opacity = '';
+                        });
+                    }, 680);
+                });
+                return;
+            }
+
+            if (data.dir !== 'to_single') return;
+
+            const elapsed = Math.max(0, Date.now() - (data.startEpoch || Date.now()));
+            if (elapsed > 2200) return;
+
+            if (typeof data.rotX === 'number' && typeof data.rotY === 'number') {
+                globeGroup.rotation.x = data.rotX;
+                globeGroup.rotation.y = data.rotY;
+            }
+
+            const progress0 = Math.min(0.75, elapsed / (data.duration || 720));
+            const eased0 = 1 - Math.pow(1 - progress0, 3);
+            const remaining = Math.max(300, (data.duration || 720) - elapsed);
+
+            const navbar = document.querySelector('.navbar');
+            const leftPanel = document.querySelector('aside.hud-panel');
+            const bottomBar = document.querySelector('.target-readout-bar');
+            const hudOverlay = document.querySelector('.globe-hud-overlay');
+            const viewport = document.querySelector('.globe-viewport');
+
+            const navH = navbar ? navbar.getBoundingClientRect().height : 0;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const vpH = winH - navH;
+
+            const dualDrawerW = Math.min(310, Math.max(270, winW * 0.19));
+            const gap = Math.min(48, Math.max(24, winW * 0.028));
+            const colW = (winW - dualDrawerW - 44 - gap) / 2;
+            const colH = winH - navH - 16;
+            const dualCenterX = dualDrawerW + 24 + colW / 2;
+            const dualCenterY = navH + 8 + colH / 2;
+            const hHalfDual = 1.22 / Math.min(1, colW / colH);
+            const dualRadiusPx = (1.12 / hHalfDual) * (colH / 2);
+
+            const vpSingleW = winW - 418;
+            const vpSingleH = Math.max(200, winH - navH - 182);
+            const singleCenterX = 402 + vpSingleW / 2;
+            const singleCenterY = navH + 16 + vpSingleH / 2;
+            const vFov = (42 * Math.PI) / 180;
+            const singleWorldPerPx = (2 * 3.45 * Math.tan(vFov / 2)) / vpSingleH;
+            const singleRadiusPx = 1.12 / singleWorldPerPx;
+
+            const startCenterX = dualCenterX + (singleCenterX - dualCenterX) * eased0;
+            const startCenterY = dualCenterY + (singleCenterY - dualCenterY) * eased0;
+            const startRadiusPx = dualRadiusPx + (singleRadiusPx - dualRadiusPx) * eased0;
+
+            const br = bottomBar ? bottomBar.getBoundingClientRect() : null;
+
+            if (leftPanel) {
+                const curL = 8 + (16 - 8) * eased0;
+                const curT = (navH + 8) + ((navH + 16) - (navH + 8)) * eased0;
+                const curW = dualDrawerW + (370 - dualDrawerW) * eased0;
+                const curH = (winH - navH - 16) + ((winH - navH - 32) - (winH - navH - 16)) * eased0;
+                leftPanel.style.position = 'fixed';
+                leftPanel.style.left = `${curL}px`;
+                leftPanel.style.top = `${curT}px`;
+                leftPanel.style.width = `${curW}px`;
+                leftPanel.style.height = `${curH}px`;
+                leftPanel.style.zIndex = '25';
+            }
+            if (bottomBar && br) {
+                bottomBar.style.position = 'fixed';
+                bottomBar.style.top = `${br.top}px`;
+                bottomBar.style.left = `${br.left}px`;
+                bottomBar.style.width = `${br.width}px`;
+                bottomBar.style.height = `${br.height}px`;
+                bottomBar.style.transition = 'none';
+                bottomBar.style.transform = 'translateY(120%)';
+                bottomBar.style.opacity = '0';
+                bottomBar.style.zIndex = '25';
+                void bottomBar.offsetHeight;
+            }
+            if (hudOverlay) {
+                hudOverlay.style.opacity = '0';
+            }
+            if (navbar) navbar.style.zIndex = '30';
+
+            if (viewport) {
+                viewport.style.position = 'fixed';
+                viewport.style.top = `${navH}px`;
+                viewport.style.left = '0';
+                viewport.style.width = `${winW}px`;
+                viewport.style.height = `${vpH}px`;
+                viewport.style.zIndex = '5';
+            }
+
+            renderer.setSize(winW, vpH);
+            camera.aspect = winW / vpH;
+            camera.position.set(0, 0, 3.45);
+            camera.updateProjectionMatrix();
+
+            const newWorldPerPx = (2 * 3.45 * Math.tan(vFov / 2)) / vpH;
+            const vpCenterY = navH + vpH / 2;
+
+            const startPosX = (startCenterX - winW / 2) * newWorldPerPx;
+            const startPosY = -(startCenterY - vpCenterY) * newWorldPerPx;
+            const startScale = (startRadiusPx * newWorldPerPx) / 1.12;
+
+            const endPosX = (singleCenterX - winW / 2) * newWorldPerPx;
+            const endPosY = -(singleCenterY - vpCenterY) * newWorldPerPx;
+            const endScale = (singleRadiusPx * newWorldPerPx) / 1.12;
+
+            globeGroup.position.set(startPosX, startPosY, 0);
+            globeGroup.scale.setScalar(startScale);
+
+            dualTrans = {
+                mode: 'in',
+                start: performance.now(),
+                duration: remaining,
+                startPosX, startPosY, startScale,
+                endPosX, endPosY, endScale
+            };
+
+            requestAnimationFrame(() => {
+                const easeStr = `all ${remaining}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+                if (leftPanel) {
+                    leftPanel.style.transition = easeStr;
+                    leftPanel.style.left = '16px';
+                    leftPanel.style.top = `${navH + 16}px`;
+                    leftPanel.style.width = '370px';
+                    leftPanel.style.height = `${winH - navH - 32}px`;
+                }
+                if (bottomBar) {
+                    bottomBar.style.transition = `transform ${Math.round(remaining * 0.95)}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${Math.round(remaining * 0.75)}ms ease`;
+                    bottomBar.style.transform = 'translateY(0)';
+                    bottomBar.style.opacity = '1';
+                }
+                if (hudOverlay) {
+                    hudOverlay.style.transition = `opacity ${Math.round(remaining * 0.6)}ms ease ${Math.round(remaining * 0.35)}ms`;
+                    hudOverlay.style.opacity = '1';
+                }
+            });
+        })();
 
         function openResultsPage() {
             if (isDiving) return;
