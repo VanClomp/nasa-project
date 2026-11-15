@@ -39,6 +39,8 @@ $presets = [
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
+$initialRotX = isset($_GET['rotX']) && is_numeric($_GET['rotX']) ? floatval($_GET['rotX']) : null;
+$initialRotY = isset($_GET['rotY']) && is_numeric($_GET['rotY']) ? floatval($_GET['rotY']) : null;
 $initialWeights = [];
 if (isset($_GET['w'])) {
     $parts = explode(',', $_GET['w']);
@@ -383,6 +385,7 @@ if (isset($_GET['w'])) {
             }
 
             function resize() {
+                if (state.isTransitioning) return;
                 const rect = container.getBoundingClientRect();
                 if (rect.width <= 0 || rect.height <= 0) return;
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -548,27 +551,57 @@ if (isset($_GET['w'])) {
             }, { passive: false });
 
             function loop() {
-                if (state.isCentering) {
-                    group.rotation.x += (state.targetCenterRotX - group.rotation.x) * 0.12;
-                    group.rotation.y += (state.targetCenterRotY - group.rotation.y) * 0.12;
-                    if (Math.abs(state.targetCenterRotX - group.rotation.x) < 0.001 &&
-                        Math.abs(state.targetCenterRotY - group.rotation.y) < 0.001) {
-                        group.rotation.x = state.targetCenterRotX;
-                        group.rotation.y = state.targetCenterRotY;
-                        state.isCentering = false;
+                if (state.singleTrans) {
+                    const tr = state.singleTrans;
+                    const elapsed = performance.now() - tr.start;
+                    const progress = Math.min(1, elapsed / tr.duration);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+
+                    group.position.x = tr.startPosX + (tr.endPosX - tr.startPosX) * eased;
+                    group.position.y = tr.startPosY + (tr.endPosY - tr.startPosY) * eased;
+                    group.scale.setScalar(tr.startScale + (tr.endScale - tr.startScale) * eased);
+
+                    if (tr.mode === 'out' && elapsed >= tr.reloadAt && !tr.navigated) {
+                        tr.navigated = true;
+                        try {
+                            sessionStorage.setItem('paf_view_transition', JSON.stringify({
+                                dir: 'to_single',
+                                startEpoch: Date.now() - elapsed,
+                                duration: tr.duration,
+                                rotX: group.rotation.x,
+                                rotY: group.rotation.y
+                            }));
+                        } catch (e) {}
+                        window.location.href = tr.url;
+                        return;
                     }
-                } else if (!state.isDragging) {
-                    const now = performance.now();
-                    if (now >= state.pauseAutoRotateUntil) {
-                        const resumeFactor = Math.min(1, (now - state.pauseAutoRotateUntil) / 800);
-                        group.rotation.y += 0.0008 * resumeFactor;
+
+                    if (tr.mode === 'in' && progress >= 1) {
+                        if (tr.onFinish) tr.onFinish();
                     }
-                }
-                camera.position.x += (state.targetCamX - camera.position.x) * 0.08;
-                camera.position.y += (state.targetCamY - camera.position.y) * 0.08;
-                camera.position.z += (state.targetCamZ - camera.position.z) * 0.08;
-                if (state.onPinScale) {
-                    state.onPinScale(Math.max(0.22, (camera.position.z - 1.05) / 3.25));
+                } else {
+                    if (state.isCentering) {
+                        group.rotation.x += (state.targetCenterRotX - group.rotation.x) * 0.12;
+                        group.rotation.y += (state.targetCenterRotY - group.rotation.y) * 0.12;
+                        if (Math.abs(state.targetCenterRotX - group.rotation.x) < 0.001 &&
+                            Math.abs(state.targetCenterRotY - group.rotation.y) < 0.001) {
+                            group.rotation.x = state.targetCenterRotX;
+                            group.rotation.y = state.targetCenterRotY;
+                            state.isCentering = false;
+                        }
+                    } else if (!state.isDragging) {
+                        const now = performance.now();
+                        if (now >= state.pauseAutoRotateUntil) {
+                            const resumeFactor = Math.min(1, (now - state.pauseAutoRotateUntil) / 800);
+                            group.rotation.y += 0.0008 * resumeFactor;
+                        }
+                    }
+                    camera.position.x += (state.targetCamX - camera.position.x) * 0.08;
+                    camera.position.y += (state.targetCamY - camera.position.y) * 0.08;
+                    camera.position.z += (state.targetCamZ - camera.position.z) * 0.08;
+                    if (state.onPinScale) {
+                        state.onPinScale(Math.max(0.22, (camera.position.z - 1.05) / 3.25));
+                    }
                 }
                 renderer.render(scene, camera);
                 requestAnimationFrame(loop);
@@ -587,6 +620,12 @@ if (isset($_GET['w'])) {
                 triggerCharacterizeAndSearch();
             }
         });
+        const INITIAL_ROT_X = <?php echo json_encode($initialRotX); ?>;
+        const INITIAL_ROT_Y = <?php echo json_encode($initialRotY); ?>;
+        if (INITIAL_ROT_X !== null && INITIAL_ROT_Y !== null) {
+            targetGlobe.group.rotation.x = INITIAL_ROT_X;
+            targetGlobe.group.rotation.y = INITIAL_ROT_Y;
+        }
 
         // Pinezka na Księżycu / Marsie
         const targetMarker = new THREE.Group();
@@ -834,8 +873,331 @@ if (isset($_GET['w'])) {
         }
 
         function switchToSingleView() {
-            window.location.href = `explorer.php?${buildQuery()}`;
+            if (targetGlobe.isTransitioning) return;
+            const rotParams = `&rotX=${targetGlobe.group.rotation.x.toFixed(4)}&rotY=${targetGlobe.group.rotation.y.toFixed(4)}`;
+            const targetUrl = `explorer.php?${buildQuery()}${rotParams}`;
+
+            if (window.innerWidth <= 1024) {
+                window.location.href = targetUrl;
+                return;
+            }
+
+            const prefetch = document.createElement('link');
+            prefetch.rel = 'prefetch';
+            prefetch.href = targetUrl;
+            document.head.appendChild(prefetch);
+
+            // Zaktualizuj aktywny przycisk w pasku nawigacji
+            const modeBtns = document.querySelectorAll('.nav-right .mode-switcher:first-child .mode-btn');
+            if (modeBtns.length >= 2) {
+                modeBtns[0].classList.add('active');
+                modeBtns[1].classList.remove('active');
+            }
+
+            const navbar = document.querySelector('.navbar');
+            const workspace = document.getElementById('dual-workspace');
+            const leftDrawer = document.getElementById('dual-filters-panel');
+            const resultsDrawer = document.getElementById('dual-results-panel');
+            const cols = document.querySelectorAll('.dual-globe-col');
+            const targetCol = cols[0];
+            const earthCol = cols[1];
+            const hudPills = document.querySelectorAll('.dual-globe-col .globe-hud-overlay');
+
+            const navH = navbar ? navbar.getBoundingClientRect().height : 0;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const vpH = winH - navH;
+
+            // Aktualna pozycja i rozmiar lewej planety na ekranie
+            const rect = targetGlobe.container.getBoundingClientRect();
+            const cam = targetGlobe.camera;
+            const curVFov = (cam.fov * Math.PI) / 180;
+            const startWorldPerPx = (2 * cam.position.z * Math.tan(curVFov / 2)) / rect.height;
+            const startRadiusPx = 1.12 / startWorldPerPx;
+            const startCenterX = rect.left + rect.width / 2 - (cam.position.x / startWorldPerPx);
+            const startCenterY = rect.top + rect.height / 2 + (cam.position.y / startWorldPerPx);
+
+            // Dokładna docelowa geometria pojedynczej planety w explorer.php
+            const vpSingleW = winW - 418;
+            const vpSingleH = Math.max(200, winH - navH - 182);
+            const endCenterX = 402 + vpSingleW / 2;
+            const endCenterY = navH + 16 + vpSingleH / 2;
+            const singleVFov = (42 * Math.PI) / 180;
+            const endWorldPerPx = (2 * 3.45 * Math.tan(singleVFov / 2)) / vpSingleH;
+            const endRadiusPx = 1.12 / endWorldPerPx;
+
+            // Zamroź aktualną pozycję lewego panelu przed animacją do wymiarów explorer.php
+            const showingResults = workspace.classList.contains('show-results');
+            if (leftDrawer) {
+                const lr = leftDrawer.getBoundingClientRect();
+                leftDrawer.style.position = 'fixed';
+                leftDrawer.style.top = `${lr.top}px`;
+                leftDrawer.style.left = `${showingResults ? -lr.width - 24 : lr.left}px`;
+                leftDrawer.style.width = `${lr.width}px`;
+                leftDrawer.style.height = `${lr.height}px`;
+                leftDrawer.style.bottom = 'auto';
+                leftDrawer.style.transform = 'none';
+                leftDrawer.style.opacity = showingResults ? '0' : '1';
+                leftDrawer.style.zIndex = '25';
+            }
+            if (resultsDrawer && showingResults) {
+                const rr = resultsDrawer.getBoundingClientRect();
+                resultsDrawer.style.position = 'fixed';
+                resultsDrawer.style.top = `${rr.top}px`;
+                resultsDrawer.style.left = `${rr.left}px`;
+                resultsDrawer.style.width = `${rr.width}px`;
+                resultsDrawer.style.height = `${rr.height}px`;
+                resultsDrawer.style.right = 'auto';
+                resultsDrawer.style.bottom = 'auto';
+                resultsDrawer.style.transform = 'none';
+                resultsDrawer.style.zIndex = '24';
+            }
+            if (navbar) navbar.style.zIndex = '30';
+
+            // Rozszerz canvas lewej planety na cały obszar pod navbarem bez przeskoku w klatce 0
+            targetGlobe.isTransitioning = true;
+            if (targetCol) targetCol.style.overflow = 'visible';
+            const canvasBox = targetGlobe.container;
+            canvasBox.style.position = 'fixed';
+            canvasBox.style.top = `${navH}px`;
+            canvasBox.style.left = '0';
+            canvasBox.style.width = `${winW}px`;
+            canvasBox.style.height = `${vpH}px`;
+            canvasBox.style.zIndex = '5';
+
+            targetGlobe.renderer.setSize(winW, vpH);
+            cam.fov = 42;
+            cam.aspect = winW / vpH;
+            cam.position.set(0, 0, 3.45);
+            cam.updateProjectionMatrix();
+
+            const newWorldPerPx = (2 * 3.45 * Math.tan(singleVFov / 2)) / vpH;
+            const vpCenterY = navH + vpH / 2;
+
+            const startPosX = (startCenterX - winW / 2) * newWorldPerPx;
+            const startPosY = -(startCenterY - vpCenterY) * newWorldPerPx;
+            const startScale = (startRadiusPx * newWorldPerPx) / 1.12;
+
+            const endPosX = (endCenterX - winW / 2) * newWorldPerPx;
+            const endPosY = -(endCenterY - vpCenterY) * newWorldPerPx;
+            const endScale = (endRadiusPx * newWorldPerPx) / 1.12;
+
+            targetGlobe.group.position.set(startPosX, startPosY, 0);
+            targetGlobe.group.scale.setScalar(startScale);
+
+            targetGlobe.singleTrans = {
+                mode: 'out',
+                start: performance.now(),
+                duration: 720,
+                reloadAt: 220,
+                navigated: false,
+                startPosX, startPosY, startScale,
+                endPosX, endPosY, endScale,
+                url: targetUrl
+            };
+
+            requestAnimationFrame(() => {
+                const panelEase = 'all 0.72s cubic-bezier(0.22, 1, 0.36, 1)';
+                if (leftDrawer) {
+                    leftDrawer.style.transition = panelEase;
+                    leftDrawer.style.left = '16px';
+                    leftDrawer.style.top = `${navH + 16}px`;
+                    leftDrawer.style.width = '370px';
+                    leftDrawer.style.height = `${winH - navH - 32}px`;
+                    leftDrawer.style.opacity = '1';
+                }
+                if (resultsDrawer && showingResults) {
+                    resultsDrawer.style.transition = 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease';
+                    resultsDrawer.style.transform = 'translateX(110%)';
+                    resultsDrawer.style.opacity = '0';
+                }
+                if (earthCol) {
+                    earthCol.style.transition = 'transform 0.56s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.42s ease';
+                    earthCol.style.transform = 'translateX(48%) scale(0.92)';
+                    earthCol.style.opacity = '0';
+                }
+                hudPills.forEach(pill => {
+                    pill.style.transition = 'opacity 0.25s ease';
+                    pill.style.opacity = '0';
+                });
+            });
         }
+
+        (function initEnterDualTransition() {
+            let raw = null;
+            try {
+                raw = sessionStorage.getItem('paf_view_transition');
+                if (raw) sessionStorage.removeItem('paf_view_transition');
+            } catch (e) {}
+            if (!raw || window.innerWidth <= 1024) return;
+
+            let data = null;
+            try { data = JSON.parse(raw); } catch (e) {}
+            if (!data || data.dir !== 'to_dual') return;
+
+            const elapsed = Math.max(0, Date.now() - (data.startEpoch || Date.now()));
+            if (elapsed > 2200) return;
+
+            if (typeof data.rotX === 'number' && typeof data.rotY === 'number') {
+                targetGlobe.group.rotation.x = data.rotX;
+                targetGlobe.group.rotation.y = data.rotY;
+            }
+
+            const progress0 = Math.min(0.75, elapsed / (data.duration || 720));
+            const eased0 = 1 - Math.pow(1 - progress0, 3);
+            const remaining = Math.max(300, (data.duration || 720) - elapsed);
+
+            const navbar = document.querySelector('.navbar');
+            const leftDrawer = document.getElementById('dual-filters-panel');
+            const cols = document.querySelectorAll('.dual-globe-col');
+            const targetCol = cols[0];
+            const earthCol = cols[1];
+            const hudPills = document.querySelectorAll('.dual-globe-col .globe-hud-overlay');
+
+            const navH = navbar ? navbar.getBoundingClientRect().height : 0;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const vpH = winH - navH;
+
+            const dualDrawerW = Math.min(310, Math.max(270, winW * 0.19));
+            const gap = Math.min(48, Math.max(24, winW * 0.028));
+            const colW = (winW - dualDrawerW - 44 - gap) / 2;
+            const colH = winH - navH - 16;
+            const dualCenterX = dualDrawerW + 24 + colW / 2;
+            const dualCenterY = navH + 8 + colH / 2;
+            const hHalfDual = 1.22 / Math.min(1, colW / colH);
+            const dualRadiusPx = (1.12 / hHalfDual) * (colH / 2);
+
+            const vpSingleW = winW - 418;
+            const vpSingleH = Math.max(200, winH - navH - 182);
+            const singleCenterX = 402 + vpSingleW / 2;
+            const singleCenterY = navH + 16 + vpSingleH / 2;
+            const vFov = (42 * Math.PI) / 180;
+            const singleWorldPerPx = (2 * 3.45 * Math.tan(vFov / 2)) / vpSingleH;
+            const singleRadiusPx = 1.12 / singleWorldPerPx;
+
+            const startCenterX = singleCenterX + (dualCenterX - singleCenterX) * eased0;
+            const startCenterY = singleCenterY + (dualCenterY - singleCenterY) * eased0;
+            const startRadiusPx = singleRadiusPx + (dualRadiusPx - singleRadiusPx) * eased0;
+
+            if (leftDrawer) {
+                const curL = 16 + (8 - 16) * eased0;
+                const curT = (navH + 16) + ((navH + 8) - (navH + 16)) * eased0;
+                const curW = 370 + (dualDrawerW - 370) * eased0;
+                const curH = (winH - navH - 32) + ((winH - navH - 16) - (winH - navH - 32)) * eased0;
+                leftDrawer.style.position = 'fixed';
+                leftDrawer.style.left = `${curL}px`;
+                leftDrawer.style.top = `${curT}px`;
+                leftDrawer.style.width = `${curW}px`;
+                leftDrawer.style.height = `${curH}px`;
+                leftDrawer.style.bottom = 'auto';
+                leftDrawer.style.transform = 'none';
+                leftDrawer.style.zIndex = '25';
+            }
+            if (earthCol) {
+                const startTx = 42 * (1 - eased0);
+                earthCol.style.transition = 'none';
+                earthCol.style.transform = `translateX(${startTx}%) scale(${0.92 + 0.08 * eased0})`;
+                earthCol.style.opacity = `${Math.min(1, 0.25 + eased0 * 0.75)}`;
+            }
+            hudPills.forEach(pill => {
+                pill.style.opacity = '0';
+            });
+            if (navbar) navbar.style.zIndex = '30';
+
+            targetGlobe.isTransitioning = true;
+            if (targetCol) targetCol.style.overflow = 'visible';
+            const canvasBox = targetGlobe.container;
+            canvasBox.style.position = 'fixed';
+            canvasBox.style.top = `${navH}px`;
+            canvasBox.style.left = '0';
+            canvasBox.style.width = `${winW}px`;
+            canvasBox.style.height = `${vpH}px`;
+            canvasBox.style.zIndex = '5';
+
+            const cam = targetGlobe.camera;
+            targetGlobe.renderer.setSize(winW, vpH);
+            cam.fov = 42;
+            cam.aspect = winW / vpH;
+            cam.position.set(0, 0, 4.3);
+            cam.updateProjectionMatrix();
+
+            const newWorldPerPx = (2 * 4.3 * Math.tan(vFov / 2)) / vpH;
+            const vpCenterY = navH + vpH / 2;
+
+            const startPosX = (startCenterX - winW / 2) * newWorldPerPx;
+            const startPosY = -(startCenterY - vpCenterY) * newWorldPerPx;
+            const startScale = (startRadiusPx * newWorldPerPx) / 1.12;
+
+            const endPosX = (dualCenterX - winW / 2) * newWorldPerPx;
+            const endPosY = -(dualCenterY - vpCenterY) * newWorldPerPx;
+            const endScale = (dualRadiusPx * newWorldPerPx) / 1.12;
+
+            targetGlobe.group.position.set(startPosX, startPosY, 0);
+            targetGlobe.group.scale.setScalar(startScale);
+
+            targetGlobe.singleTrans = {
+                mode: 'in',
+                start: performance.now(),
+                duration: remaining,
+                startPosX, startPosY, startScale,
+                endPosX, endPosY, endScale,
+                onFinish: () => {
+                    targetGlobe.singleTrans = null;
+                    targetGlobe.isTransitioning = false;
+                    if (targetCol) targetCol.style.overflow = '';
+                    canvasBox.style.position = '';
+                    canvasBox.style.top = '';
+                    canvasBox.style.left = '';
+                    canvasBox.style.width = '';
+                    canvasBox.style.height = '';
+                    canvasBox.style.zIndex = '';
+                    targetGlobe.group.position.set(0, 0, 0);
+                    targetGlobe.group.scale.setScalar(1);
+                    targetGlobe.resize();
+                    if (leftDrawer) {
+                        leftDrawer.style.position = '';
+                        leftDrawer.style.left = '';
+                        leftDrawer.style.top = '';
+                        leftDrawer.style.width = '';
+                        leftDrawer.style.height = '';
+                        leftDrawer.style.bottom = '';
+                        leftDrawer.style.transform = '';
+                        leftDrawer.style.zIndex = '';
+                        leftDrawer.style.transition = '';
+                    }
+                    if (earthCol) {
+                        earthCol.style.transition = '';
+                        earthCol.style.transform = '';
+                        earthCol.style.opacity = '';
+                    }
+                    hudPills.forEach(pill => {
+                        pill.style.transition = '';
+                        pill.style.opacity = '';
+                    });
+                }
+            };
+
+            requestAnimationFrame(() => {
+                const easeStr = `all ${remaining}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+                if (leftDrawer) {
+                    leftDrawer.style.transition = easeStr;
+                    leftDrawer.style.left = '8px';
+                    leftDrawer.style.top = `${navH + 8}px`;
+                    leftDrawer.style.width = `${dualDrawerW}px`;
+                    leftDrawer.style.height = `${winH - navH - 16}px`;
+                }
+                if (earthCol) {
+                    earthCol.style.transition = `transform ${remaining}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${Math.round(remaining * 0.8)}ms ease`;
+                    earthCol.style.transform = 'translateX(0) scale(1)';
+                    earthCol.style.opacity = '1';
+                }
+                hudPills.forEach(pill => {
+                    pill.style.transition = `opacity ${Math.round(remaining * 0.6)}ms ease ${Math.round(remaining * 0.35)}ms`;
+                    pill.style.opacity = '1';
+                });
+            });
+        })();
 
         function openResultsPage() {
             window.location.href = `results.php?${buildQuery()}`;
