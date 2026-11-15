@@ -7,13 +7,6 @@ services:
     build:
       context: .
       dockerfile: ./2-networker/Dockerfile.frontend
-    volumes:
-      - ./index.php:/var/www/html/index.php:ro
-      - ./explorer.php:/var/www/html/explorer.php:ro
-      - ./results.php:/var/www/html/results.php:ro
-      - ./dual.php:/var/www/html/dual.php:ro
-      - ./style.css:/var/www/html/style.css:ro
-      - ./images:/var/www/html/images:ro
     expose:
       - "80"
     networks:
@@ -67,7 +60,7 @@ services:
       - ./data:/data:ro
       - ./3-charakteryzator/outputs:/charakteryzator/outputs:ro
       - ./3-charakteryzator/service/norm_ranges.json:/charakteryzator/service/norm_ranges.json:ro
-      - ./2-networker/conf.d:/etc/nginx/conf.d:ro
+      - ./2-networker/conf.d:/etc/nginx/conf.d
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
     restart: unless-stopped
