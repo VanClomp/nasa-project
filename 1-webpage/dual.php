@@ -21,20 +21,8 @@ $kFeatures = [
     ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Nachylenie terenu',         'default_w' => 0.75],
 ];
 
-$presets = [
-    'moon' => [
-        ['name' => 'Krater Shackleton',     'lat' => -89.9, 'lon' => 0.0],
-        ['name' => 'Marius Hills Skylight', 'lat' => 14.1,  'lon' => -56.8],
-        ['name' => 'Mare Tranquillitatis',  'lat' => 0.67,  'lon' => 23.47],
-        ['name' => 'Płaskowyż Aristarchus', 'lat' => 23.7,  'lon' => -47.4],
-    ],
-    'mars' => [
-        ['name' => 'Krater Jezero',         'lat' => 18.38, 'lon' => 77.58],
-        ['name' => 'Olympus Mons',          'lat' => 18.65, 'lon' => -133.8],
-        ['name' => 'Valles Marineris',      'lat' => -13.9, 'lon' => -60.5],
-        ['name' => 'Planum Australe',       'lat' => -83.5, 'lon' => 160.0],
-    ]
-];
+// Miejsca lądowania: generowane z danych 3-charakteryzatora (scripts/export_presets.py)
+$presets = require __DIR__ . '/presets.php';
 
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
@@ -104,16 +92,14 @@ if (isset($_GET['w'])) {
             </div>
 
             <div class="panel-body">
-                <span class="section-label">Lokalizacje referencyjne</span>
-                <div class="presets-list" id="presets-container">
-                    <?php foreach ($presets[$selectedBody] as $idx => $p): ?>
-                        <button class="preset-chip <?php echo $idx === 0 ? 'active' : ''; ?>"
-                                onclick="selectPreset(<?php echo $p['lat']; ?>, <?php echo $p['lon']; ?>, this)">
-                            <strong><?php echo htmlspecialchars($p['name']); ?></strong>
-                            <span><?php echo $p['lat']; ?>°, <?php echo $p['lon']; ?>°</span>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
+                <span class="section-label">Miejsce lądowania</span>
+                <button type="button" class="site-picker-btn" id="site-picker-btn" onclick="SitePicker.open()" aria-haspopup="dialog">
+                    <span class="site-picker-btn-text">
+                        <strong id="site-picker-current">&nbsp;</strong>
+                        <span id="site-picker-coords">&nbsp;</span>
+                    </span>
+                    <span class="site-picker-btn-cta">Zmień ▾</span>
+                </button>
 
                 <span class="section-label">Współrzędne</span>
                 <div class="coords-row">
@@ -811,13 +797,6 @@ if (isset($_GET['w'])) {
                 `${body === 'moon' ? 'Księżyc' : 'Mars'} · kliknij, aby wybrać punkt`;
 
             const pList = PRESETS[body];
-            document.getElementById('presets-container').innerHTML = pList.map((p, idx) => `
-                <button class="preset-chip ${idx === 0 ? 'active' : ''}"
-                        onclick="selectPreset(${p.lat}, ${p.lon}, this)">
-                    <strong>${p.name}</strong>
-                    <span>${p.lat}°, ${p.lon}°</span>
-                </button>
-            `).join('');
 
             document.getElementById('input-lat').value = pList[0].lat;
             document.getElementById('input-lon').value = pList[0].lon;
@@ -902,5 +881,6 @@ if (isset($_GET['w'])) {
             triggerCharacterizeAndSearch();
         });
     </script>
+    <?php include __DIR__ . '/site_picker.php'; ?>
 </body>
 </html>

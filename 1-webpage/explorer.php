@@ -258,21 +258,8 @@ $kFeatures = [
     ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Nachylenie terenu',         'unit' => '°',      'default_w' => 0.75],
 ];
 
-// Presety słynnych punktów lądowania NASA dla Księżyca i Marsa
-$presets = [
-    'moon' => [
-        ['name' => 'Krater Shackleton (Biegun Pd.)', 'lat' => -89.9, 'lon' => 0.0,   'desc' => 'Baza Artemis III – krater wiecznego cienia i lód wodny'],
-        ['name' => 'Marius Hills Skylight',          'lat' => 14.1,  'lon' => -56.8, 'desc' => 'Zapadnięty strop podpowierzchniowego tunelu lawowego'],
-        ['name' => 'Mare Tranquillitatis',           'lat' => 0.67,  'lon' => 23.47, 'desc' => 'Równina bazaltowa Apollo 11 – wysoka amplituda dobowa'],
-        ['name' => 'Płaskowyż Aristarchus',          'lat' => 23.7,  'lon' => -47.4, 'desc' => 'Złoża piroklastyczne i urozmaicona rzeźba wulkaniczna'],
-    ],
-    'mars' => [
-        ['name' => 'Krater Jezero (Perseverance)',   'lat' => 18.38, 'lon' => 77.58,  'desc' => 'Dawna delta rzeczna z osadami ilastymi i węglanami'],
-        ['name' => 'Olympus Mons (Kaldera)',         'lat' => 18.65, 'lon' => -133.8, 'desc' => 'Najwyższy wulkan Układu Słonecznego, tunele lawowe'],
-        ['name' => 'Valles Marineris (Coprates)',    'lat' => -13.9, 'lon' => -60.5,  'desc' => 'Głęboki system kanionów tektonicznych i strome zbocza'],
-        ['name' => 'Planum Australe (Biegun Pd.)',   'lat' => -83.5, 'lon' => 160.0,  'desc' => 'Czapa lodowa CO₂/H₂O i ekstremalnie niskie temperatury'],
-    ]
-];
+// Miejsca lądowania: generowane z danych 3-charakteryzatora (scripts/export_presets.py)
+$presets = require __DIR__ . '/presets.php';
 
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
@@ -340,16 +327,14 @@ if (isset($_GET['w'])) {
             </div>
 
             <div class="panel-body">
-                <span class="section-label">Lokalizacje referencyjne</span>
-                <div class="presets-list" id="presets-container">
-                    <?php foreach ($presets[$selectedBody] as $idx => $p): ?>
-                        <button class="preset-chip <?php echo $idx === 0 ? 'active' : ''; ?>"
-                                onclick="selectPreset(<?php echo $p['lat']; ?>, <?php echo $p['lon']; ?>, this)">
-                            <strong><?php echo htmlspecialchars($p['name']); ?></strong>
-                            <span><?php echo $p['lat']; ?>°, <?php echo $p['lon']; ?>°</span>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
+                <span class="section-label">Miejsce lądowania</span>
+                <button type="button" class="site-picker-btn" id="site-picker-btn" onclick="SitePicker.open()" aria-haspopup="dialog">
+                    <span class="site-picker-btn-text">
+                        <strong id="site-picker-current">&nbsp;</strong>
+                        <span id="site-picker-coords">&nbsp;</span>
+                    </span>
+                    <span class="site-picker-btn-cta">Zmień ▾</span>
+                </button>
 
                 <span class="section-label">Współrzędne</span>
                 <div class="coords-row">
@@ -952,14 +937,6 @@ if (isset($_GET['w'])) {
             document.getElementById('btn-mode-mars').classList.toggle('active', body === 'mars');
 
             const pList = PRESETS[body];
-            const pContainer = document.getElementById('presets-container');
-            pContainer.innerHTML = pList.map((p, idx) => `
-                <button class="preset-chip ${idx === 0 ? 'active' : ''}"
-                        onclick="selectPreset(${p.lat}, ${p.lon}, this)">
-                    <strong>${p.name}</strong>
-                    <span>${p.lat}°, ${p.lon}°</span>
-                </button>
-            `).join('');
 
             document.getElementById('input-lat').value = pList[0].lat;
             document.getElementById('input-lon').value = pList[0].lon;
@@ -1136,5 +1113,6 @@ if (isset($_GET['w'])) {
             triggerCharacterize();
         });
     </script>
+    <?php include __DIR__ . '/site_picker.php'; ?>
 </body>
 </html>
