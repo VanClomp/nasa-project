@@ -57,7 +57,7 @@ if (isset($_GET['w'])) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo @filemtime(__DIR__ . '/style.css') ?: 1; ?>">
 </head>
 <body>
 
@@ -88,14 +88,17 @@ if (isset($_GET['w'])) {
     </header>
 
     <!-- GŁÓWNA PRZESTRZEŃ ROBOCZA -->
-    <main class="workspace workspace-config">
+    <main class="workspace workspace-dual" id="dual-workspace">
 
         <!-- LEWA KOLUMNA: PARAMETRY I WAGI -->
-        <aside class="hud-panel">
+        <aside class="hud-panel dual-drawer dual-drawer-left" id="dual-filters-panel">
             <div class="panel-header">
                 <div class="panel-title">
                     <span>Parametry i wagi</span>
                 </div>
+                <button type="button" class="panel-switch-btn" onclick="toggleDualDrawer('results')">
+                    Wyniki →
+                </button>
             </div>
 
             <div class="panel-body">
@@ -120,8 +123,8 @@ if (isset($_GET['w'])) {
                         <label>LON (°)</label>
                         <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
-                    <button class="scan-btn" onclick="triggerCharacterizeAndSearch()">Pobierz</button>
                 </div>
+                <button type="button" class="center-pin-btn" onclick="centerGlobesOnPins()">Wyśrodkuj</button>
 
                 <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
                 <div id="sliders-container">
@@ -186,6 +189,31 @@ if (isset($_GET['w'])) {
             </div>
         </section>
 
+        <!-- PRAWA KOLUMNA: WYNIKI WYSZUKIWANIA (POKAZYWANA PO PRZEŁĄCZENIU) -->
+        <aside class="hud-panel dual-drawer dual-drawer-right" id="dual-results-panel">
+            <div class="panel-header">
+                <button type="button" class="panel-switch-btn" onclick="toggleDualDrawer('filters')">
+                    ← Filtry
+                </button>
+                <div class="panel-title">
+                    <span>Wyniki wyszukiwania</span>
+                </div>
+            </div>
+
+            <div class="panel-body" id="dual-candidates-list">
+                <div style="color: var(--text-muted); font-size: 0.78rem; padding: 0.5rem 0;">
+                    Ładowanie analogów...
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <button type="button" class="find-analogs-btn" onclick="openResultsPage()">
+                    <span>Szczegóły wyników</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </aside>
+
     </main>
 
     <script>
@@ -193,6 +221,7 @@ if (isset($_GET['w'])) {
         let currentBody = <?php echo json_encode($selectedBody); ?>;
         let currentTargetProfile = null;
         let currentCandidates = [];
+        let selectedCandidateIndex = 0;
 
         const textureLoader = new THREE.TextureLoader();
         function loadBodyTexture(url) {
@@ -215,52 +244,74 @@ if (isset($_GET['w'])) {
             return marsPhotoTexture;
         }
 
-        const earthBaseImg = new Image();
-        earthBaseImg.src = 'images/earth_photo.jpg';
-        earthBaseImg.onload = () => {
-            if (typeof earthGlobe !== 'undefined' && earthGlobe.sphereMat) {
-                earthGlobe.sphereMat.map = generateEarthHeatmapTexture(currentCandidates);
+        const earthPhotoTexture = textureLoader.load('images/earth_photo.jpg', (tex) => {
+            tex.needsUpdate = true;
+            if (typeof earthGlobe !== 'undefined' && earthGlobe && earthGlobe.sphereMat) {
                 earthGlobe.sphereMat.needsUpdate = true;
             }
-        };
+        });
 
-        function generateEarthHeatmapTexture(candidates = []) {
-            const c = document.createElement('canvas');
-            c.width = 2048;
-            c.height = 1024;
-            const ctx = c.getContext('2d');
+        function createEarthPin(isBest) {
+            const pinGroup = new THREE.Group();
+            const color = isBest ? 0x10b981 : 0x60a5fa;
 
-            if (earthBaseImg.complete && earthBaseImg.naturalWidth > 0) {
-                ctx.drawImage(earthBaseImg, 0, 0, c.width, c.height);
-                ctx.fillStyle = 'rgba(5, 10, 20, 0.18)';
-                ctx.fillRect(0, 0, c.width, c.height);
-            } else {
-                ctx.fillStyle = '#091526';
-                ctx.fillRect(0, 0, c.width, c.height);
+            // Subtelny pierścień na powierzchni planety
+            const baseRing = new THREE.Mesh(
+                new THREE.RingGeometry(isBest ? 0.015 : 0.010, isBest ? 0.021 : 0.014, 32),
+                new THREE.MeshBasicMaterial({
+                    color,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: isBest ? 0.9 : 0.55
+                })
+            );
+            baseRing.position.z = 0.001;
+            pinGroup.add(baseRing);
+
+            // Zewnętrzna aureola dla najlepszego dopasowania
+            if (isBest) {
+                const outerRing = new THREE.Mesh(
+                    new THREE.RingGeometry(0.028, 0.032, 36),
+                    new THREE.MeshBasicMaterial({
+                        color,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.45
+                    })
+                );
+                outerRing.position.z = 0.001;
+                pinGroup.add(outerRing);
             }
 
-            ctx.strokeStyle = 'rgba(96, 165, 250, 0.12)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < c.width; x += 128) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke();
-            }
-            for (let y = 0; y < c.height; y += 128) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.width, y); ctx.stroke();
-            }
+            // Smukła nóżka pinezki skierowana prostopadle do powierzchni (oś +Z)
+            const stemH = isBest ? 0.044 : 0.030;
+            const stemGeo = new THREE.CylinderGeometry(0.0016, 0.0010, stemH, 10);
+            stemGeo.rotateX(Math.PI / 2);
+            const stem = new THREE.Mesh(
+                stemGeo,
+                new THREE.MeshBasicMaterial({
+                    color: 0xe2e8f0,
+                    transparent: true,
+                    opacity: isBest ? 0.95 : 0.75
+                })
+            );
+            stem.position.z = stemH * 0.5 + 0.001;
+            pinGroup.add(stem);
 
-            candidates.forEach(cand => {
-                const px = ((cand.lon + 180) / 360) * c.width;
-                const py = ((90 - cand.lat) / 180) * c.height;
-                const radius = 110 * cand.score;
-                const g = ctx.createRadialGradient(px, py, 4, px, py, radius);
-                g.addColorStop(0, `rgba(16, 185, 129, ${cand.score * 0.9})`);
-                g.addColorStop(0.5, `rgba(96, 165, 250, ${cand.score * 0.45})`);
-                g.addColorStop(1, 'rgba(96, 165, 250, 0)');
-                ctx.fillStyle = g;
-                ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill();
-            });
+            // Główka pinezki 3D
+            const headR = isBest ? 0.012 : 0.0085;
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(headR, 18, 18),
+                new THREE.MeshBasicMaterial({
+                    color,
+                    transparent: true,
+                    opacity: isBest ? 1.0 : 0.9
+                })
+            );
+            head.position.z = stemH + headR * 0.7;
+            pinGroup.add(head);
 
-            return new THREE.CanvasTexture(c);
+            return pinGroup;
         }
 
         function latLonToVector3(lat, lon, radius = 1.124) {
@@ -282,6 +333,7 @@ if (isset($_GET['w'])) {
             camera.position.z = 4.3;
 
             const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
             container.appendChild(renderer.domElement);
 
             const group = new THREE.Group();
@@ -306,18 +358,50 @@ if (isset($_GET['w'])) {
                 isDragging: false, dragMoved: false,
                 prevMouse: { x: 0, y: 0 },
                 targetCamX: 0, targetCamY: 0, targetCamZ: 4.3,
-                onPinScale: null
+                pauseAutoRotateUntil: 0,
+                isCentering: false, targetCenterRotX: 0, targetCenterRotY: 0,
+                onPinScale: null,
+                centerOnLatLon: (lat, lon) => {
+                    pauseAutoRotate();
+                    const p = latLonToVector3(lat, lon, 1);
+                    const rXZ = Math.hypot(p.x, p.z);
+                    const desiredRotY = -Math.atan2(p.x, p.z);
+                    const desiredRotX = Math.atan2(p.y, rXZ);
+                    let deltaY = (desiredRotY - group.rotation.y) % (Math.PI * 2);
+                    if (deltaY > Math.PI) deltaY -= Math.PI * 2;
+                    if (deltaY < -Math.PI) deltaY += Math.PI * 2;
+                    state.targetCenterRotX = desiredRotX;
+                    state.targetCenterRotY = group.rotation.y + deltaY;
+                    state.targetCamX = 0;
+                    state.targetCamY = 0;
+                    state.isCentering = true;
+                }
             };
+
+            function pauseAutoRotate(ms = 8000) {
+                state.pauseAutoRotateUntil = performance.now() + ms;
+            }
 
             function resize() {
                 const rect = container.getBoundingClientRect();
                 if (rect.width <= 0 || rect.height <= 0) return;
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 renderer.setSize(rect.width, rect.height);
                 camera.aspect = rect.width / rect.height;
+                // Dopasowanie FOV tak, aby sfera (r=1.12) przy z=4.3 wypełniała ~95% kolumny z zachowaniem oddechu
+                const targetHalfSpan = 1.22;
+                const hHalf = targetHalfSpan / Math.min(1, camera.aspect);
+                camera.fov = (2 * Math.atan(hHalf / 4.3) * 180) / Math.PI;
                 camera.updateProjectionMatrix();
             }
             window.addEventListener('resize', resize);
+            if (typeof ResizeObserver !== 'undefined') {
+                new ResizeObserver(() => resize()).observe(container);
+            }
+            resize();
+            requestAnimationFrame(resize);
             setTimeout(resize, 50);
+            state.resize = resize;
 
             renderer.domElement.style.touchAction = 'none';
 
@@ -346,10 +430,13 @@ if (isset($_GET['w'])) {
 
             renderer.domElement.addEventListener('wheel', (e) => {
                 e.preventDefault();
+                pauseAutoRotate();
                 applyZoomAt(e.clientX, e.clientY, e.deltaY * 0.0022);
             }, { passive: false });
 
             renderer.domElement.addEventListener('mousedown', (e) => {
+                pauseAutoRotate();
+                state.isCentering = false;
                 state.isDragging = true;
                 state.dragMoved = false;
                 state.prevMouse = { x: e.clientX, y: e.clientY };
@@ -357,6 +444,7 @@ if (isset($_GET['w'])) {
 
             window.addEventListener('mousemove', (e) => {
                 if (!state.isDragging) return;
+                pauseAutoRotate();
                 const dx = e.clientX - state.prevMouse.x;
                 const dy = e.clientY - state.prevMouse.y;
                 if (Math.abs(dx) > 3 || Math.abs(dy) > 3) state.dragMoved = true;
@@ -385,8 +473,11 @@ if (isset($_GET['w'])) {
             }
 
             window.addEventListener('mouseup', (e) => {
-                if (state.isDragging && !state.dragMoved) {
-                    pickPointAt(e.clientX, e.clientY);
+                if (state.isDragging) {
+                    pauseAutoRotate();
+                    if (!state.dragMoved) {
+                        pickPointAt(e.clientX, e.clientY);
+                    }
                 }
                 state.isDragging = false;
             });
@@ -395,6 +486,8 @@ if (isset($_GET['w'])) {
             let prevPinchDist = 0;
             renderer.domElement.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                pauseAutoRotate();
+                state.isCentering = false;
                 state.isDragging = true;
                 if (e.touches.length === 1) {
                     state.dragMoved = false;
@@ -412,6 +505,7 @@ if (isset($_GET['w'])) {
             renderer.domElement.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 if (!state.isDragging) return;
+                pauseAutoRotate();
                 if (e.touches.length === 1 && prevPinchDist === 0) {
                     const dx = e.touches[0].clientX - state.prevMouse.x;
                     const dy = e.touches[0].clientY - state.prevMouse.y;
@@ -442,8 +536,11 @@ if (isset($_GET['w'])) {
                     return;
                 }
                 if (e.touches.length === 0) {
-                    if (state.isDragging && !state.dragMoved && e.changedTouches.length > 0) {
-                        pickPointAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                    if (state.isDragging) {
+                        pauseAutoRotate();
+                        if (!state.dragMoved && e.changedTouches.length > 0) {
+                            pickPointAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                        }
                     }
                     state.isDragging = false;
                     prevPinchDist = 0;
@@ -451,7 +548,22 @@ if (isset($_GET['w'])) {
             }, { passive: false });
 
             function loop() {
-                if (!state.isDragging) group.rotation.y += 0.0008;
+                if (state.isCentering) {
+                    group.rotation.x += (state.targetCenterRotX - group.rotation.x) * 0.12;
+                    group.rotation.y += (state.targetCenterRotY - group.rotation.y) * 0.12;
+                    if (Math.abs(state.targetCenterRotX - group.rotation.x) < 0.001 &&
+                        Math.abs(state.targetCenterRotY - group.rotation.y) < 0.001) {
+                        group.rotation.x = state.targetCenterRotX;
+                        group.rotation.y = state.targetCenterRotY;
+                        state.isCentering = false;
+                    }
+                } else if (!state.isDragging) {
+                    const now = performance.now();
+                    if (now >= state.pauseAutoRotateUntil) {
+                        const resumeFactor = Math.min(1, (now - state.pauseAutoRotateUntil) / 800);
+                        group.rotation.y += 0.0008 * resumeFactor;
+                    }
+                }
                 camera.position.x += (state.targetCamX - camera.position.x) * 0.08;
                 camera.position.y += (state.targetCamY - camera.position.y) * 0.08;
                 camera.position.z += (state.targetCamZ - camera.position.z) * 0.08;
@@ -494,7 +606,7 @@ if (isset($_GET['w'])) {
 
         // Inicjalizacja prawej planety (Ziemia)
         const earthGlobe = createGlobeController('earth-globe-canvas', {
-            initialTexture: generateEarthHeatmapTexture([])
+            initialTexture: earthPhotoTexture
         });
         const earthPinsGroup = new THREE.Group();
         earthGlobe.group.add(earthPinsGroup);
@@ -538,39 +650,18 @@ if (isset($_GET['w'])) {
         }
 
         function refreshEarthPins() {
-            earthGlobe.sphereMat.map = generateEarthHeatmapTexture(currentCandidates);
-            earthGlobe.sphereMat.needsUpdate = true;
-
+            if (selectedCandidateIndex >= currentCandidates.length) {
+                selectedCandidateIndex = 0;
+            }
             earthPinsGroup.clear();
+            const currentScale = Math.max(0.22, (earthGlobe.camera.position.z - 1.05) / 3.25);
             currentCandidates.forEach((c, idx) => {
-                const pos = latLonToVector3(c.lat, c.lon, 1.125);
-                const isBest = (idx === 0);
-                const pinGroup = new THREE.Group();
+                const pos = latLonToVector3(c.lat, c.lon, 1.1205);
+                const isSelected = (idx === selectedCandidateIndex);
+                const pinGroup = createEarthPin(isSelected);
                 pinGroup.position.copy(pos);
                 pinGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), pos.clone().normalize());
-
-                pinGroup.add(new THREE.Mesh(
-                    new THREE.CircleGeometry(isBest ? 0.015 : 0.010, 24),
-                    new THREE.MeshBasicMaterial({
-                        color: isBest ? 0x10b981 : 0x60a5fa,
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        opacity: isBest ? 1.0 : 0.85
-                    })
-                ));
-
-                if (isBest) {
-                    pinGroup.add(new THREE.Mesh(
-                        new THREE.RingGeometry(0.028, 0.034, 32),
-                        new THREE.MeshBasicMaterial({
-                            color: 0x10b981,
-                            side: THREE.DoubleSide,
-                            transparent: true,
-                            opacity: 0.95
-                        })
-                    ));
-                }
-
+                pinGroup.scale.setScalar(currentScale);
                 earthPinsGroup.add(pinGroup);
             });
 
@@ -581,6 +672,67 @@ if (isset($_GET['w'])) {
             } else {
                 summaryEl.innerText = 'Brak wyników dla filtra jaskiń';
             }
+
+            renderDualCandidatesList();
+        }
+
+        function renderDualCandidatesList() {
+            const listEl = document.getElementById('dual-candidates-list');
+            if (!listEl) return;
+
+            if (currentCandidates.length === 0) {
+                listEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; padding: 0.75rem 0;">Brak lokalizacji spełniających kryteria filtra jaskiń.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = currentCandidates.map((c, idx) => {
+                const isSel = (idx === selectedCandidateIndex);
+                const caveText = c.nearest_skylight_km !== null
+                    ? `Jaskinia: ${c.nearest_skylight_km} km`
+                    : 'Brak jaskiń';
+                return `
+                    <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="selectDualCandidate(${idx})">
+                        <div class="cand-top">
+                            <span class="cand-rank">#${idx + 1} · ${c.lat.toFixed(2)}°, ${c.lon.toFixed(2)}°</span>
+                            <span class="cand-score">${(c.score * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="cand-name">${c.name_hint}</div>
+                        <div class="cand-meta" style="font-size: 0.68rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+                            ${caveText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectDualCandidate(idx) {
+            selectedCandidateIndex = idx;
+            refreshEarthPins();
+            const cand = currentCandidates[idx];
+            if (cand) {
+                earthGlobe.centerOnLatLon(cand.lat, cand.lon);
+            }
+        }
+
+        let drawerResizeRaf = null;
+        function toggleDualDrawer(mode) {
+            const workspace = document.getElementById('dual-workspace');
+            if (mode === 'results') {
+                workspace.classList.add('show-results');
+            } else {
+                workspace.classList.remove('show-results');
+            }
+
+            if (drawerResizeRaf) cancelAnimationFrame(drawerResizeRaf);
+            const animStart = performance.now();
+            const syncResize = (now) => {
+                if (typeof targetGlobe !== 'undefined' && targetGlobe.resize) targetGlobe.resize();
+                if (typeof earthGlobe !== 'undefined' && earthGlobe.resize) earthGlobe.resize();
+                if (now - animStart < 700) {
+                    drawerResizeRaf = requestAnimationFrame(syncResize);
+                }
+            };
+            drawerResizeRaf = requestAnimationFrame(syncResize);
         }
 
         async function triggerCharacterizeAndSearch() {
@@ -689,7 +841,41 @@ if (isset($_GET['w'])) {
             window.location.href = `results.php?${buildQuery()}`;
         }
 
+        function centerGlobesOnPins() {
+            const lat = parseFloat(document.getElementById('input-lat').value) || 0;
+            const lon = parseFloat(document.getElementById('input-lon').value) || 0;
+            targetGlobe.centerOnLatLon(lat, lon);
+            if (currentCandidates.length > 0) {
+                earthGlobe.centerOnLatLon(currentCandidates[0].lat, currentCandidates[0].lon);
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            const latInput = document.getElementById('input-lat');
+            const lonInput = document.getElementById('input-lon');
+            let coordsDebounce = null;
+
+            const handleCoordsInput = () => {
+                const rawLat = parseFloat(latInput.value);
+                const rawLon = parseFloat(lonInput.value);
+                if (Number.isNaN(rawLat) || Number.isNaN(rawLon)) return;
+                const lat = Math.max(-90, Math.min(90, rawLat));
+                const lon = Math.max(-180, Math.min(180, rawLon));
+                updateTargetMarker(lat, lon);
+                clearTimeout(coordsDebounce);
+                coordsDebounce = setTimeout(() => {
+                    triggerCharacterizeAndSearch();
+                }, 200);
+            };
+
+            [latInput, lonInput].forEach(el => {
+                el.addEventListener('input', handleCoordsInput);
+                el.addEventListener('change', () => {
+                    clearTimeout(coordsDebounce);
+                    triggerCharacterizeAndSearch();
+                });
+            });
+
             triggerCharacterizeAndSearch();
         });
     </script>
