@@ -905,19 +905,54 @@ if (isset($_GET['w'])) {
                 `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
             renderModelBadge(profile);
             renderSeason(profile);
+            renderFeatureFlags(profile);
         }
 
-        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty, "global" = model globalny (niepewny).
-        // Brak pola (np. mock w PHP) traktujemy jako globalny.
+        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty (Mars), "orbital" = pomiary orbitalne
+        // w tym punkcie (Księżyc), "global" = model globalny (niepewny). Brak pola (np. mock w PHP) = globalny.
+        const MODEL_LABELS = {
+            local:   'Model lokalny · dane stacji',
+            orbital: 'Pomiary orbitalne · ten punkt',
+            global:  'Model globalny · niepewny'
+        };
         function renderModelBadge(profile) {
             const badge = document.getElementById('model-badge');
             if (!badge) return;
             const extra = (profile && profile.extra) || {};
-            const isLocal = extra.model === 'local';
-            badge.classList.toggle('local', isLocal);
-            badge.classList.toggle('global', !isLocal);
-            badge.innerText = isLocal ? 'Model lokalny · dane stacji' : 'Model globalny · niepewny';
-            badge.title = extra.model_basis || (isLocal ? 'Dane stacji' : 'Model globalny');
+            const model = MODEL_LABELS[extra.model] ? extra.model : 'global';
+            ['local', 'orbital', 'global'].forEach(m => badge.classList.toggle(m, m === model));
+            badge.innerText = MODEL_LABELS[model];
+            badge.title = extra.model_basis || MODEL_LABELS[model];
+        }
+
+        // Przy każdym parametrze: skąd pochodzi wartość w TYM miejscu (extra.features_measured) i czy zmienia się
+        // z datą lądowania (extra.features_time_varying). Opis parametrów: 3-charakteryzator/PARAMETERS.md.
+        const FEATURE_KEYS = ['temp_mean', 'temp_diurnal_amp', 'thermal_inertia', 'surface_roughness', 'soil_moisture',
+                              'dust_aerosol', 'solar_elevation_max', 'radiation_proxy', 'slope_deg'];
+        function renderFeatureFlags(profile) {
+            const extra = (profile && profile.extra) || {};
+            const meas = extra.features_measured || [];
+            const tv = extra.features_time_varying || [];
+            const raw = (profile && profile.features_raw) || {};
+            FEATURE_KEYS.forEach((k, i) => {
+                const valueEl = document.getElementById(`raw-${k}`);
+                if (!valueEl) return;
+                const box = valueEl.parentElement;
+                let flags = box.querySelector('.feat-flags');
+                if (!flags) { flags = document.createElement('span'); flags.className = 'feat-flags'; box.appendChild(flags); }
+                let src;
+                if (raw[k] === null || raw[k] === undefined || (extra.null_features || []).includes(k)) {
+                    src = '<i class="feat-src none" title="Brak danych dla tego miejsca">brak danych</i>';
+                } else if (meas[i] === true) {
+                    src = '<i class="feat-src local" title="Zmierzone w tym miejscu (stacja, mapa orbitalna w tym pikselu lub dokładna geometria)">zmierzone</i>';
+                } else {
+                    src = '<i class="feat-src global" title="Przewidywane przez model globalny (szerokość, wysokość, mapy) - niepewne">model</i>';
+                }
+                const time = tv[i] === true
+                    ? '<i class="feat-time varies" title="Zmienia się z datą lądowania (pora roku, położenie Słońca, sezon pyłowy)">◷ z datą</i>'
+                    : (tv[i] === false ? '<i class="feat-time fixed" title="Stała cecha miejsca, nie zależy od daty">stałe</i>' : '');
+                flags.innerHTML = src + time;
+            });
         }
 
         function selectPreset(lat, lon, btnEl) {

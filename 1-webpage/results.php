@@ -134,6 +134,13 @@ $backQuery = http_build_query([
                     <div class="chart-wrap">
                         <canvas id="climatogram-chart" height="155"></canvas>
                     </div>
+
+                    <!-- p(t): parametry wybranego miejsca, które zmieniają się z datą (extra.series z 3-charakteryzatora) -->
+                    <div id="time-charts" class="time-charts" hidden>
+                        <span class="section-label">Wybrane miejsce · parametry zmienne w czasie</span>
+                        <p class="time-charts-note" id="time-charts-note"></p>
+                        <div id="time-charts-list"></div>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -482,19 +489,54 @@ $backQuery = http_build_query([
                 `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
             renderModelBadge(profile);
             renderSeason(profile);
+            renderFeatureFlags(profile);
         }
 
-        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty, "global" = model globalny (niepewny).
-        // Brak pola (np. mock w PHP) traktujemy jako globalny.
+        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty (Mars), "orbital" = pomiary orbitalne
+        // w tym punkcie (Księżyc), "global" = model globalny (niepewny). Brak pola (np. mock w PHP) = globalny.
+        const MODEL_LABELS = {
+            local:   'Model lokalny · dane stacji',
+            orbital: 'Pomiary orbitalne · ten punkt',
+            global:  'Model globalny · niepewny'
+        };
         function renderModelBadge(profile) {
             const badge = document.getElementById('model-badge');
             if (!badge) return;
             const extra = (profile && profile.extra) || {};
-            const isLocal = extra.model === 'local';
-            badge.classList.toggle('local', isLocal);
-            badge.classList.toggle('global', !isLocal);
-            badge.innerText = isLocal ? 'Model lokalny · dane stacji' : 'Model globalny · niepewny';
-            badge.title = extra.model_basis || (isLocal ? 'Dane stacji' : 'Model globalny');
+            const model = MODEL_LABELS[extra.model] ? extra.model : 'global';
+            ['local', 'orbital', 'global'].forEach(m => badge.classList.toggle(m, m === model));
+            badge.innerText = MODEL_LABELS[model];
+            badge.title = extra.model_basis || MODEL_LABELS[model];
+        }
+
+        // Przy każdym parametrze: skąd pochodzi wartość w TYM miejscu (extra.features_measured) i czy zmienia się
+        // z datą lądowania (extra.features_time_varying). Opis parametrów: 3-charakteryzator/PARAMETERS.md.
+        const FEATURE_KEYS = ['temp_mean', 'temp_diurnal_amp', 'thermal_inertia', 'surface_roughness', 'soil_moisture',
+                              'dust_aerosol', 'solar_elevation_max', 'radiation_proxy', 'slope_deg'];
+        function renderFeatureFlags(profile) {
+            const extra = (profile && profile.extra) || {};
+            const meas = extra.features_measured || [];
+            const tv = extra.features_time_varying || [];
+            const raw = (profile && profile.features_raw) || {};
+            FEATURE_KEYS.forEach((k, i) => {
+                const valueEl = document.getElementById(`raw-${k}`);
+                if (!valueEl) return;
+                const box = valueEl.parentElement;
+                let flags = box.querySelector('.feat-flags');
+                if (!flags) { flags = document.createElement('span'); flags.className = 'feat-flags'; box.appendChild(flags); }
+                let src;
+                if (raw[k] === null || raw[k] === undefined || (extra.null_features || []).includes(k)) {
+                    src = '<i class="feat-src none" title="Brak danych dla tego miejsca">brak danych</i>';
+                } else if (meas[i] === true) {
+                    src = '<i class="feat-src local" title="Zmierzone w tym miejscu (stacja, mapa orbitalna w tym pikselu lub dokładna geometria)">zmierzone</i>';
+                } else {
+                    src = '<i class="feat-src global" title="Przewidywane przez model globalny (szerokość, wysokość, mapy) - niepewne">model</i>';
+                }
+                const time = tv[i] === true
+                    ? '<i class="feat-time varies" title="Zmienia się z datą lądowania (pora roku, położenie Słońca, sezon pyłowy)">◷ z datą</i>'
+                    : (tv[i] === false ? '<i class="feat-time fixed" title="Stała cecha miejsca, nie zależy od daty">stałe</i>' : '');
+                flags.innerHTML = src + time;
+            });
         }
 
         function renderCandidatesList() {
@@ -627,6 +669,82 @@ $backQuery = http_build_query([
             }
         }
 
+        // ---- p(t): wykresy parametrów zmiennych w czasie dla wybranego miejsca ----
+        const TIME_LABELS = {
+            temp_mean:           ['Średnia temperatura gruntu', '°C'],
+            temp_diurnal_amp:    ['Dobowa amplituda temperatury', 'K'],
+            dust_aerosol:        ['Zapylenie atmosfery (AOD)', ''],
+            solar_elevation_max: ['Maks. wysokość Słońca w południe', '°'],
+            radiation_proxy:     ['Osłona atmosfery (masa kolumny)', 'g/cm²']
+        };
+        let timeCharts = [];
+        async function loadTimeCharts() {
+            let profile;
+            try {
+                profile = await callApi('characterize', {
+                    target_body: SEARCH_PARAMS.body, lat: SEARCH_PARAMS.lat, lon: SEARCH_PARAMS.lon,
+                    timestamp_iso: `${SEARCH_PARAMS.date}T12:00:00Z`, series: true
+                });
+            } catch (e) { return; }
+            renderTimeCharts(profile);
+        }
+        function renderTimeCharts(profile) {
+            const box = document.getElementById('time-charts');
+            const list = document.getElementById('time-charts-list');
+            const s = profile && profile.extra && profile.extra.series;
+            timeCharts.forEach(c => c.destroy()); timeCharts = [];
+            list.innerHTML = '';
+            if (!s || !Object.keys(s.values || {}).length) { box.hidden = true; return; }
+            const isMars = s.axis === 'mars_month';
+            const accent = isMars ? '#F97316' : '#60A5FA';
+            document.getElementById('time-charts-note').innerText = isMars
+                ? `Oś czasu: 12 miesięcy marsjańskich roku lądowania, opisanych miesiącem ziemskim, w którym się zaczynają (miesiąc marsjański trwa ok. 1,5–2 miesięcy ziemskich). Zaznaczony punkt = data lądowania ${SEARCH_PARAMS.date}.`
+                : `Oś czasu: 15. dzień każdego miesiąca roku ${SEARCH_PARAMS.date.slice(0, 4)}. Zaznaczony punkt = miesiąc lądowania.`;
+            const meas = profile.extra.features_measured || [];
+            const order = ['temp_mean', 'temp_diurnal_amp', 'thermal_inertia', 'surface_roughness', 'soil_moisture',
+                           'dust_aerosol', 'solar_elevation_max', 'radiation_proxy', 'slope_deg'];
+            Object.entries(s.values).forEach(([key, values]) => {
+                const [label, unit] = TIME_LABELS[key] || [key, ''];
+                const measured = meas[order.indexOf(key)] === true;
+                const block = document.createElement('div');
+                block.className = 'time-chart';
+                block.innerHTML = `<h4 class="time-chart-title">${label} – zmiana w czasie</h4>
+                    <span class="time-chart-meta">${unit ? unit + ' · ' : ''}${measured ? 'zmierzone w tym miejscu' : 'model globalny'}</span>
+                    <div class="chart-wrap"><canvas height="120"></canvas></div>`;
+                list.appendChild(block);
+                const cur = s.current_index;
+                timeCharts.push(new Chart(block.querySelector('canvas').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: s.labels,
+                        datasets: [{
+                            label, data: values, borderColor: accent, backgroundColor: accent + '22', fill: true,
+                            tension: 0.35, borderWidth: 1.5,
+                            pointRadius: values.map((_, i) => i === cur ? 4.5 : 1.5),
+                            pointBackgroundColor: values.map((_, i) => i === cur ? '#F4F4F6' : accent),
+                            pointBorderColor: accent
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: {
+                                title: items => (s.detail_labels || s.labels)[items[0].dataIndex],
+                                label: c => `${c.formattedValue}${unit ? ' ' + unit : ''}${c.dataIndex === cur ? ' (data lądowania)' : ''}` } }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 8 }, maxRotation: 0, autoSkip: true,
+                                          callback: function (v) { const [m, y] = this.getLabelForValue(v).split(' '); return `${m} '${String(y).slice(2)}`; } },
+                                 grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        }
+                    }
+                }));
+            });
+            box.hidden = false;
+        }
+
         async function loadResults() {
             const profile = await callApi('characterize', {
                 target_body: SEARCH_PARAMS.body,
@@ -636,6 +754,7 @@ $backQuery = http_build_query([
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);
+            loadTimeCharts();      // osobne zapytanie: wyniki pokazują się bez czekania na wykresy
 
             const searchRes = await callApi('search', {
                 features_norm: profile.features_norm,

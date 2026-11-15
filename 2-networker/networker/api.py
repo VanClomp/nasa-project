@@ -43,6 +43,7 @@ class CharacterizeRequest(BaseModel):
     lat: float = Field(..., ge=-90.0, le=90.0)
     lon: float = Field(...)
     timestamp_iso: str | None = "2026-11-14T12:00:00Z"
+    series: bool = False  # passed to 3-charakteryzator: also return extra.series (12-month p(t))
 
 
 class SearchRequest(BaseModel):

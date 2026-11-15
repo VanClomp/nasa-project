@@ -1331,3 +1331,42 @@ body.leaving {
     .site-picker-item-side code { display: none; }
     .site-picker { max-height: 86vh; }
 }
+
+/* Pochodzenie i zmienność w czasie każdego parametru (renderFeatureFlags) */
+.model-badge.orbital {
+    color: var(--moon-accent);
+    border-color: rgba(96, 165, 250, 0.35);
+    background: rgba(96, 165, 250, 0.08);
+}
+.feat-flags { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 3px; }
+.feat-src, .feat-time {
+    font-style: normal;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.54rem;
+    letter-spacing: 0.02em;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    cursor: help;
+    white-space: nowrap;
+}
+.feat-src.local  { color: var(--emerald); border-color: rgba(16, 185, 129, 0.35); }
+.feat-src.global { color: #FB923C;        border-color: rgba(251, 146, 60, 0.35); }
+.feat-src.none   { color: var(--text-Dim); }
+.feat-time.varies { color: var(--text-main); }
+.feat-time.fixed  { color: var(--text-Dim); }
+
+/* p(t): wykresy parametrów zmiennych w czasie (results.php, pod klimatogramem) */
+.time-charts { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); }
+.time-charts[hidden] { display: none; }
+.time-charts-note { margin: 0.2rem 0 0.6rem; font-size: 0.66rem; color: var(--text-muted); line-height: 1.4; }
+.time-chart { margin-bottom: 0.9rem; }
+.time-chart-title {
+    margin: 0; font-size: 0.76rem; font-weight: 500; letter-spacing: -0.01em; color: var(--text-main);
+}
+.time-chart-meta {
+    display: block; margin: 1px 0 0.3rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--text-muted);
+}
+.site-picker-tag.partial { color: #FB923C; border-color: rgba(251, 146, 60, 0.35); background: rgba(251, 146, 60, 0.08); }

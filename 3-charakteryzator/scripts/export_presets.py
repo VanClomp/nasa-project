@@ -44,13 +44,18 @@ def moon():
                 desc = 'Lądowanie: ' + k[k.find('(') + 1:k.rfind(')')] if '(' in k else k
             name = s['name'] + (f" ({k[k.find('(') + 1:k.rfind(')')]})" if k.startswith('Landed') and '(' in k else '')
             out.append(dict(id=s['id'], name=name, lat=round(float(c['lat']), 3),
-                            lon=round(((float(c['lon']) + 180) % 360) - 180, 3), group=label, desc=desc, local=False))
+                            lon=round(((float(c['lon']) + 180) % 360) - 180, 3), group=label, desc=desc, local=False,
+                            station_months=[]))
     return out
 
 
 def mars():
     import marslib, mars_model
     stations = set(mars_model.STATION_FILES)
+    station_keys = ('air_temp_min', 'air_temp_max', 'air_temp_mean', 'ground_temp_min', 'ground_temp_max',
+                    'ground_temp_mean', 'pressure', 'wind_mean')      # = service/contract.py STATION_PARAMS
+    months_with_data = {sid: [k for k in range(1, 13)
+                              if any(x in mars_model.station_month(sid, k) for x in station_keys)] for sid in stations}
     groups = [('Przyszłe misje – kandydaci', lambda s: s['kind'] == 'Candidate'),
               ('Lądowiska z danymi stacji (model lokalny)', lambda s: s['kind'] != 'Candidate' and s['id'] in stations),
               ('Pozostałe lądowiska', lambda s: s['kind'] != 'Candidate' and s['id'] not in stations)]
@@ -62,7 +67,7 @@ def mars():
             name = s['name'] + (f" ({s['mission']})" if s['kind'] != 'Candidate' else '')
             out.append(dict(id=s['id'], name=name, lat=round(float(s['lat']), 3),
                             lon=round(((float(s['lon']) + 180) % 360) - 180, 3), group=label, desc=desc,
-                            local=s['id'] in stations))
+                            local=s['id'] in stations, station_months=months_with_data.get(s['id'], [])))
     return out
 
 

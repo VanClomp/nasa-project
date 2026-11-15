@@ -14,10 +14,11 @@ class CharacterizeRequest(BaseModel):
     lat: float = Field(..., ge=-90, le=90)
     lon: float
     timestamp_iso: Optional[str] = Field(None, examples=['2026-11-14T12:00:00Z'])
+    series: bool = False          # also return extra.series: 12-month p(t) for the time-varying features
 
 @app.get('/health')
 def health():
-    return {'status': 'ok', 'bodies': {'mars': 'ready', 'moon': 'in preparation'}}
+    return {'status': 'ok', 'bodies': {'mars': 'ready', 'moon': 'ready'}}
 
 @app.post('/characterize')
 def characterize(req: CharacterizeRequest):

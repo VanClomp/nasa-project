@@ -48,6 +48,16 @@ const SitePicker = (() => {
                                     : `${isFinite(c.lat) ? fmt(c.lat) : '--'}°, ${isFinite(c.lon) ? fmt(c.lon) : '--'}°`;
     }
 
+    // Station records exist only in some Mars months (Phoenix 3-5, Pathfinder 5-7): outside them the site gets the
+    // global model, so the tag says how much of the year is covered.
+    function stationTag(p) {
+        const m = p.station_months || [];
+        if (!p.local || !m.length) return '';
+        const ls = m.map(k => `Ls ${30 * (k - 1)}–${30 * k}°`).join(', ');
+        const text = m.length === 12 ? 'dane stacji · cały rok' : `dane stacji · ${m.length}/12 mies.`;
+        return `<em class="site-picker-tag${m.length === 12 ? '' : ' partial'}" title="Miesiące marsjańskie z danymi stacji: ${ls}. W pozostałych: model globalny.">${text}</em>`;
+    }
+
     function render() {
         const q = search.value.trim().toLowerCase();
         const cur = current().preset;
@@ -59,7 +69,7 @@ const SitePicker = (() => {
             html += `<button type="button" role="option" class="site-picker-item${cur && cur.id === p.id ? ' active' : ''}"
                         aria-selected="${cur && cur.id === p.id}" data-i="${i}">
                         <span class="site-picker-item-main"><strong>${esc(p.name)}</strong><span>${esc(p.desc)}</span></span>
-                        <span class="site-picker-item-side">${p.local ? '<em class="site-picker-tag">dane stacji</em>' : ''}
+                        <span class="site-picker-item-side">${stationTag(p)}
                         <code>${fmt(p.lat)}°, ${fmt(p.lon)}°</code></span>
                     </button>`;
         });
