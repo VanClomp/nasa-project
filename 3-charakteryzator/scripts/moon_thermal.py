@@ -42,6 +42,12 @@ def surface_temps(lat, sub_solar_lat=0.0, a0=0.12, flux=1361.0, days=6, steps=No
     T = np.full((n, N), 1.0) * (220.0 * np.cos(phi) ** 0.25 + 40.0)
     dzc = np.diff(z); h0 = dz[0] / 2
     Ts = T[:, 0].copy(); rec = np.empty((n, steps))
+    if _surface_kernel is not None:                       # compiled time loop (same scheme, ~100x faster)
+        rec = _surface_kernel(np.ascontiguousarray(absorbed, dtype=np.float64), np.ascontiguousarray(T, dtype=np.float64),
+                              Ts.astype(float), dz.astype(float), dzc.astype(float), rho.astype(float), kc.astype(float),
+                              float(h0), float(dt), int(days), int(steps), np.array(C_POLY, float))
+        hrs = rec[:, (np.arange(24) * steps // 24 + steps // 2) % steps]
+        return rec.min(axis=1), rec.max(axis=1), rec.mean(axis=1), hrs
     for day_i in range(days):
         for i in range(steps):
             k0 = kc[0] * (1 + CHI * (T[:, 0] / 350.0) ** 3)
@@ -60,6 +66,47 @@ def surface_temps(lat, sub_solar_lat=0.0, a0=0.12, flux=1361.0, days=6, steps=No
             if day_i == days - 1: rec[:, i] = Ts
     hrs = rec[:, (np.arange(24) * steps // 24 + steps // 2) % steps]      # local hour 0..23 (12 = noon)
     return rec.min(axis=1), rec.max(axis=1), rec.mean(axis=1), hrs
+
+def _surface_loop(absorbed, T, Ts, dz, dzc, rho, kc, h0, dt, days, steps, cpoly):
+    """The time loop of surface_temps for numba, with the same operations in the same order as the numpy version:
+    4 Newton steps for the skin temperature, then one explicit conduction step of the whole column."""
+    n, N = T.shape
+    rec = np.empty((n, steps))
+    cond = np.empty(N - 1); dT = np.empty(N)
+    for c in range(n):
+        ts = Ts[c]
+        for day_i in range(days):
+            for i in range(steps):
+                k0 = kc[0] * (1 + CHI * (T[c, 0] / 350.0) ** 3)
+                for _ in range(4):
+                    f = absorbed[c, i] + k0 * (T[c, 0] - ts) / h0 - EMIS * SIGMA * ts ** 4
+                    ts = ts - f / (-k0 / h0 - 4 * EMIS * SIGMA * ts ** 3)
+                    if ts < 15.0: ts = 15.0
+                    elif ts > 450.0: ts = 450.0
+                for j in range(N - 1):
+                    tm = 0.5 * (T[c, j + 1] + T[c, j])
+                    kk = 0.5 * (kc[j + 1] + kc[j]) * (1 + CHI * (tm / 350.0) ** 3)
+                    cond[j] = kk * (T[c, j + 1] - T[c, j]) / dzc[j]
+                for j in range(N):
+                    t = T[c, j]
+                    cp = (((cpoly[0] * t + cpoly[1]) * t + cpoly[2]) * t + cpoly[3]) * t + cpoly[4]   # Horner, as np.polyval
+                    cap = rho[j] * cp
+                    if j == 0:
+                        dT[j] = (k0 * (ts - T[c, 0]) / h0 + cond[0]) / (cap * dz[0])
+                    elif j == N - 1:
+                        dT[j] = (Q_GEO - cond[N - 2]) / (cap * dz[N - 1])
+                    else:
+                        dT[j] = (cond[j] - cond[j - 1]) / (cap * dz[j])
+                for j in range(N):
+                    T[c, j] = T[c, j] + dT[j] * dt
+                if day_i == days - 1: rec[c, i] = ts
+    return rec
+
+try:                                                      # optional: falls back to the numpy loop without numba
+    import numba
+    _surface_kernel = numba.njit(cache=True)(_surface_loop)
+except ImportError:
+    _surface_kernel = None
 
 if __name__ == '__main__':
     import time

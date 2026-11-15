@@ -52,6 +52,7 @@ if (isset($_GET['w'])) {
     <link rel="stylesheet" href="style.css?v=<?php echo @filemtime(__DIR__ . '/style.css') ?: 1; ?>">
 </head>
 <body>
+    <?php include __DIR__ . '/progress_bar.php'; ?>
 
     <div class="hud-bg"></div>
 
@@ -791,7 +792,8 @@ if (isset($_GET['w'])) {
                 features_norm: currentTargetProfile.features_norm,
                 weights: getWeightsVector(),
                 require_caves: document.getElementById('require-caves').checked,
-                top_k: 100
+                top_k: 100,
+                include_maps: false   // the pages draw pins only; skip the unused heatmap/error-map images
             });
             currentCandidates = res.candidates || [];
             refreshEarthPins();

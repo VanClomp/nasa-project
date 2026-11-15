@@ -65,6 +65,10 @@ def score_all(
     any valid month gets a score of -inf.
     """
     n_points = features.shape[0]
+    if _score_kernel is not None and n_points:
+        # Compiled single pass over the data (no temporary arrays), parallel over points.
+        return _score_kernel(np.asarray(features, dtype=np.float32), np.asarray(target, dtype=np.float32),
+                             np.asarray(weights_norm, dtype=np.float32))
     best_score = np.empty(n_points, dtype=np.float32)
     best_month = np.empty(n_points, dtype=np.int8)
 
@@ -84,6 +88,38 @@ def score_all(
         # list() forces execution and re-raises any exception from the thread.
         list(_pool().map(work, starts))
     return best_score, best_month
+
+
+def _score_all_loop(features, target, weights_norm):
+    """score_all for numba: per point and month 1 - sum_k(w_k * |x - y_k|) in float32, NaN months lose
+    (-inf), ties go to the earlier month, as numpy's argmax does."""
+    n, m, k = features.shape
+    best_score = np.empty(n, dtype=np.float32)
+    best_month = np.empty(n, dtype=np.int8)
+    for i in numba.prange(n):
+        best = np.float32(-np.inf)
+        bm = 0
+        for j in range(m):
+            penalty = np.float32(0.0)
+            for f in range(k):
+                penalty += weights_norm[f] * abs(features[i, j, f] - target[f])
+            s = np.float32(1.0) - penalty
+            if s != s:                     # NaN: missing data
+                s = np.float32(-np.inf)
+            if s > best:
+                best = s
+                bm = j
+        best_score[i] = best
+        best_month[i] = bm
+    return best_score, best_month
+
+
+try:                                       # optional: without numba the numpy blocks above are used
+    import numba
+
+    _score_kernel = numba.njit(parallel=True, cache=True)(_score_all_loop)
+except ImportError:
+    _score_kernel = None
 
 
 def latlon_to_unit_xyz(lat_deg: np.ndarray, lon_deg: np.ndarray) -> np.ndarray:

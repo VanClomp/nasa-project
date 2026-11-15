@@ -102,6 +102,7 @@ def search(
     require_caves: bool = False,
     cave_max_km: float = DEFAULT_CAVE_MAX_KM,
     error_scale_max: float = DEFAULT_ERROR_SCALE_MAX,
+    include_maps: bool = True,
 ) -> dict:
     """Finds the top_k locations on Earth closest to the target profile.
 
@@ -112,6 +113,8 @@ def search(
         of two closer ones, the better one stays. 0 turns the filtering off.
     require_caves: return only points with a cave no farther than cave_max_km.
     error_scale_max: error at which the error-map colour scale ends.
+    include_maps: build heatmap_base64 and error_map (two 1024x512 images, ~100 ms and ~375 kB);
+        with False both fields are null.
 
     Returns the POST /search response dictionary (fields described in README.md). Raises
     ValueError on invalid input.
@@ -179,14 +182,16 @@ def search(
         for i in range(chosen.size)
     ]
     # The maps show all points, including those removed by the cave filter.
-    pixel_scores = pixel_best_scores(data, best_score)
-    heatmap = render_heatmap(data, best_score, pixel_scores)
-    error_map = _error_map_payload(
-        global_error_grid(data, best_score, pixel_scores),
-        (-90.0, 90.0, -180.0, 180.0),
-        1.0 - best_score[np.isfinite(best_score)],
-        error_scale_max,
-    )
+    heatmap = error_map = None
+    if include_maps:
+        pixel_scores = pixel_best_scores(data, best_score)
+        heatmap = render_heatmap(data, best_score, pixel_scores)
+        error_map = _error_map_payload(
+            global_error_grid(data, best_score, pixel_scores),
+            (-90.0, 90.0, -180.0, 180.0),
+            1.0 - best_score[np.isfinite(best_score)],
+            error_scale_max,
+        )
 
     return {
         "execution_time_ms": round((time.perf_counter() - started) * 1000.0, 2),

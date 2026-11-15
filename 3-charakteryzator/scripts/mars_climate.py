@@ -97,6 +97,12 @@ def ground_temps(lat, ls, albedo, ti, p_pa, tau, ir_coef=None, n_sols=12, steps=
     T = np.repeat(t_eq[:, None], N, axis=1)
     zc = np.cumsum(dz) - dz / 2; dzc = np.diff(zc)
     cap0 = RHO_C * dz[0]
+    if _ground_kernel is not None:                        # compiled time loop (same scheme, ~100x faster)
+        rec = _ground_kernel(np.ascontiguousarray(absorbed, dtype=np.float64), np.asarray(l_down, float),
+                             np.asarray(tf, float), np.ascontiguousarray(T, dtype=np.float64), float(k),
+                             dzc.astype(float), dz.astype(float), float(RHO_C), float(cap0), float(dt),
+                             float(EPS * SIGMA), int(n_sols), int(steps))
+        return rec.min(axis=1), rec.max(axis=1), rec.mean(axis=1)
     rec = np.empty((S, steps))
     for sol_i in range(n_sols):
         for i in range(steps):
@@ -110,6 +116,34 @@ def ground_temps(lat, ls, albedo, ti, p_pa, tau, ir_coef=None, n_sols=12, steps=
             T[:, 0] = np.maximum(T[:, 0], tf)
             if sol_i == n_sols - 1: rec[:, i] = T[:, 0]
     return rec.min(axis=1), rec.max(axis=1), rec.mean(axis=1)
+
+def _ground_loop(absorbed, l_down, tf, T, k, dzc, dz, rho_c, cap0, dt, eps_sigma, n_sols, steps):
+    """The explicit time loop of ground_temps for numba: identical update order to the numpy version
+    (conduction from the old profile, all layers updated together, then the CO2 frost floor on the surface)."""
+    S, N = T.shape
+    rec = np.empty((S, steps))
+    cond = np.empty(N - 1); dT = np.empty(N)
+    for s in range(S):
+        for sol_i in range(n_sols):
+            for i in range(steps):
+                for j in range(N - 1):
+                    cond[j] = k * (T[s, j + 1] - T[s, j]) / dzc[j]
+                q_top = absorbed[s, i] + l_down[s] - eps_sigma * T[s, 0] ** 4 + cond[0]
+                dT[0] = q_top / cap0
+                for j in range(1, N - 1):
+                    dT[j] = (cond[j] - cond[j - 1]) / (rho_c * dz[j])
+                dT[N - 1] = -cond[N - 2] / (rho_c * dz[N - 1])
+                for j in range(N):
+                    T[s, j] = T[s, j] + dT[j] * dt
+                if T[s, 0] < tf[s]: T[s, 0] = tf[s]
+                if sol_i == n_sols - 1: rec[s, i] = T[s, 0]
+    return rec
+
+try:                                                      # optional: falls back to the numpy loop without numba
+    import numba
+    _ground_kernel = numba.njit(cache=True)(_ground_loop)
+except ImportError:
+    _ground_kernel = None
 
 def air_density(p_pa, t_k): return p_pa / (R_GAS * t_k)
 def column_mass_g_cm2(p_pa): return p_pa / G_MARS / 10.0

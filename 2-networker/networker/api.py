@@ -52,6 +52,7 @@ class SearchRequest(BaseModel):
     require_caves: bool = False
     top_k: int = Field(100, ge=1, le=1000)
     min_distance_km: float | None = Field(None, ge=0.0)
+    include_maps: bool = True  # False: 4-szukacz skips the heatmap/error-map images (faster, ~375 kB smaller)
 
 
 class ErrorMapRequest(BaseModel):
@@ -201,6 +202,7 @@ async def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse
         "weights": clean_weights,
         "require_caves": body.require_caves,
         "top_k": body.top_k,
+        "include_maps": body.include_maps,
     }
     if body.min_distance_km is not None:
         payload["min_distance_km"] = body.min_distance_km

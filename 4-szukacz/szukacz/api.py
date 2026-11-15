@@ -15,12 +15,16 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+import numpy as np
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .data import load_earth_data
+from .scoring import score_all
 from .engine import (
     DEFAULT_CAVE_MAX_KM,
     DEFAULT_MIN_DISTANCE_KM,
@@ -48,6 +52,8 @@ class SearchRequest(BaseModel):
     top_k: int = Field(DEFAULT_TOP_K, ge=1, le=MAX_TOP_K)
     # A missing field means the SZUKACZ_MIN_DISTANCE_KM value; 0 turns the filtering off.
     min_distance_km: float | None = Field(None, ge=0)
+    # False skips the heatmap and error-map images (both returned as null): faster and ~375 kB smaller.
+    include_maps: bool = True
 
 
 class ErrorMapRequest(BaseModel):
@@ -59,9 +65,21 @@ class ErrorMapRequest(BaseModel):
     size_px: int = Field(DEFAULT_DETAIL_SIZE_PX, ge=MIN_DETAIL_SIZE_PX, le=MAX_DETAIL_SIZE_PX)
 
 
+def _default_data_dir() -> str:
+    """SZUKACZ_DATA_DIR if set; otherwise /data/earth_real (the real Earth data, git-ignored so that git operations
+    on the server cannot replace it) when it exists, else /data/earth (the small mock tracked in git)."""
+    if os.environ.get("SZUKACZ_DATA_DIR"):
+        return os.environ["SZUKACZ_DATA_DIR"]
+    real = Path("/data/earth_real")
+    return str(real) if (real / "earth_features_norm.npy").exists() else "/data/earth"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.earth = load_earth_data(os.environ.get("SZUKACZ_DATA_DIR", "/data/earth"))
+    app.state.earth = load_earth_data(_default_data_dir())
+    # Warm-up: compiles the scoring kernel and reads the matrix into the page cache before the first request.
+    earth = app.state.earth
+    score_all(earth.features_norm, np.zeros(earth.n_features, np.float32), np.ones(earth.n_features, np.float32))
     app.state.min_distance_km = float(
         os.environ.get("SZUKACZ_MIN_DISTANCE_KM", DEFAULT_MIN_DISTANCE_KM)
     )
@@ -99,6 +117,7 @@ def search_endpoint(body: SearchRequest, request: Request) -> JSONResponse:
             require_caves=body.require_caves,
             cave_max_km=state.cave_max_km,
             error_scale_max=state.error_scale_max,
+            include_maps=body.include_maps,
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

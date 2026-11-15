@@ -1372,3 +1372,30 @@ body.leaving {
     font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--text-muted);
 }
 .site-picker-tag.partial { color: #FB923C; border-color: rgba(251, 146, 60, 0.35); background: rgba(251, 146, 60, 0.08); }
+
+/* Progress bar for running API requests (progress_bar.php) */
+.api-progress {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+    height: 2px; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s var(--ease-out);
+}
+.api-progress.active { opacity: 1; }
+.api-progress.done { opacity: 0; transition-delay: 0.15s; }
+.api-progress-fill {
+    height: 100%; width: 100%;
+    transform-origin: left center; transform: scaleX(0);
+    background: var(--accent-primary);
+    box-shadow: 0 0 10px var(--accent-primary);
+    transition: transform 0.2s var(--ease-out);
+}
+.api-progress-label {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);   /* centre: free space in every navbar */
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.03em;
+    color: var(--text-muted);
+    padding: 0.15rem 0.5rem; border-radius: 999px;
+    background: rgba(11, 12, 16, 0.85); border: 1px solid var(--border-subtle);
+}
+@media (prefers-reduced-motion: reduce) {
+    .api-progress-fill { transition: none; }
+}
