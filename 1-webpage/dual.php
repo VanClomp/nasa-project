@@ -248,17 +248,36 @@ if (isset($_GET['w'])) {
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.width, y); ctx.stroke();
             }
 
-            candidates.forEach(cand => {
+            // Ważność wyniku = pozycja w rankingu + względny score (min–max w tej odpowiedzi),
+            // bo surowe score bywają ściśnięte (np. 0.86–0.93) i same nie różnicują wyników.
+            // Rysujemy od najsłabszego do najlepszego, żeby czołówka była na wierzchu.
+            const ranked = [...candidates].sort((a, b) => b.score - a.score);
+            const n = ranked.length;
+            const sMax = n ? ranked[0].score : 0;
+            const sSpan = n ? sMax - ranked[n - 1].score : 0;
+            const mix = (a, b, t) => Math.round(a + (b - a) * t);
+
+            for (let i = n - 1; i >= 0; i--) {
+                const cand = ranked[i];
+                const rankT = n > 1 ? 1 - i / (n - 1) : 1;
+                const scoreT = sSpan > 1e-9 ? 1 - (sMax - cand.score) / sSpan : 1;
+                const imp = Math.pow(0.6 * rankT + 0.4 * scoreT, 1.6); // 0..1, faworyzuje czołówkę
+
                 const px = ((cand.lon + 180) / 360) * c.width;
                 const py = ((90 - cand.lat) / 180) * c.height;
-                const radius = 110 * cand.score;
-                const g = ctx.createRadialGradient(px, py, 4, px, py, radius);
-                g.addColorStop(0, `rgba(16, 185, 129, ${cand.score * 0.9})`);
-                g.addColorStop(0.5, `rgba(96, 165, 250, ${cand.score * 0.45})`);
+                const radius = 6 + 10 * imp; // 6–16 px na teksturze 2048 (wcześniej ~100 px)
+                const alpha = 0.12 + 0.78 * imp;
+                // Nasycenie: od wyblakłego łupku (słabe wyniki) do pełnego szmaragdu / błękitu (top)
+                const core = `rgba(${mix(120, 16, imp)}, ${mix(135, 185, imp)}, ${mix(150, 129, imp)}, ${alpha})`;
+                const halo = `rgba(${mix(120, 96, imp)}, ${mix(135, 165, imp)}, ${mix(150, 250, imp)}, ${alpha * 0.4})`;
+                const g = ctx.createRadialGradient(px, py, 0, px, py, radius);
+                g.addColorStop(0, core);
+                g.addColorStop(0.3, core);
+                g.addColorStop(0.6, halo);
                 g.addColorStop(1, 'rgba(96, 165, 250, 0)');
                 ctx.fillStyle = g;
                 ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill();
-            });
+            }
 
             return new THREE.CanvasTexture(c);
         }
