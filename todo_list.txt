@@ -82,26 +82,30 @@ PRECOMPUTER (pliki w /data/earth)
     miesiąc z NaN w którejkolwiek cesze (także o wadze 0) przegrywa
     z pozostałymi, a punkt bez żadnego pełnego miesiąca nie trafia do wyników.
 
-12. W repozytorium nie ma jeszcze generate_mock_data.py ani katalogu data/.
-    Szukacz był testowany tylko na własnych danych syntetycznych tworzonych
-    w testach (4-szukacz/tests/test_szukacz.py, funkcja write_dataset).
-    Odczyt metadanych z .parquet nie był uruchomiony.
+12. [Stan na 2026-11-14] Generator mocka kończy się błędem.
+    5-precomputer/MOCK_HEURYSTYKA_generate_earth_data.py zatrzymuje się na
+    np.stack (ok. linii 252): "ValueError: all input arrays must have the
+    same shape". Tablica thermal_inertia (linia 214) ma kształt (N, 1),
+    pozostałe cechy (N, 12).
+    - Skutek: przy pustym ./data kontener precomputer-mock-init kończy się
+      błędem, a szukacz czeka na jego poprawne zakończenie (depends_on
+      w docker-compose.yml), więc nie wystartuje. Z tego samego powodu nie
+      przechodzi test test_mock_precomputer_integrates_with_szukacz
+      w 2-networker/tests.
+    - Do zrobienia (Precomputer): rozciągnąć thermal_inertia do (N, 12), tak
+      jak zrobiono to dla surface_roughness i slope_deg (np.broadcast_to).
+    - Szukacz był sprawdzony na danych z tego generatora uruchomionego z taką
+      poprawką w pamięci, bez zmiany pliku: 60 000 i 400 000 punktów,
+      metadane w .npy i .parquet. Odczyt .parquet działa.
 
 
 INFRASTRUKTURA (docker-compose.yml)
 -----------------------------------
 
-13. Nie ma jeszcze docker-compose.yml. Szukacz potrzebuje wpisu:
-
-      szukacz:
-        build: ./4-szukacz
-        volumes:
-          - ./data:/data:ro
-        expose:
-          - "8002"
-
-    Dockerfile jest w 4-szukacz/, ale nie był budowany (brak Dockera na
-    maszynie, na której powstał).
+13. [Stan na 2026-11-14] docker-compose.yml istnieje i ma wpis szukacz
+    (build ./4-szukacz, wolumen ./data:/data:ro, port 8002). Nic do zrobienia.
+    Obraz z 4-szukacz/Dockerfile nadal nie był budowany po stronie Szukacza
+    (brak Dockera na maszynie).
 
 
 SZUKACZ (do zrobienia później, celowo pominięte)
@@ -111,11 +115,76 @@ SZUKACZ (do zrobienia później, celowo pominięte)
     (profil zasłonięcia Słońca przez góry), punkt 5.4 zadań Szukacza
     w specyfikacji.
 
-15. Warstwa HTTP (4-szukacz/szukacz/api.py) nie była uruchomiona, bo nie było
-    pakietu fastapi. Po instalacji zależności: uruchomić testy
-    (python -m unittest discover -s tests -v w katalogu 4-szukacz); test
-    endpointu przestanie być pomijany.
+15. [Stan na 2026-11-14] Zrobione. Warstwa HTTP (4-szukacz/szukacz/api.py)
+    została uruchomiona z fastapi 0.163 i httpx 0.28: testy endpointów
+    /search i /error-map przechodzą, serwer uvicorn odpowiada na /health,
+    /search i /error-map.
 
-16. Wydajność: ok. 80 ms na zapytanie przy 400 000 punktów (8 rdzeni),
-    specyfikacja zakłada poniżej 15 ms. Możliwy kierunek: jądro liczące
-    w numba zamiast numpy.
+16. Wydajność: ok. 105 ms na zapytanie /search przy 400 000 punktów
+    (8 rdzeni), w tym ok. 11 ms na mapę błędu z punktu 17. Specyfikacja
+    zakłada poniżej 15 ms. Możliwy kierunek: jądro liczące w numba zamiast
+    numpy.
+
+
+MAPA BŁĘDU (dodane 2026-11-14, pełny opis w 4-szukacz/README.md)
+-----------------------------------------------------------------
+
+Błąd to ważona różnica między profilem celu a cechami miejsca na Ziemi
+(liczba od 0 do 1, błąd = 1 - score). Szukacz zwraca go teraz jako mapę
+całej Ziemi i, na żądanie, jako szczegółową mapkę okolicy punktu.
+
+17. Nowe pole w odpowiedzi POST /search: error_map.
+    Obiekt z polami image_base64, width, height, bounds, scale, stats.
+    - Networker: nic do zrobienia. /api/v1/search oddaje odpowiedź Szukacza
+      w całości, więc pole przechodzi dalej. Wynika to z kodu
+      2-networker/networker/api.py; nie było sprawdzane na działającym
+      klastrze.
+    - Frontend: do zrobienia, jeśli mapa ma być widoczna. image_base64 to
+      "data:image/png;base64,..." (PNG, nie WebP jak heatmapa), obraz
+      1024x512 nakładany na globus Ziemi tak samo jak heatmap_base64.
+      Piksel przezroczysty = brak danych. Legendę rysuje się z pola scale:
+      9 kolorów rozłożonych równo od scale.min (0) do scale.max (0.5),
+      ciemny = mały błąd, jasny = duży. Skala jest stała dla wszystkich
+      zapytań, inaczej niż w heatmapie.
+    - Odpowiedź /search urosła o 90-130 kB (dane mockowe, 60 000
+      i 400 000 punktów).
+    - Koniec skali kolorów ustawia zmienna SZUKACZ_ERROR_SCALE_MAX
+      (domyślnie 0.5). Bez zmian w docker-compose.yml działa wartość
+      domyślna.
+
+18. Nowy endpoint Szukacza: POST /error-map (szczegółowa mapka wokół punktu).
+    Zapytanie: features_norm i weights (te same co w /search), lat, lon,
+    opcjonalnie radius_km (1..2000, domyślnie 250) i size_px (64..1024,
+    domyślnie 512). Odpowiedź: execution_time_ms, center, radius_km,
+    km_per_px, error_map (ten sam format co w punkcie 17).
+    - Networker: do zrobienia. Potrzebna publiczna trasa, np.
+      POST /api/v1/error-map, która przekazuje zapytanie bez zmian do
+      http://szukacz:8002/error-map i oddaje odpowiedź oraz status 422 bez
+      zmian. Dopóki jej nie ma, frontend nie ma dostępu do mapki.
+    - Frontend: do zrobienia. Wywołanie po wyborze kandydata albo kliknięciu
+      w globus Ziemi, z tymi samymi features_norm i weights co ostatnie
+      /search. Gdzie leży obraz, mówi error_map.bounds (stopnie).
+
+19. Przypadki, które frontend powinien znieść w mapce z punktu 18:
+    - bounds.lon_min i lon_max wychodzą poza [-180, 180], gdy okno przecina
+      południk 180 (np. 170..190).
+    - height jest mniejsze niż size_px, gdy okno sięga bieguna.
+    - Okolica bez danych (ocean) daje obraz w całości przezroczysty,
+      a w stats: n_points = 0 oraz null w min, mean i max.
+    - Czas odpowiedzi: ok. 27 ms przy wartościach domyślnych, do ok. 160 ms
+      przy radius_km = 2000 i size_px = 1024 (400 000 punktów).
+
+20. PRECOMPUTER: szczegółowość mapki z punktu 18 zależy od gęstości punktów.
+    Mapka nie interpoluje: piksel pokazuje błąd najbliższego punktu danych.
+    Mock z 60 000 punktów ma ich ok. 1.4 na piksel siatki 1024x512, więc
+    mapka pokazuje niewiele więcej niż mapa całej Ziemi; zysk pojawia się
+    dopiero przy gęstszych danych (400 000 punktów to ok. 3.7 na piksel).
+    Szukacz zakłada punkty rozłożone równomiernie w stopniach (regularna
+    siatka lat/lon). Jeśli docelowa siatka będzie inna, np.
+    równopowierzchniowa, przy biegunach w mapce pojawią się przerwy między
+    punktami i regułę wypełniania trzeba będzie dostosować.
+
+21. Specyfikacja (punkt 5, Komponent 4) i CONTEXT.md (punkt 5) nie opisują
+    pola error_map ani endpointu /error-map. Szukacz tych plików nie
+    zmieniał. Do decyzji zespołu, czy dopisać tam nowy kontrakt; jego opis
+    jest w 4-szukacz/README.md.

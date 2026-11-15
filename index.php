@@ -136,7 +136,7 @@
             }
         `;
 
-        // Proceduralny shader powierzchni planetarnej (FBM noise w GLSL - zero kreskówkowych plam)
+        // Proceduralny shader powierzchni planetarnej lub tekstura ze zdjęcia
         const fragmentShader = `
             uniform vec3 uBaseColor;
             uniform vec3 uDarkColor;
@@ -144,6 +144,8 @@
             uniform vec3 uLightDir;
             uniform float uHover;
             uniform float uSeed;
+            uniform float uHasTexture;
+            uniform sampler2D uTexture;
 
             varying vec3 vNormal;
             varying vec3 vPosition;
@@ -177,28 +179,29 @@
             }
 
             void main() {
-                // Tekstura geologiczna z 5 oktaw szumu FBM
-                float n = fbm(vUv * vec2(14.0, 7.0));
-                float detail = fbm(vUv * vec2(42.0, 21.0));
-                float surfaceFactor = smoothstep(0.28, 0.72, n * 0.75 + detail * 0.25);
-
-                vec3 albedo = mix(uDarkColor, uBaseColor, surfaceFactor);
+                vec3 albedo;
+                if (uHasTexture > 0.5) {
+                    albedo = texture2D(uTexture, vUv).rgb;
+                } else {
+                    // Tekstura geologiczna z 5 oktaw szumu FBM
+                    float n = fbm(vUv * vec2(14.0, 7.0));
+                    float detail = fbm(vUv * vec2(42.0, 21.0));
+                    float surfaceFactor = smoothstep(0.28, 0.72, n * 0.75 + detail * 0.25);
+                    albedo = mix(uDarkColor, uBaseColor, surfaceFactor);
+                }
 
                 // Oświetlenie kierunkowe Słońca (wyraźny, realistyczny terminator)
                 vec3 lightDir = normalize(uLightDir);
                 float diff = max(dot(vNormal, lightDir), 0.0);
                 float terminator = smoothstep(-0.08, 0.25, dot(vNormal, lightDir));
 
-                // Efekt Fresnela na krawędziach sfery (subtelna atmosfera / rim light)
-                vec3 viewDir = normalize(-vPosition);
-                float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.4);
-
-                vec3 color = albedo * (0.06 + diff * 0.95 * terminator);
-                color += uRimColor * fresnel * (0.28 + uHover * 0.35);
+                vec3 color = albedo * (0.08 + diff * 0.95 * terminator);
 
                 gl_FragColor = vec4(color, 1.0);
             }
         `;
+
+        const textureLoader = new THREE.TextureLoader();
 
         function createMinimalPlanet(holderId, config) {
             const container = document.getElementById(holderId);
@@ -214,13 +217,17 @@
             const group = new THREE.Group();
             scene.add(group);
 
+            const loadedTexture = config.textureUrl ? textureLoader.load(config.textureUrl) : null;
+
             const uniforms = {
-                uBaseColor: { value: new THREE.Color(config.baseColor) },
-                uDarkColor: { value: new THREE.Color(config.darkColor) },
-                uRimColor:  { value: new THREE.Color(config.rimColor) },
-                uLightDir:  { value: new THREE.Vector3(1.2, 0.4, 0.9) },
-                uHover:     { value: 0.0 },
-                uSeed:      { value: config.seed }
+                uBaseColor:  { value: new THREE.Color(config.baseColor) },
+                uDarkColor:  { value: new THREE.Color(config.darkColor) },
+                uRimColor:   { value: new THREE.Color(config.rimColor) },
+                uLightDir:   { value: new THREE.Vector3(1.2, 0.4, 0.9) },
+                uHover:      { value: 0.0 },
+                uSeed:       { value: config.seed },
+                uHasTexture: { value: loadedTexture ? 1.0 : 0.0 },
+                uTexture:    { value: loadedTexture }
             };
 
             const geo = new THREE.SphereGeometry(1.04, 64, 64);
@@ -233,20 +240,8 @@
             const sphere = new THREE.Mesh(geo, mat);
             group.add(sphere);
 
-            // Ultracienki, ascetyczny pierścień równikowy
-            const ringGeo = new THREE.RingGeometry(1.26, 1.264, 96);
-            const ringMat = new THREE.MeshBasicMaterial({
-                color: config.rimColor,
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0.12
-            });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = Math.PI / 2.25;
-            group.add(ring);
-
             return {
-                scene, camera, renderer, sphere, ring, ringMat, group, uniforms,
+                scene, camera, renderer, sphere, group, uniforms,
                 hovered: false,
                 targetRotX: 0,
                 targetRotZ: 0
@@ -257,14 +252,16 @@
             baseColor: '#CBD5E1',
             darkColor: '#334155',
             rimColor:  '#60A5FA',
-            seed: 1.0
+            seed: 1.0,
+            textureUrl: 'moon_photo.jpg'
         });
 
         const marsScene = createMinimalPlanet('mars-holder', {
             baseColor: '#EA580C',
             darkColor: '#431407',
             rimColor:  '#F97316',
-            seed: 7.4
+            seed: 7.4,
+            textureUrl: 'mars_photo.jpg'
         });
 
         function animate() {
@@ -274,7 +271,6 @@
 
                 const targetHover = p.hovered ? 1.0 : 0.0;
                 p.uniforms.uHover.value += (targetHover - p.uniforms.uHover.value) * 0.06;
-                p.ringMat.opacity += ((p.hovered ? 0.32 : 0.10) - p.ringMat.opacity) * 0.06;
 
                 p.group.rotation.x += (p.targetRotX - p.group.rotation.x) * 0.06;
                 p.group.rotation.z += (p.targetRotZ - p.group.rotation.z) * 0.06;
