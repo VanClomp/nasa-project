@@ -1,0 +1,66 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Frontend (PHP 8.3 + Apache)
+  # Built from the pages in 1-webpage/ and the images in images/ (see 2-networker/Dockerfile.frontend).
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: ./2-networker/Dockerfile.frontend
+    expose:
+      - "80"
+    networks:
+      default:
+        aliases:
+          - 1-frontend
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 3. Charakteryzator (Moon / Mars -> TargetProfile)
+  # ---------------------------------------------------------------------------
+  charakteryzator:
+    build: ./3-charakteryzator
+    environment:
+      MARS_DATA_DIR: /data/mars
+      MOON_DATA_DIR: /data/moon
+    volumes:
+      - ./data:/data:ro
+    expose:
+      - "8001"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 4. Szukacz (vector search over the Earth matrices in RAM / mmap)
+  # ---------------------------------------------------------------------------
+  szukacz:
+    build: ./4-szukacz
+    volumes:
+      - ./data:/data:ro
+    expose:
+      - "8002"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 2. Networker (Nginx Reverse Proxy + FastAPI API Gateway)
+  # Main entry point (ports 80 and 443).
+  # ---------------------------------------------------------------------------
+  networker:
+    build: ./2-networker
+    depends_on:
+      - frontend
+      - charakteryzator
+      - szukacz
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CHARAKTERYZATOR_URL=http://charakteryzator:8001
+      - SZUKACZ_URL=http://szukacz:8002
+    volumes:
+      - ./data:/data:ro
+      - ./3-charakteryzator/outputs:/charakteryzator/outputs:ro
+      - ./3-charakteryzator/service/norm_ranges.json:/charakteryzator/service/norm_ranges.json:ro
+      - ./2-networker/conf.d:/etc/nginx/conf.d
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    restart: unless-stopped

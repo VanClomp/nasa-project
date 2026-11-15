@@ -1,0 +1,13 @@
+ls_bin_start,ls_bin_end,sols_with_data,t_air_full_sols,t_air_min_median_K,t_air_max_median_K,t_air_mean_median_K,t_air_coldest_K,t_air_warmest_K,t_ground_full_sols,t_ground_min_median_K,t_ground_max_median_K,t_ground_mean_median_K,t_ground_coldest_K,t_ground_warmest_K,p_full_sols,p_min_median_Pa,p_max_median_Pa,p_mean_median_Pa,wind_mean_ms_median,wind_max_ms_median,tau_dust_median,p_mean_any_coverage_Pa
+0,30,0,0,,,,,,0,,,,,,0,,,,,,,
+30,60,0,0,,,,,,0,,,,,,0,,,,,,,
+60,90,0,0,,,,,,0,,,,,,0,,,,,,,
+90,120,0,0,,,,,,0,,,,,,0,,,,,,,
+120,150,14,5,198.8,256.5,223.8,197.9,258.2,0,,,,,,5,650.6,684.8,669.9,,,,668.1
+150,180,48,11,197.5,258.7,223.9,196.0,260.1,0,,,,,,11,642.0,682.2,664.9,,,,672.1
+180,210,14,0,,,,,,0,,,,,,0,,,,,,,708.2
+210,240,0,0,,,,,,0,,,,,,0,,,,,,,
+240,270,0,0,,,,,,0,,,,,,0,,,,,,,
+270,300,0,0,,,,,,0,,,,,,0,,,,,,,
+300,330,0,0,,,,,,0,,,,,,0,,,,,,,
+330,360,0,0,,,,,,0,,,,,,0,,,,,,,

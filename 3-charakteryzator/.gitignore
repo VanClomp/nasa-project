@@ -1,0 +1,11 @@
+data/
+pathfinder_met/
+outputs/_superseded/
+__pycache__/
+*.pyc
+.DS_Store
+.wtest
+.vscode/
+
+# Local session handoff notes (not for the team repo)
+HANDOFF.md

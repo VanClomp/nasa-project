@@ -1,0 +1,44 @@
+# Real Earth data on the server (read by 4-szukacz instead of the mock in data/earth/); never tracked so that
+# git pull / checkout on the server cannot replace it
+data/earth_real/
+
+# Raw binary Mars and Moon maps (1.3+ GB; prepared with 3-charakteryzator/scripts/pack_server_data.sh)
+data/mars/*
+!data/mars/.gitkeep
+data/moon/*
+!data/moon/.gitkeep
+
+# Certyfikaty SSL i dynamiczne konfiguracje Nginx
+certbot/
+2-networker/conf.d/*.conf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Internal notes and AI-assistant instructions (kept locally, not part of the public submission)
+CLAUDE.md
+CONTEXT.md
+.gemini/
+.claude/
+todo_list.txt
+HANDOFF.md
+
+# Keys, credentials and local environment files: never commit
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.env
+.env.*
+.netrc
+*.p12
+
+# Local archives, copies and OS files
+*.zip
+nasa-project/
+.DS_Store
+data/earth/UWAGA_DANE_MOCK_HEURYSTYKA.txt

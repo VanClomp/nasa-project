@@ -1,0 +1,109 @@
+site,parameter,coverage,detail
+vl1,Air temperature,Partial,"7 of 12 seasons; 333 sols with 18+ hours; the footpad sensor covers all 12 seasons but reads well above air temperature, so it is not used as a stand-in"
+vl1,Ground temperature,Missing,Not measured by this mission
+vl1,Pressure,Full,12 of 12 seasons; 1344 full-day sols
+vl1,Wind,Partial,"7 of 12 seasons; 333 sols; speed of the mean wind vector, lower than the mean speed"
+vl1,Dust opacity from the surface,Full,12 of 12 seasons; 286 sols
+vl1,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+vl1,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+vl1,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data. The Viking-era topography map in the folder is not usable."
+vl1,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+vl2,Air temperature,Full,12 of 12 seasons; 882 sols with 18+ hours
+vl2,Ground temperature,Missing,Not measured by this mission
+vl2,Pressure,Full,12 of 12 seasons; 807 full-day sols
+vl2,Wind,Full,12 of 12 seasons; 948 sols
+vl2,Dust opacity from the surface,Partial,11 of 12 seasons; 234 sols
+vl2,Dust opacity from orbit,Partial,"TES climatology at this latitude, 23 of 24 half-seasons with retrievals; gaps (polar night) filled by interpolation"
+vl2,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+vl2,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data; pressure-implied elevation agrees within 0.1 km. The Viking-era topography map in the folder is not usable."
+vl2,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+pathfinder,Air temperature,Partial,2 of 12 seasons; 16 sols with 18+ hours
+pathfinder,Ground temperature,Missing,Not measured by this mission
+pathfinder,Pressure,Partial,2 of 12 seasons; 16 full-day sols
+pathfinder,Wind,Missing,"Wind columns are raw sensor temperatures, not speeds"
+pathfinder,Dust opacity from the surface,Missing,"Measured by the mission cameras, not in the downloaded files"
+pathfinder,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+pathfinder,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+pathfinder,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data; pressure-implied elevation agrees within 0.4 km. The Viking-era topography map in the folder is not usable."
+pathfinder,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+spirit,Air temperature,Missing,No weather station data
+spirit,Ground temperature,Missing,No weather station data
+spirit,Pressure,Missing,No weather station data; pressure is estimated from the Viking 1 curve and elevation
+spirit,Wind,Missing,No weather station data
+spirit,Dust opacity from the surface,Missing,No weather station data
+spirit,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+spirit,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+spirit,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data. The Viking-era topography map in the folder is not usable."
+spirit,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+opportunity,Air temperature,Missing,No weather station data
+opportunity,Ground temperature,Missing,No weather station data
+opportunity,Pressure,Missing,No weather station data; pressure is estimated from the Viking 1 curve and elevation
+opportunity,Wind,Missing,No weather station data
+opportunity,Dust opacity from the surface,Missing,No weather station data
+opportunity,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+opportunity,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+opportunity,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data. The Viking-era topography map in the folder is not usable."
+opportunity,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+phoenix,Air temperature,Partial,3 of 12 seasons; 145 sols with 18+ hours
+phoenix,Ground temperature,Missing,Not measured by this mission
+phoenix,Pressure,Partial,3 of 12 seasons; 145 full-day sols
+phoenix,Wind,Partial,3 of 12 seasons; 128 sols
+phoenix,Dust opacity from the surface,Partial,3 of 12 seasons; 117 sols
+phoenix,Dust opacity from orbit,Partial,"TES climatology at this latitude, 18 of 24 half-seasons with retrievals; gaps (polar night) filled by interpolation"
+phoenix,Thermal inertia and albedo,Missing,Site is outside the map (coverage ends at 60 N)
+phoenix,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data; pressure-implied elevation agrees within 0.2 km. The Viking-era topography map in the folder is not usable."
+phoenix,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+curiosity,Air temperature,Full,12 of 12 seasons; 123 sols with 18+ hours; every 10th sol sampled
+curiosity,Ground temperature,Full,12 of 12 seasons; 121 sols with 18+ hours; every 10th sol sampled
+curiosity,Pressure,Full,12 of 12 seasons; 123 full-day sols; every 10th sol sampled
+curiosity,Wind,Missing,Wind speed present in under 0.1% of records
+curiosity,Dust opacity from the surface,Missing,"Measured by the mission cameras, not in the downloaded files"
+curiosity,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+curiosity,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+curiosity,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data; pressure-implied elevation agrees within 0.2 km. The Viking-era topography map in the folder is not usable."
+curiosity,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+insight,Air temperature,Partial,"4 of 12 seasons, 3 from complete sols and the rest from a composite of event windows; 15 complete sols"
+insight,Ground temperature,Missing,Not measured by this mission
+insight,Pressure,Partial,"5 of 12 seasons, 4 from complete sols and the rest from a composite of event windows; 16 complete sols"
+insight,Wind,Partial,10 of 12 seasons; 182 sols
+insight,Dust opacity from the surface,Missing,"Measured by the mission cameras, not in the downloaded files"
+insight,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+insight,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+insight,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data; pressure-implied elevation agrees within 0.2 km. The Viking-era topography map in the folder is not usable."
+insight,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+perseverance,Air temperature,Missing,"In the calibrated product, which was not downloaded"
+perseverance,Ground temperature,Full,"12 of 12 seasons; 73 sols with 18+ hours; derived from thermal flux, 2 sols rejected; every 20th sol sampled"
+perseverance,Pressure,Full,12 of 12 seasons; 29 full-day sols in the first Mars year (landing area); later sols are at higher elevation; every 20th sol sampled
+perseverance,Wind,Partial,5 of 12 seasons; 13 sols; every 20th sol sampled
+perseverance,Dust opacity from the surface,Missing,"Measured by the mission cameras, not in the downloaded files"
+perseverance,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+perseverance,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+perseverance,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data; pressure-implied elevation agrees within 0.1 km. The Viking-era topography map in the folder is not usable."
+perseverance,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+zhurong,Air temperature,Missing,No weather station data
+zhurong,Ground temperature,Missing,No weather station data
+zhurong,Pressure,Missing,No weather station data; pressure is estimated from the Viking 1 curve and elevation
+zhurong,Wind,Missing,No weather station data
+zhurong,Dust opacity from the surface,Missing,No weather station data
+zhurong,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+zhurong,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+zhurong,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data. The Viking-era topography map in the folder is not usable."
+zhurong,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+oxia,Air temperature,Missing,No weather station data (nothing has landed here)
+oxia,Ground temperature,Missing,No weather station data (nothing has landed here)
+oxia,Pressure,Missing,No weather station data (nothing has landed here); pressure is estimated from the Viking 1 curve and elevation
+oxia,Wind,Missing,No weather station data (nothing has landed here)
+oxia,Dust opacity from the surface,Missing,No weather station data (nothing has landed here)
+oxia,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+oxia,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+oxia,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data. The Viking-era topography map in the folder is not usable."
+oxia,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"
+arcadia,Air temperature,Missing,No weather station data (nothing has landed here)
+arcadia,Ground temperature,Missing,No weather station data (nothing has landed here)
+arcadia,Pressure,Missing,No weather station data (nothing has landed here); pressure is estimated from the Viking 1 curve and elevation
+arcadia,Wind,Missing,No weather station data (nothing has landed here)
+arcadia,Dust opacity from the surface,Missing,No weather station data (nothing has landed here)
+arcadia,Dust opacity from orbit,Full,"TES climatology at this latitude, 24 of 24 half-seasons with retrievals"
+arcadia,Thermal inertia and albedo,Partial,Viking-era regional maps (2 deg and 1 deg cells); superseded by TES and THEMIS maps
+arcadia,Elevation,Partial,"Published MOLA value entered by hand, not read from archive data. The Viking-era topography map in the folder is not usable."
+arcadia,"Slopes, rocks, minerals, ice",Missing,"No data downloaded yet (MOLA, TES/THEMIS, CRISM, neutron data, or published site studies)"

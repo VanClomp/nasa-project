@@ -1,0 +1,10 @@
+.git
+.gemini
+data
+certbot
+2-networker/*
+!2-networker/Dockerfile.frontend
+3-charakteryzator
+4-szukacz
+__pycache__
+*.pyc
