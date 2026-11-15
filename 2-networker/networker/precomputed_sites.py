@@ -134,6 +134,10 @@ def characterize_from_precomputed_outputs(
         "features_norm": _normalise_from_ranges(raw_in, ranges),
         "nearest_skylight_km": 0.0 if skylight is None else float(skylight),
         "extra": {
+            # Fallback = wartości NAJBLIŻSZEGO znanego stanowiska, nie klikniętego punktu: zawsze "global"
+            # (niepewne), nawet jeśli to stanowisko ma dane stacji. Zgodne z extra.model z 3-charakteryzator.
+            "model": "global",
+            "model_basis": "characterizer unavailable: values of the nearest precomputed site, not this point",
             "matched_site": best_site.get("site"),
             "month": month_idx,
             "features_measured": tp.get("features_measured"),

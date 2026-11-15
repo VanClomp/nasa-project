@@ -21,24 +21,14 @@ $kFeatures = [
     ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Nachylenie terenu',         'default_w' => 0.75],
 ];
 
-$presets = [
-    'moon' => [
-        ['name' => 'Krater Shackleton',     'lat' => -89.9, 'lon' => 0.0],
-        ['name' => 'Marius Hills Skylight', 'lat' => 14.1,  'lon' => -56.8],
-        ['name' => 'Mare Tranquillitatis',  'lat' => 0.67,  'lon' => 23.47],
-        ['name' => 'Płaskowyż Aristarchus', 'lat' => 23.7,  'lon' => -47.4],
-    ],
-    'mars' => [
-        ['name' => 'Krater Jezero',         'lat' => 18.38, 'lon' => 77.58],
-        ['name' => 'Olympus Mons',          'lat' => 18.65, 'lon' => -133.8],
-        ['name' => 'Valles Marineris',      'lat' => -13.9, 'lon' => -60.5],
-        ['name' => 'Planum Australe',       'lat' => -83.5, 'lon' => 160.0],
-    ]
-];
+// Miejsca lądowania: generowane z danych 3-charakteryzatora (scripts/export_presets.py)
+$presets = require __DIR__ . '/presets.php';
 
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
+$initialDate = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
+    ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC), domyślnie dziś
 $initialWeights = [];
 if (isset($_GET['w'])) {
     $parts = explode(',', $_GET['w']);
@@ -102,16 +92,14 @@ if (isset($_GET['w'])) {
             </div>
 
             <div class="panel-body">
-                <span class="section-label">Lokalizacje referencyjne</span>
-                <div class="presets-list" id="presets-container">
-                    <?php foreach ($presets[$selectedBody] as $idx => $p): ?>
-                        <button class="preset-chip <?php echo $idx === 0 ? 'active' : ''; ?>"
-                                onclick="selectPreset(<?php echo $p['lat']; ?>, <?php echo $p['lon']; ?>, this)">
-                            <strong><?php echo htmlspecialchars($p['name']); ?></strong>
-                            <span><?php echo $p['lat']; ?>°, <?php echo $p['lon']; ?>°</span>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
+                <span class="section-label">Miejsce lądowania</span>
+                <button type="button" class="site-picker-btn" id="site-picker-btn" onclick="SitePicker.open()" aria-haspopup="dialog">
+                    <span class="site-picker-btn-text">
+                        <strong id="site-picker-current">&nbsp;</strong>
+                        <span id="site-picker-coords">&nbsp;</span>
+                    </span>
+                    <span class="site-picker-btn-cta">Zmień ▾</span>
+                </button>
 
                 <span class="section-label">Współrzędne</span>
                 <div class="coords-row">
@@ -125,6 +113,14 @@ if (isset($_GET['w'])) {
                     </div>
                 </div>
                 <button type="button" class="center-pin-btn" onclick="centerGlobesOnPins()">Wyśrodkuj</button>
+
+                <span class="section-label">Data lądowania</span>
+                <div class="coords-row">
+                    <div class="hud-input-group">
+                        <label>DATA (UTC)</label>
+                        <input type="date" id="input-date" min="1990-01-01" max="2100-12-31" value="<?php echo htmlspecialchars($initialDate); ?>" onchange="triggerCharacterizeAndSearch()">
+                    </div>
+                </div>
 
                 <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
                 <div id="sliders-container">
@@ -744,7 +740,7 @@ if (isset($_GET['w'])) {
                 target_body: currentBody,
                 lat: lat,
                 lon: lon,
-                timestamp_iso: new Date().toISOString()
+                timestamp_iso: landingTimestamp()
             });
             currentTargetProfile = profile;
             await triggerSearchOnly();
@@ -801,13 +797,6 @@ if (isset($_GET['w'])) {
                 `${body === 'moon' ? 'Księżyc' : 'Mars'} · kliknij, aby wybrać punkt`;
 
             const pList = PRESETS[body];
-            document.getElementById('presets-container').innerHTML = pList.map((p, idx) => `
-                <button class="preset-chip ${idx === 0 ? 'active' : ''}"
-                        onclick="selectPreset(${p.lat}, ${p.lon}, this)">
-                    <strong>${p.name}</strong>
-                    <span>${p.lat}°, ${p.lon}°</span>
-                </button>
-            `).join('');
 
             document.getElementById('input-lat').value = pList[0].lat;
             document.getElementById('input-lon').value = pList[0].lon;
@@ -817,6 +806,18 @@ if (isset($_GET['w'])) {
             targetGlobe.sphereMat.needsUpdate = true;
 
             triggerCharacterizeAndSearch();
+        }
+
+
+        // Data lądowania z pola #input-date -> timestamp_iso dla /api/v1/characterize (południe UTC tego dnia).
+        // Warunki na Marsie / Księżycu (pora roku Ls, pył, temperatury, położenie Słońca) zależą od tej daty.
+        function landingTimestamp() {
+            const el = document.getElementById('input-date');
+            const d = el ? el.value : '';
+            return /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T12:00:00Z` : new Date().toISOString();
+        }
+        function landingDate() {
+            return landingTimestamp().slice(0, 10);
         }
 
         function buildQuery() {
@@ -829,7 +830,8 @@ if (isset($_GET['w'])) {
                 lat: lat.toFixed(2),
                 lon: lon.toFixed(2),
                 w: weights,
-                caves: caves
+                caves: caves,
+                date: landingDate()
             }).toString();
         }
 
@@ -879,5 +881,6 @@ if (isset($_GET['w'])) {
             triggerCharacterizeAndSearch();
         });
     </script>
+    <?php include __DIR__ . '/site_picker.php'; ?>
 </body>
 </html>
