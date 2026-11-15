@@ -211,7 +211,8 @@ def generate_mock_earth_dataset(output_dir: str | Path, n_points: int = 60_000, 
 
     # 2: thermal_inertia [TIU, ~40..400]
     rock_factor = np.abs(np.sin(np.radians(lat_2d * 2.3 + lon_2d * 1.7)))
-    thermal_inertia = np.clip(60.0 + 260.0 * rock_factor + 0.015 * np.maximum(0.0, elev_2d), 40.0, 395.0)
+    thermal_inertia_base = np.clip(60.0 + 260.0 * rock_factor + 0.015 * np.maximum(0.0, elev_2d), 40.0, 395.0)
+    thermal_inertia = np.broadcast_to(thermal_inertia_base, (n_points, N_MONTHS)).copy()
 
     # 3: surface_roughness [0.05..0.95]
     roughness_base = np.clip(

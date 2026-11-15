@@ -1,0 +1,17 @@
+# Wygenerowane dane binarne i mocki w wolumenie /data
+data/**/*.npy
+data/**/*.parquet
+data/**/*.tif
+data/**/*.tiff
+data/**/UWAGA_DANE_MOCK_HEURYSTYKA.txt
+
+# Certyfikaty SSL i dynamiczne konfiguracje Nginx
+certbot/
+2-networker/conf.d/*.conf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
