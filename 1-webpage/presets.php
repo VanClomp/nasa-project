@@ -4,61 +4,61 @@
 // and future-mission candidates. Coordinates match the characterizer (refined points for approximate regions).
 return [
     'moon' => [
-        ['id' => 'nobile_rim_2', 'name' => 'Nobile Rim 2', 'lat' => -84.202, 'lon' => 60.7, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'nobile_rim_2', 'name' => 'Nobile Rim 2', 'lat' => -84.202, 'lon' => 60.7, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'nobile_rim_1', 'name' => 'Nobile Rim 1', 'lat' => -85.456, 'lon' => 36.361, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'nobile_rim_1', 'name' => 'Nobile Rim 1', 'lat' => -85.456, 'lon' => 36.361, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'haworth', 'name' => 'Haworth', 'lat' => -86.726, 'lon' => -21.639, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'haworth', 'name' => 'Haworth', 'lat' => -86.726, 'lon' => -21.639, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'slater_plain', 'name' => 'Slater Plain', 'lat' => -87.478, 'lon' => 124.521, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'slater_plain', 'name' => 'Slater Plain', 'lat' => -87.478, 'lon' => 124.521, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'malapert_massif', 'name' => 'Malapert Massif', 'lat' => -85.955, 'lon' => -3.378, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'malapert_massif', 'name' => 'Malapert Massif', 'lat' => -85.955, 'lon' => -3.378, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'de_gerlache_rim_2', 'name' => 'de Gerlache Rim 2', 'lat' => -88.465, 'lon' => -67.849, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'de_gerlache_rim_2', 'name' => 'de Gerlache Rim 2', 'lat' => -88.465, 'lon' => -67.849, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'mons_mouton', 'name' => 'Mons Mouton', 'lat' => -84.8, 'lon' => 28.377, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'mons_mouton', 'name' => 'Mons Mouton', 'lat' => -84.8, 'lon' => 28.377, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'mons_mouton_plateau', 'name' => 'Mons Mouton Plateau', 'lat' => -84.835, 'lon' => 34.14, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'mons_mouton_plateau', 'name' => 'Mons Mouton Plateau', 'lat' => -84.835, 'lon' => 34.14, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'peak_near_cabeus_b', 'name' => 'Peak near Cabeus B', 'lat' => -82.559, 'lon' => -54.292, 'group' => 'Artemis III – regiony kandydackie NASA (2024)', 'desc' => 'Region kandydacki Artemis III (NASA)', 'local' => false, 'station_months' => [
+        ['id' => 'peak_near_cabeus_b', 'name' => 'Peak near Cabeus B', 'lat' => -82.559, 'lon' => -54.292, 'group' => 'Artemis III – NASA candidate regions (2024)', 'desc' => 'Artemis III candidate region (NASA)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'shackleton_ridge', 'name' => 'Shackleton connecting ridge', 'lat' => -89.475, 'lon' => -137.443, 'group' => 'Biegun południowy – najlepsze oświetlenie', 'desc' => 'Grzbiet Shackleton–de Gerlache, najdłuższe oświetlenie', 'local' => false, 'station_months' => [
+        ['id' => 'shackleton_ridge', 'name' => 'Shackleton connecting ridge', 'lat' => -89.475, 'lon' => -137.443, 'group' => 'South pole – best illumination', 'desc' => 'Shackleton–de Gerlache ridge, longest illumination', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'mare_tranquillitatis_pit', 'name' => 'Mare Tranquillitatis Pit', 'lat' => 8.335, 'lon' => 33.222, 'group' => 'Tunele lawowe (świetliki)', 'desc' => 'Świetlik tunelu lawowego (LROC)', 'local' => false, 'station_months' => [
+        ['id' => 'mare_tranquillitatis_pit', 'name' => 'Mare Tranquillitatis Pit', 'lat' => 8.335, 'lon' => 33.222, 'group' => 'Lava tubes (skylights)', 'desc' => 'Lava-tube skylight (LROC)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'marius_hills_pit', 'name' => 'Marius Hills Pit', 'lat' => 14.09, 'lon' => -56.81, 'group' => 'Tunele lawowe (świetliki)', 'desc' => 'Świetlik tunelu lawowego (LROC)', 'local' => false, 'station_months' => [
+        ['id' => 'marius_hills_pit', 'name' => 'Marius Hills Pit', 'lat' => 14.09, 'lon' => -56.81, 'group' => 'Lava tubes (skylights)', 'desc' => 'Lava-tube skylight (LROC)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'mare_ingenii_pit', 'name' => 'Mare Ingenii Pit', 'lat' => -35.95, 'lon' => 166.06, 'group' => 'Tunele lawowe (świetliki)', 'desc' => 'Świetlik tunelu lawowego (LROC)', 'local' => false, 'station_months' => [
+        ['id' => 'mare_ingenii_pit', 'name' => 'Mare Ingenii Pit', 'lat' => -35.95, 'lon' => 166.06, 'group' => 'Lava tubes (skylights)', 'desc' => 'Lava-tube skylight (LROC)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'apollo11', 'name' => 'Mare Tranquillitatis (Apollo 11)', 'lat' => 0.674, 'lon' => 23.473, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Apollo 11', 'local' => false, 'station_months' => [
+        ['id' => 'apollo11', 'name' => 'Mare Tranquillitatis (Apollo 11)', 'lat' => 0.674, 'lon' => 23.473, 'group' => 'Past landings', 'desc' => 'Landing: Apollo 11', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'apollo12', 'name' => 'Oceanus Procellarum (Apollo 12)', 'lat' => -3.012, 'lon' => -23.422, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Apollo 12', 'local' => false, 'station_months' => [
+        ['id' => 'apollo12', 'name' => 'Oceanus Procellarum (Apollo 12)', 'lat' => -3.012, 'lon' => -23.422, 'group' => 'Past landings', 'desc' => 'Landing: Apollo 12', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'apollo14', 'name' => 'Fra Mauro (Apollo 14)', 'lat' => -3.645, 'lon' => -17.471, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Apollo 14', 'local' => false, 'station_months' => [
+        ['id' => 'apollo14', 'name' => 'Fra Mauro (Apollo 14)', 'lat' => -3.645, 'lon' => -17.471, 'group' => 'Past landings', 'desc' => 'Landing: Apollo 14', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'apollo15', 'name' => 'Hadley-Apennine (Apollo 15)', 'lat' => 26.132, 'lon' => 3.634, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Apollo 15', 'local' => false, 'station_months' => [
+        ['id' => 'apollo15', 'name' => 'Hadley-Apennine (Apollo 15)', 'lat' => 26.132, 'lon' => 3.634, 'group' => 'Past landings', 'desc' => 'Landing: Apollo 15', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'apollo16', 'name' => 'Descartes Highlands (Apollo 16)', 'lat' => -8.973, 'lon' => 15.5, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Apollo 16', 'local' => false, 'station_months' => [
+        ['id' => 'apollo16', 'name' => 'Descartes Highlands (Apollo 16)', 'lat' => -8.973, 'lon' => 15.5, 'group' => 'Past landings', 'desc' => 'Landing: Apollo 16', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'apollo17', 'name' => 'Taurus-Littrow (Apollo 17)', 'lat' => 20.191, 'lon' => 30.772, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Apollo 17', 'local' => false, 'station_months' => [
+        ['id' => 'apollo17', 'name' => 'Taurus-Littrow (Apollo 17)', 'lat' => 20.191, 'lon' => 30.772, 'group' => 'Past landings', 'desc' => 'Landing: Apollo 17', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'change3', 'name' => 'Mare Imbrium (Chang\'e-3)', 'lat' => 44.121, 'lon' => -19.512, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Chang\'e-3', 'local' => false, 'station_months' => [
+        ['id' => 'change3', 'name' => 'Mare Imbrium (Chang\'e-3)', 'lat' => 44.121, 'lon' => -19.512, 'group' => 'Past landings', 'desc' => 'Landing: Chang\'e-3', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'change4', 'name' => 'Von Karman crater (Chang\'e-4, far side)', 'lat' => -45.444, 'lon' => 177.599, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Chang\'e-4, far side', 'local' => false, 'station_months' => [
+        ['id' => 'change4', 'name' => 'Von Karman crater (Chang\'e-4, far side)', 'lat' => -45.444, 'lon' => 177.599, 'group' => 'Past landings', 'desc' => 'Landing: Chang\'e-4, far side', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'change5', 'name' => 'Mons Rumker region (Chang\'e-5)', 'lat' => 43.06, 'lon' => -51.92, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Chang\'e-5', 'local' => false, 'station_months' => [
+        ['id' => 'change5', 'name' => 'Mons Rumker region (Chang\'e-5)', 'lat' => 43.06, 'lon' => -51.92, 'group' => 'Past landings', 'desc' => 'Landing: Chang\'e-5', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'change6', 'name' => 'Apollo basin (Chang\'e-6, far side)', 'lat' => -41.64, 'lon' => -153.99, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Chang\'e-6, far side', 'local' => false, 'station_months' => [
+        ['id' => 'change6', 'name' => 'Apollo basin (Chang\'e-6, far side)', 'lat' => -41.64, 'lon' => -153.99, 'group' => 'Past landings', 'desc' => 'Landing: Chang\'e-6, far side', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'chandrayaan3', 'name' => 'Near Manzinus/Boguslawsky (Chandrayaan-3)', 'lat' => -69.373, 'lon' => 32.319, 'group' => 'Dotychczasowe lądowania', 'desc' => 'Lądowanie: Chandrayaan-3', 'local' => false, 'station_months' => [
+        ['id' => 'chandrayaan3', 'name' => 'Near Manzinus/Boguslawsky (Chandrayaan-3)', 'lat' => -69.373, 'lon' => 32.319, 'group' => 'Past landings', 'desc' => 'Landing: Chandrayaan-3', 'local' => false, 'station_months' => [
 ]],
     ],
     'mars' => [
-        ['id' => 'oxia', 'name' => 'Oxia Planum', 'lat' => 18.2, 'lon' => -24.55, 'group' => 'Przyszłe misje – kandydaci', 'desc' => 'Kandydat: Rosalind Franklin (2030)', 'local' => false, 'station_months' => [
+        ['id' => 'oxia', 'name' => 'Oxia Planum', 'lat' => 18.2, 'lon' => -24.55, 'group' => 'Future missions – candidates', 'desc' => 'Candidate: Rosalind Franklin (2030)', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'arcadia', 'name' => 'Arcadia Planitia', 'lat' => 40.0, 'lon' => -158.0, 'group' => 'Przyszłe misje – kandydaci', 'desc' => 'Kandydat: crewed-landing studies', 'local' => false, 'station_months' => [
+        ['id' => 'arcadia', 'name' => 'Arcadia Planitia', 'lat' => 40.0, 'lon' => -158.0, 'group' => 'Future missions – candidates', 'desc' => 'Candidate: crewed-landing studies', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'vl1', 'name' => 'Chryse Planitia (Viking 1)', 'lat' => 22.27, 'lon' => -47.95, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: Viking 1', 'local' => true, 'station_months' => [
+        ['id' => 'vl1', 'name' => 'Chryse Planitia (Viking 1)', 'lat' => 22.27, 'lon' => -47.95, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: Viking 1', 'local' => true, 'station_months' => [
     1,
     2,
     3,
@@ -72,7 +72,7 @@ return [
     11,
     12,
 ]],
-        ['id' => 'vl2', 'name' => 'Utopia Planitia (Viking 2)', 'lat' => 47.64, 'lon' => 134.29, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: Viking 2', 'local' => true, 'station_months' => [
+        ['id' => 'vl2', 'name' => 'Utopia Planitia (Viking 2)', 'lat' => 47.64, 'lon' => 134.29, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: Viking 2', 'local' => true, 'station_months' => [
     1,
     2,
     3,
@@ -86,17 +86,17 @@ return [
     11,
     12,
 ]],
-        ['id' => 'pathfinder', 'name' => 'Ares Vallis (Pathfinder)', 'lat' => 19.1, 'lon' => -33.25, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: Pathfinder', 'local' => true, 'station_months' => [
+        ['id' => 'pathfinder', 'name' => 'Ares Vallis (Pathfinder)', 'lat' => 19.1, 'lon' => -33.25, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: Pathfinder', 'local' => true, 'station_months' => [
     5,
     6,
     7,
 ]],
-        ['id' => 'phoenix', 'name' => 'Northern plains (Phoenix)', 'lat' => 68.22, 'lon' => -125.75, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: Phoenix', 'local' => true, 'station_months' => [
+        ['id' => 'phoenix', 'name' => 'Northern plains (Phoenix)', 'lat' => 68.22, 'lon' => -125.75, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: Phoenix', 'local' => true, 'station_months' => [
     3,
     4,
     5,
 ]],
-        ['id' => 'curiosity', 'name' => 'Gale crater (Curiosity)', 'lat' => -4.59, 'lon' => 137.44, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: Curiosity', 'local' => true, 'station_months' => [
+        ['id' => 'curiosity', 'name' => 'Gale crater (Curiosity)', 'lat' => -4.59, 'lon' => 137.44, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: Curiosity', 'local' => true, 'station_months' => [
     1,
     2,
     3,
@@ -110,7 +110,7 @@ return [
     11,
     12,
 ]],
-        ['id' => 'insight', 'name' => 'Elysium Planitia (InSight)', 'lat' => 4.5, 'lon' => 135.62, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: InSight', 'local' => true, 'station_months' => [
+        ['id' => 'insight', 'name' => 'Elysium Planitia (InSight)', 'lat' => 4.5, 'lon' => 135.62, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: InSight', 'local' => true, 'station_months' => [
     1,
     2,
     3,
@@ -123,7 +123,7 @@ return [
     11,
     12,
 ]],
-        ['id' => 'perseverance', 'name' => 'Jezero crater (Perseverance)', 'lat' => 18.44, 'lon' => 77.45, 'group' => 'Lądowiska z danymi stacji (model lokalny)', 'desc' => 'Lądowanie: Perseverance', 'local' => true, 'station_months' => [
+        ['id' => 'perseverance', 'name' => 'Jezero crater (Perseverance)', 'lat' => 18.44, 'lon' => 77.45, 'group' => 'Landing sites with station data (local model)', 'desc' => 'Landing: Perseverance', 'local' => true, 'station_months' => [
     1,
     2,
     3,
@@ -137,11 +137,11 @@ return [
     11,
     12,
 ]],
-        ['id' => 'spirit', 'name' => 'Gusev crater (Spirit)', 'lat' => -14.57, 'lon' => 175.47, 'group' => 'Pozostałe lądowiska', 'desc' => 'Lądowanie: Spirit', 'local' => false, 'station_months' => [
+        ['id' => 'spirit', 'name' => 'Gusev crater (Spirit)', 'lat' => -14.57, 'lon' => 175.47, 'group' => 'Other landing sites', 'desc' => 'Landing: Spirit', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'opportunity', 'name' => 'Meridiani Planum (Opportunity)', 'lat' => -1.95, 'lon' => -5.53, 'group' => 'Pozostałe lądowiska', 'desc' => 'Lądowanie: Opportunity', 'local' => false, 'station_months' => [
+        ['id' => 'opportunity', 'name' => 'Meridiani Planum (Opportunity)', 'lat' => -1.95, 'lon' => -5.53, 'group' => 'Other landing sites', 'desc' => 'Landing: Opportunity', 'local' => false, 'station_months' => [
 ]],
-        ['id' => 'zhurong', 'name' => 'Utopia Planitia south (Zhurong)', 'lat' => 25.07, 'lon' => 109.93, 'group' => 'Pozostałe lądowiska', 'desc' => 'Lądowanie: Zhurong', 'local' => false, 'station_months' => [
+        ['id' => 'zhurong', 'name' => 'Utopia Planitia south (Zhurong)', 'lat' => 25.07, 'lon' => 109.93, 'group' => 'Other landing sites', 'desc' => 'Landing: Zhurong', 'local' => false, 'station_months' => [
 ]],
     ],
 ];

@@ -1,7 +1,7 @@
 <?php
 /**
- * results.php - Podstrona wyników wyszukiwania analogów na Ziemi
- * Otwierana z explorer.php po kliknięciu przycisku "Znajdź analogi na Ziemi"
+ * results.php - Results page of the Earth analog search
+ * Opened from explorer.php with the "Find analogs on Earth" button
  */
 $selectedBody = strtolower($_GET['body'] ?? 'moon');
 if (!in_array($selectedBody, ['moon', 'mars'])) {
@@ -12,7 +12,7 @@ $lat = isset($_GET['lat']) ? floatval($_GET['lat']) : -89.9;
 $lon = isset($_GET['lon']) ? floatval($_GET['lon']) : 0.0;
 $caves = (isset($_GET['caves']) && $_GET['caves'] === '1');
 $date = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
-    ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC)
+    ? $_GET['date'] : gmdate('Y-m-d');   // landing date (UTC)
 
 $defaultWeights = [0.90, 0.70, 0.85, 0.65, 0.80, 0.50, 0.95, 0.60, 0.75];
 $weights = $defaultWeights;
@@ -35,11 +35,11 @@ $backQuery = http_build_query([
 ]);
 ?>
 <!DOCTYPE html>
-<html lang="pl" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
+<html lang="en" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wyniki Analogów Ziemi // Planetary Analog Finder (<?php echo strtoupper($selectedBody); ?>)</title>
+    <title>Earth Analog Results // Planetary Analog Finder (<?php echo strtoupper($selectedBody); ?>)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -52,34 +52,34 @@ $backQuery = http_build_query([
 
     <div class="hud-bg"></div>
 
-    <!-- GÓRNY PASEK NAWIGACYJNY -->
+    <!-- TOP NAVIGATION BAR -->
     <header class="navbar">
         <div class="nav-left">
-            <a href="explorer.php?<?php echo htmlspecialchars($backQuery); ?>" class="back-btn" id="btn-back-config" onclick="return returnToConfig(event);">← Konfiguracja</a>
-            <a href="index.php" class="back-btn">Zmień planetę</a>
-            <span class="app-title">Wyniki analizy</span>
+            <a href="explorer.php?<?php echo htmlspecialchars($backQuery); ?>" class="back-btn" id="btn-back-config" onclick="return returnToConfig(event);">← Setup</a>
+            <a href="index.php" class="back-btn">Change planet</a>
+            <span class="app-title">Analysis results</span>
         </div>
 
         <div class="nav-telemetry">
             <span id="api-latency">-- ms</span>
             <span class="cpp-badge" id="target-summary-badge">
-                <?php echo $selectedBody === 'moon' ? 'Księżyc' : 'Mars'; ?> · <?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°
+                <?php echo $selectedBody === 'moon' ? 'Moon' : 'Mars'; ?> · <?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°
             </span>
         </div>
     </header>
 
-    <!-- GŁÓWNA PRZESTRZEŃ ROBOCZA (2 KOLUMNY: GLOBUS ZIEMI + RANKING & WYKRESY) -->
+    <!-- MAIN WORKSPACE (2 COLUMNS: EARTH GLOBE + RANKING & CHARTS) -->
     <main class="workspace workspace-results">
 
-        <!-- LEWA / GŁÓWNA KOLUMNA: GLOBUS ZIEMI Z HEATMAPĄ I PINEZKAMI + PODSUMOWANIE CELU -->
+        <!-- LEFT / MAIN COLUMN: EARTH GLOBE WITH HEATMAP AND PINS + TARGET SUMMARY -->
         <section class="center-stage">
             <div class="globe-viewport">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill">
-                        Ziemia — mapa dopasowania
+                        Earth — match map
                     </div>
                     <div class="hud-pill">
-                        Najlepszy okres: <strong style="color:var(--emerald);" id="best-month-badge">--</strong>
+                        Best period: <strong style="color:var(--emerald);" id="best-month-badge">--</strong>
                     </div>
                 </div>
                 <div id="main-globe-canvas"></div>
@@ -88,56 +88,56 @@ $backQuery = http_build_query([
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        Profil celu · <?php echo $selectedBody === 'moon' ? 'Księżyc' : 'Mars'; ?> (<?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°) · <?php echo htmlspecialchars($date); ?><span id="readout-season"></span>
+                        Target profile · <?php echo $selectedBody === 'moon' ? 'Moon' : 'Mars'; ?> (<?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°) · <?php echo htmlspecialchars($date); ?><span id="readout-season"></span>
                     </span>
                     <div class="readout-meta">
-                        <span class="model-badge" id="model-badge" title="Pochodzenie danych">Model: --</span>
+                        <span class="model-badge" id="model-badge" title="Data source">Model: --</span>
                         <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
-                            Najbliższa jaskinia: -- km
+                            Nearest cave: -- km
                         </span>
                     </div>
                 </div>
                 <div class="readout-grid">
-                    <div class="readout-box"><span>TEMP. ŚREDNIA</span><strong id="raw-temp_mean">-- °C</strong></div>
-                    <div class="readout-box"><span>AMPLITUDA DOBOWA</span><strong id="raw-temp_diurnal_amp">-- °C</strong></div>
-                    <div class="readout-box"><span>BEZWŁADNOŚĆ CIEPLNA</span><strong id="raw-thermal_inertia">-- TIU</strong></div>
-                    <div class="readout-box"><span>CHROPOWATOŚĆ SAR</span><strong id="raw-surface_roughness">--</strong></div>
-                    <div class="readout-box"><span>LÓD / WILGOTNOŚĆ</span><strong id="raw-soil_moisture">-- %</strong></div>
-                    <div class="readout-box"><span>ZAPYLENIE (AOD)</span><strong id="raw-dust_aerosol">--</strong></div>
-                    <div class="readout-box"><span>MAKS. KĄT SŁOŃCA</span><strong id="raw-solar_elevation_max">-- °</strong></div>
-                    <div class="readout-box"><span>PROMIENIOWANIE</span><strong id="raw-radiation_proxy">--</strong></div>
-                    <div class="readout-box"><span>NACHYLENIE STOKU</span><strong id="raw-slope_deg">-- °</strong></div>
-                    <div class="readout-box"><span>FILTR JASKIŃ</span><strong style="color:var(--emerald);"><?php echo $caves ? 'TAK (&lt;15km)' : 'NIE'; ?></strong></div>
+                    <div class="readout-box"><span>MEAN TEMP.</span><strong id="raw-temp_mean">-- °C</strong></div>
+                    <div class="readout-box"><span>DIURNAL RANGE</span><strong id="raw-temp_diurnal_amp">-- °C</strong></div>
+                    <div class="readout-box"><span>THERMAL INERTIA</span><strong id="raw-thermal_inertia">-- TIU</strong></div>
+                    <div class="readout-box"><span>SAR ROUGHNESS</span><strong id="raw-surface_roughness">--</strong></div>
+                    <div class="readout-box"><span>ICE / MOISTURE</span><strong id="raw-soil_moisture">-- %</strong></div>
+                    <div class="readout-box"><span>DUST (AOD)</span><strong id="raw-dust_aerosol">--</strong></div>
+                    <div class="readout-box"><span>MAX. SUN ELEVATION</span><strong id="raw-solar_elevation_max">-- °</strong></div>
+                    <div class="readout-box"><span>RADIATION</span><strong id="raw-radiation_proxy">--</strong></div>
+                    <div class="readout-box"><span>TERRAIN SLOPE</span><strong id="raw-slope_deg">-- °</strong></div>
+                    <div class="readout-box"><span>CAVE FILTER</span><strong style="color:var(--emerald);"><?php echo $caves ? 'YES (&lt;15km)' : 'NO'; ?></strong></div>
                 </div>
             </div>
         </section>
 
-        <!-- PRAWA KOLUMNA: RANKING ANALOGÓW NA ZIEMI + WYKRESY PORÓWNAWCZE -->
+        <!-- RIGHT COLUMN: RANKING OF EARTH ANALOGS + COMPARISON CHARTS -->
         <aside class="hud-panel">
             <div class="panel-header">
                 <div class="panel-title">
-                    <span>Najlepsze analogi na Ziemi</span>
+                    <span>Best analogs on Earth</span>
                 </div>
-                <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--emerald);" id="candidates-count">Ładowanie...</span>
+                <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--emerald);" id="candidates-count">Loading...</span>
             </div>
 
             <div class="panel-body">
                 <div id="candidates-list"></div>
 
                 <div class="charts-box">
-                    <span class="section-label">Porównanie profilu cech</span>
+                    <span class="section-label">Feature profile comparison</span>
                     <div class="chart-wrap">
                         <canvas id="radar-chart" height="190"></canvas>
                     </div>
 
-                    <span class="section-label">Klimatogram 12-miesięczny</span>
+                    <span class="section-label">12-month climatogram</span>
                     <div class="chart-wrap">
                         <canvas id="climatogram-chart" height="155"></canvas>
                     </div>
 
-                    <!-- p(t): parametry wybranego miejsca, które zmieniają się z datą (extra.series z 3-charakteryzatora) -->
+                    <!-- p(t): parameters of the chosen site that change with the date (extra.series from 3-charakteryzator) -->
                     <div id="time-charts" class="time-charts" hidden>
-                        <span class="section-label">Wybrane miejsce · parametry zmienne w czasie</span>
+                        <span class="section-label">Chosen site · parameters that change over time</span>
                         <p class="time-charts-note" id="time-charts-note"></p>
                         <div id="time-charts-list"></div>
                     </div>
@@ -156,19 +156,19 @@ $backQuery = http_build_query([
             require_caves: <?php echo json_encode($caves); ?>,
             date: <?php echo json_encode($date); ?>
         };
-        const MONTH_NAMES = ['STY', 'LUT', 'MAR', 'KWI', 'MAJ', 'CZE', 'LIP', 'SIE', 'WRZ', 'PAŹ', 'LIS', 'GRU'];
+        const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
         let currentTargetProfile = null;
         let currentCandidates = [];
         let selectedCandidateIndex = 0;
 
         // =========================================================================
-        // 1. SCENA 3D THREE.JS — GLOBUS ZIEMI Z HEATMAPĄ I PINEZKAMI
+        // 1. THREE.JS 3D SCENE — EARTH GLOBE WITH HEATMAP AND PINS
         // =========================================================================
         const globeContainer = document.getElementById('main-globe-canvas');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-        camera.position.z = 1.95; // Płynne oddalenie na starcie (efekt wyjścia z podejścia)
+        camera.position.z = 1.95; // Smooth zoom-out at start (arrival effect)
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         globeContainer.appendChild(renderer.domElement);
@@ -191,7 +191,7 @@ $backQuery = http_build_query([
             const pinGroup = new THREE.Group();
             const color = isSelected ? 0x10b981 : 0x60a5fa;
 
-            // Subtelny pierścień na powierzchni planety
+            // Subtle ring on the planet surface
             const baseRing = new THREE.Mesh(
                 new THREE.RingGeometry(isSelected ? 0.015 : 0.010, isSelected ? 0.021 : 0.014, 32),
                 new THREE.MeshBasicMaterial({
@@ -218,7 +218,7 @@ $backQuery = http_build_query([
                 pinGroup.add(outerRing);
             }
 
-            // Smukła nóżka pinezki skierowana prostopadle do powierzchni (oś +Z)
+            // Slim pin stem pointing perpendicular to the surface (+Z axis)
             const stemH = isSelected ? 0.044 : 0.030;
             const stemGeo = new THREE.CylinderGeometry(0.0016, 0.0010, stemH, 10);
             stemGeo.rotateX(Math.PI / 2);
@@ -233,7 +233,7 @@ $backQuery = http_build_query([
             stem.position.z = stemH * 0.5 + 0.001;
             pinGroup.add(stem);
 
-            // Główka pinezki 3D
+            // 3D pin head
             const headR = isSelected ? 0.012 : 0.0085;
             const head = new THREE.Mesh(
                 new THREE.SphereGeometry(headR, 18, 18),
@@ -353,7 +353,7 @@ $backQuery = http_build_query([
             isDragging = false;
         });
 
-        // Obsługa dotyku dla Ziemi (obrót 1 palcem, pinch-to-zoom 2 palcami)
+        // Touch support for the Earth (1-finger rotate, 2-finger pinch-to-zoom)
         let prevPinchDist = 0;
         renderer.domElement.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -628,7 +628,7 @@ $backQuery = http_build_query([
                 });
                 if (res.ok) return await res.json();
             } catch (err) {
-                // Fallback do mocka w PHP
+                // Fall back to the PHP mock
             }
             const fallbackRes = await fetch(`explorer.php?mock_api=${endpoint}`, {
                 method: 'POST',
@@ -656,15 +656,15 @@ $backQuery = http_build_query([
         }
 
 
-        // Pora roku dla wybranej daty (extra.season z 3-charakteryzator)
+        // Season for the chosen date (extra.season from 3-charakteryzator)
         function renderSeason(profile) {
             const el = document.getElementById('readout-season');
             if (!el) return;
             const s = (profile && profile.extra && profile.extra.season) || null;
             if (s && s.ls !== undefined) {
-                el.innerText = ` · Ls ${Number(s.ls).toFixed(0)}° (rok marsjański ${s.mars_year})`;
+                el.innerText = ` · Ls ${Number(s.ls).toFixed(0)}° (Mars year ${s.mars_year})`;
             } else if (s && s.local_lunar_hour !== undefined) {
-                el.innerText = ` · godz. księżycowa ${Number(s.local_lunar_hour).toFixed(1)}`;
+                el.innerText = ` · lunar hour ${Number(s.local_lunar_hour).toFixed(1)}`;
             } else {
                 el.innerText = '';
             }
@@ -682,18 +682,18 @@ $backQuery = http_build_query([
             document.getElementById('raw-radiation_proxy').innerText = r.radiation_proxy;
             document.getElementById('raw-slope_deg').innerText = `${r.slope_deg} °`;
             document.getElementById('readout-skylight').innerText =
-                `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
+                `Nearest cave: ${profile.nearest_skylight_km} km`;
             renderModelBadge(profile);
             renderSeason(profile);
             renderFeatureFlags(profile);
         }
 
-        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty (Mars), "orbital" = pomiary orbitalne
-        // w tym punkcie (Księżyc), "global" = model globalny (niepewny). Brak pola (np. mock w PHP) = globalny.
+        // extra.model from 3-charakteryzator: "local" = station data for this date (Mars), "orbital" = orbital measurements
+        // at this point (Moon), "global" = global model (uncertain). Missing field (e.g. the PHP mock) = global.
         const MODEL_LABELS = {
-            local:   'Model lokalny · dane stacji',
-            orbital: 'Pomiary orbitalne · ten punkt',
-            global:  'Model globalny · niepewny'
+            local:   'Local model · station data',
+            orbital: 'Orbital measurements · this point',
+            global:  'Global model · uncertain'
         };
         function renderModelBadge(profile) {
             const badge = document.getElementById('model-badge');
@@ -705,8 +705,8 @@ $backQuery = http_build_query([
             badge.title = extra.model_basis || MODEL_LABELS[model];
         }
 
-        // Przy każdym parametrze: skąd pochodzi wartość w TYM miejscu (extra.features_measured) i czy zmienia się
-        // z datą lądowania (extra.features_time_varying). Opis parametrów: 3-charakteryzator/PARAMETERS.md.
+        // For every parameter: where the value at THIS place comes from (extra.features_measured) and whether it changes
+        // with the landing date (extra.features_time_varying). Parameter docs: 3-charakteryzator/PARAMETERS.md.
         const FEATURE_KEYS = ['temp_mean', 'temp_diurnal_amp', 'thermal_inertia', 'surface_roughness', 'soil_moisture',
                               'dust_aerosol', 'solar_elevation_max', 'radiation_proxy', 'slope_deg'];
         function renderFeatureFlags(profile) {
@@ -722,25 +722,25 @@ $backQuery = http_build_query([
                 if (!flags) { flags = document.createElement('span'); flags.className = 'feat-flags'; box.appendChild(flags); }
                 let src;
                 if (raw[k] === null || raw[k] === undefined || (extra.null_features || []).includes(k)) {
-                    src = '<i class="feat-src none" title="Brak danych dla tego miejsca">brak danych</i>';
+                    src = '<i class="feat-src none" title="No data for this place">no data</i>';
                 } else if (meas[i] === true) {
-                    src = '<i class="feat-src local" title="Zmierzone w tym miejscu (stacja, mapa orbitalna w tym pikselu lub dokładna geometria)">zmierzone</i>';
+                    src = '<i class="feat-src local" title="Measured at this place (station, orbital map at this pixel or exact geometry)">measured</i>';
                 } else {
-                    src = '<i class="feat-src global" title="Przewidywane przez model globalny (szerokość, wysokość, mapy) - niepewne">model</i>';
+                    src = '<i class="feat-src global" title="Predicted by the global model (latitude, elevation, maps) - uncertain">model</i>';
                 }
                 const time = tv[i] === true
-                    ? '<i class="feat-time varies" title="Zmienia się z datą lądowania (pora roku, położenie Słońca, sezon pyłowy)">◷ z datą</i>'
-                    : (tv[i] === false ? '<i class="feat-time fixed" title="Stała cecha miejsca, nie zależy od daty">stałe</i>' : '');
+                    ? '<i class="feat-time varies" title="Changes with the landing date (season, Sun position, dust season)">◷ by date</i>'
+                    : (tv[i] === false ? '<i class="feat-time fixed" title="Fixed property of the place, does not depend on the date">fixed</i>' : '');
                 flags.innerHTML = src + time;
             });
         }
 
         function renderCandidatesList() {
             const container = document.getElementById('candidates-list');
-            document.getElementById('candidates-count').innerText = `${currentCandidates.length} WYNIKÓW`;
+            document.getElementById('candidates-count').innerText = `${currentCandidates.length} RESULTS`;
 
             if (currentCandidates.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-muted); font-size:0.82rem;">Brak lokalizacji spełniających wybrane kryteria (spróbuj wyłączyć filtr jaskiń).</p>';
+                container.innerHTML = '<p style="color:var(--text-muted); font-size:0.82rem;">No locations meet the chosen criteria (try turning off the cave filter).</p>';
                 return;
             }
 
@@ -757,8 +757,8 @@ $backQuery = http_build_query([
                         <div class="cand-name">${c.name_hint}</div>
                         <div class="cand-meta">
                             <span>LAT: ${c.lat}°, LON: ${c.lon}°</span>
-                            <span>MIESIĄC: ${mName}</span>
-                            <span>JASKINIA: ${c.nearest_cave_km} km</span>
+                            <span>MONTH: ${mName}</span>
+                            <span>CAVE: ${c.nearest_cave_km} km</span>
                         </div>
                     </div>
                 `;
@@ -783,17 +783,17 @@ $backQuery = http_build_query([
             radarChart = new Chart(rCtx, {
                 type: 'radar',
                 data: {
-                    labels: ['Temp', 'Amplituda', 'Bezwładność', 'Chropowatość', 'Lód/Woda', 'Pył AOD', 'Kąt Słońca', 'Promieniow.', 'Nachylenie'],
+                    labels: ['Temp', 'Range', 'Inertia', 'Roughness', 'Ice/Water', 'Dust AOD', 'Sun angle', 'Radiation', 'Slope'],
                     datasets: [
                         {
-                            label: 'Cel (Księżyc/Mars)',
+                            label: 'Target (Moon/Mars)',
                             data: [0,0,0,0,0,0,0,0,0],
                             borderColor: '#60A5FA',
                             backgroundColor: 'rgba(96, 165, 250, 0.16)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Analog na Ziemi',
+                            label: 'Earth analog',
                             data: [0,0,0,0,0,0,0,0,0],
                             borderColor: '#10B981',
                             backgroundColor: 'rgba(16, 185, 129, 0.16)',
@@ -823,7 +823,7 @@ $backQuery = http_build_query([
                     labels: MONTH_NAMES,
                     datasets: [
                         {
-                            label: 'Temp. średnia (°C)',
+                            label: 'Mean temp. (°C)',
                             data: [],
                             borderColor: '#F97316',
                             backgroundColor: 'rgba(249, 115, 22, 0.15)',
@@ -831,7 +831,7 @@ $backQuery = http_build_query([
                             fill: true
                         },
                         {
-                            label: 'Wilgotność (%)',
+                            label: 'Moisture (%)',
                             data: [],
                             borderColor: '#60A5FA',
                             tension: 0.35
@@ -865,13 +865,13 @@ $backQuery = http_build_query([
             }
         }
 
-        // ---- p(t): wykresy parametrów zmiennych w czasie dla wybranego miejsca ----
+        // ---- p(t): charts of the time-varying parameters of the chosen site ----
         const TIME_LABELS = {
-            temp_mean:           ['Średnia temperatura gruntu', '°C'],
-            temp_diurnal_amp:    ['Dobowa amplituda temperatury', 'K'],
-            dust_aerosol:        ['Zapylenie atmosfery (AOD)', ''],
-            solar_elevation_max: ['Maks. wysokość Słońca w południe', '°'],
-            radiation_proxy:     ['Osłona atmosfery (masa kolumny)', 'g/cm²']
+            temp_mean:           ['Mean ground temperature', '°C'],
+            temp_diurnal_amp:    ['Diurnal temperature range', 'K'],
+            dust_aerosol:        ['Atmospheric dust (AOD)', ''],
+            solar_elevation_max: ['Max. noon Sun elevation', '°'],
+            radiation_proxy:     ['Atmospheric shielding (column mass)', 'g/cm²']
         };
         let timeCharts = [];
         async function loadTimeCharts() {
@@ -894,8 +894,8 @@ $backQuery = http_build_query([
             const isMars = s.axis === 'mars_month';
             const accent = isMars ? '#F97316' : '#60A5FA';
             document.getElementById('time-charts-note').innerText = isMars
-                ? `Oś czasu: 12 miesięcy marsjańskich roku lądowania, opisanych miesiącem ziemskim, w którym się zaczynają (miesiąc marsjański trwa ok. 1,5–2 miesięcy ziemskich). Zaznaczony punkt = data lądowania ${SEARCH_PARAMS.date}.`
-                : `Oś czasu: 15. dzień każdego miesiąca roku ${SEARCH_PARAMS.date.slice(0, 4)}. Zaznaczony punkt = miesiąc lądowania.`;
+                ? `Time axis: the 12 Mars months of the landing year, labelled with the Earth month in which each begins (a Mars month lasts about 1.5–2 Earth months). Highlighted point = landing date ${SEARCH_PARAMS.date}.`
+                : `Time axis: the 15th of each month of ${SEARCH_PARAMS.date.slice(0, 4)}. Highlighted point = landing month.`;
             const meas = profile.extra.features_measured || [];
             const order = ['temp_mean', 'temp_diurnal_amp', 'thermal_inertia', 'surface_roughness', 'soil_moisture',
                            'dust_aerosol', 'solar_elevation_max', 'radiation_proxy', 'slope_deg'];
@@ -904,8 +904,8 @@ $backQuery = http_build_query([
                 const measured = meas[order.indexOf(key)] === true;
                 const block = document.createElement('div');
                 block.className = 'time-chart';
-                block.innerHTML = `<h4 class="time-chart-title">${label} – zmiana w czasie</h4>
-                    <span class="time-chart-meta">${unit ? unit + ' · ' : ''}${measured ? 'zmierzone w tym miejscu' : 'model globalny'}</span>
+                block.innerHTML = `<h4 class="time-chart-title">${label} – change over time</h4>
+                    <span class="time-chart-meta">${unit ? unit + ' · ' : ''}${measured ? 'measured at this place' : 'global model'}</span>
                     <div class="chart-wrap"><canvas height="120"></canvas></div>`;
                 list.appendChild(block);
                 const cur = s.current_index;
@@ -927,7 +927,7 @@ $backQuery = http_build_query([
                             legend: { display: false },
                             tooltip: { callbacks: {
                                 title: items => (s.detail_labels || s.labels)[items[0].dataIndex],
-                                label: c => `${c.formattedValue}${unit ? ' ' + unit : ''}${c.dataIndex === cur ? ' (data lądowania)' : ''}` } }
+                                label: c => `${c.formattedValue}${unit ? ' ' + unit : ''}${c.dataIndex === cur ? ' (landing date)' : ''}` } }
                         },
                         scales: {
                             x: { ticks: { color: '#94a3b8', font: { size: 8 }, maxRotation: 0, autoSkip: true,
@@ -950,7 +950,7 @@ $backQuery = http_build_query([
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);
-            loadTimeCharts();      // osobne zapytanie: wyniki pokazują się bez czekania na wykresy
+            loadTimeCharts();      // separate request: results appear without waiting for the charts
 
             const searchRes = await callApi('search', {
                 features_norm: profile.features_norm,

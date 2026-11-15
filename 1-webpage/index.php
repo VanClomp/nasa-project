@@ -1,12 +1,12 @@
 <?php
-// index.php - Minimalistyczny ekran wyboru celu (SpaceX / Linear / NASA JPL Aesthetic)
+// index.php - Minimal target-selection screen (SpaceX / Linear / NASA JPL aesthetic)
 ?>
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetary Analog Finder — Wybór Celu</title>
+    <title>Planetary Analog Finder — Choose a Target</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -30,15 +30,15 @@
     </header>
 
     <section class="header-section">
-        <h1 class="header-title">Wybierz ciało niebieskie</h1>
+        <h1 class="header-title">Choose a celestial body</h1>
         <p class="header-subtitle">
-            Wyszukiwanie ziemskich analogów geologicznych i środowiskowych na podstawie 9-wymiarowych wektorów satelitarnych.
+            Find Earth's geological and environmental analogs using 9-dimensional satellite feature vectors.
         </p>
     </section>
 
     <main class="tiles-grid">
 
-        <!-- KAFELEK 01: KSIĘŻYC -->
+        <!-- TILE 01: MOON -->
         <article class="celestial-card card-moon" id="card-moon" data-target="moon">
             <div class="card-top">
                 <span class="card-index"><span class="card-index-dot"></span>01 / LUNA</span>
@@ -51,34 +51,34 @@
 
             <div class="card-bottom">
                 <div class="title-row">
-                    <h2 class="planet-title">Księżyc</h2>
-                    <span class="action-indicator">Otwórz telemetrię →</span>
+                    <h2 class="planet-title">Moon</h2>
+                    <span class="action-indicator">Open telemetry →</span>
                 </div>
                 <p class="planet-summary">
-                    Analiza kraterów biegunowych, bazaltowych mórz księżycowych oraz podpowierzchniowych tuneli lawowych pod kątem misji Artemis.
+                    Polar craters, basaltic lunar maria and subsurface lava tubes, analysed for the Artemis missions.
                 </p>
                 <div class="metrics-bar">
                     <div class="metric-cell">
-                        <span class="metric-label">Zakres temp.</span>
+                        <span class="metric-label">Temp. range</span>
                         <span class="metric-value">-180 do +120 °C</span>
                     </div>
                     <div class="metric-cell">
-                        <span class="metric-label">Nachylenie osi</span>
+                        <span class="metric-label">Axial tilt</span>
                         <span class="metric-value">1.54°</span>
                     </div>
                     <div class="metric-cell">
-                        <span class="metric-label">Grawitacja</span>
+                        <span class="metric-label">Gravity</span>
                         <span class="metric-value">1.62 m/s²</span>
                     </div>
                     <div class="metric-cell">
-                        <span class="metric-label">Główne analogi</span>
+                        <span class="metric-label">Main analogs</span>
                         <span class="metric-value">McMurdo · Devon</span>
                     </div>
                 </div>
             </div>
         </article>
 
-        <!-- KAFELEK 02: MARS -->
+        <!-- TILE 02: MARS -->
         <article class="celestial-card card-mars" id="card-mars" data-target="mars">
             <div class="card-top">
                 <span class="card-index"><span class="card-index-dot"></span>02 / MARS</span>
@@ -92,26 +92,26 @@
             <div class="card-bottom">
                 <div class="title-row">
                     <h2 class="planet-title">Mars</h2>
-                    <span class="action-indicator">Otwórz telemetrię →</span>
+                    <span class="action-indicator">Open telemetry →</span>
                 </div>
                 <p class="planet-summary">
-                    Badanie dawnych delt rzecznych, kalder wulkanicznych oraz wpływu burz pyłowych (AOD) i bezwładności cieplnej gruntu.
+                    Ancient river deltas, volcanic calderas, dust storms (AOD) and the thermal inertia of the ground.
                 </p>
                 <div class="metrics-bar">
                     <div class="metric-cell">
-                        <span class="metric-label">Średnia temp.</span>
+                        <span class="metric-label">Mean temp.</span>
                         <span class="metric-value">-63 °C</span>
                     </div>
                     <div class="metric-cell">
-                        <span class="metric-label">Nachylenie osi</span>
+                        <span class="metric-label">Axial tilt</span>
                         <span class="metric-value">25.19°</span>
                     </div>
                     <div class="metric-cell">
-                        <span class="metric-label">Grawitacja</span>
+                        <span class="metric-label">Gravity</span>
                         <span class="metric-value">3.72 m/s²</span>
                     </div>
                     <div class="metric-cell">
-                        <span class="metric-label">Główne analogi</span>
+                        <span class="metric-label">Main analogs</span>
                         <span class="metric-value">Atacama · Mauna Loa</span>
                     </div>
                 </div>
@@ -122,7 +122,7 @@
 
     <script>
         // =========================================================================
-        // REALISTYCZNY SHADER GLSL (SZUM FRAKTALNY + OŚWIETLENIE TERMINATORA + FRESNEL)
+        // REALISTIC GLSL SHADER (FRACTAL NOISE + TERMINATOR LIGHTING + FRESNEL)
         // =========================================================================
         const vertexShader = `
             varying vec3 vNormal;
@@ -136,7 +136,7 @@
             }
         `;
 
-        // Proceduralny shader powierzchni planetarnej lub tekstura ze zdjęcia
+        // Procedural planetary surface shader or a texture from a photo
         const fragmentShader = `
             uniform vec3 uBaseColor;
             uniform vec3 uDarkColor;
@@ -151,7 +151,7 @@
             varying vec3 vPosition;
             varying vec2 vUv;
 
-            // Szybki 3D hash & noise do realistycznej mikro-tekstury powierzchni
+            // Fast 3D hash & noise for a realistic surface micro-texture
             float hash(vec2 p) {
                 return fract(sin(dot(p, vec2(127.1 + uSeed, 311.7))) * 43758.5453123);
             }
@@ -183,14 +183,14 @@
                 if (uHasTexture > 0.5) {
                     albedo = texture2D(uTexture, vUv).rgb;
                 } else {
-                    // Tekstura geologiczna z 5 oktaw szumu FBM
+                    // Geological texture from 5 octaves of FBM noise
                     float n = fbm(vUv * vec2(14.0, 7.0));
                     float detail = fbm(vUv * vec2(42.0, 21.0));
                     float surfaceFactor = smoothstep(0.28, 0.72, n * 0.75 + detail * 0.25);
                     albedo = mix(uDarkColor, uBaseColor, surfaceFactor);
                 }
 
-                // Oświetlenie kierunkowe Słońca (wyraźny, realistyczny terminator)
+                // Directional sunlight (sharp, realistic terminator)
                 vec3 lightDir = normalize(uLightDir);
                 float diff = max(dot(vNormal, lightDir), 0.0);
                 float terminator = smoothstep(-0.08, 0.25, dot(vNormal, lightDir));

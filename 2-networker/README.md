@@ -1,35 +1,44 @@
-# Networker (`2-networker`) i Infrastruktura Serwerowa
+# Networker (`2-networker`) and server infrastructure
 
-Komponent `2-networker` pełni rolę bramki API (API Gateway) oraz serwera Reverse Proxy (Nginx + FastAPI `httpx` async) dla całego klastra **Planetary Analog Finder**.
+The `2-networker` component is the API gateway and reverse proxy (Nginx + FastAPI with async `httpx`) for the whole
+**Planetary Analog Finder** cluster.
 
-## Architektura i przepływ ruchu
+## Architecture and traffic flow
 
-1. **Porty publiczne `80` / `443` (Nginx)**:
-   - `/` -> przekierowuje ruch webowy do kontenera `frontend` (`PHP 8.3 + Apache`, który serwuje `index.php`, `explorer.php` oraz `style.css` z głównego katalogu bez potrzeby reorganizacji plików).
-   - `/api/v1/*` oraz `/health` -> przekierowuje do lokalnego procesu FastAPI (`127.0.0.1:8000` wewnątrz kontenera `networker`).
-   - `/.well-known/acme-challenge/` -> obsługuje weryfikację domeny przez Certbota (Let's Encrypt).
+1. **Public ports `80` / `443` (Nginx)**:
+   - `/` -> web traffic goes to the `frontend` container (`PHP 8.3 + Apache`, serving the pages from `1-webpage/`
+     and the images from `images/`).
+   - `/api/v1/*` and `/health` -> the local FastAPI process (`127.0.0.1:8000` inside the `networker` container).
+   - `/.well-known/acme-challenge/` -> domain verification by Certbot (Let's Encrypt).
 
-2. **Orkiestracja zapytań (FastAPI `networker/api.py`)**:
-   - `POST /api/v1/characterize` -> przekazuje zapytanie do `http://charakteryzator:8001/characterize`. Jeśli `3-charakteryzator` jest niedostępny, automatycznie używa wyraźnie oznaczonej heurystyki awaryjnej (`networker/mock_heuristics.py`).
-   - `POST /api/v1/search` -> przekazuje zapytanie (wraz z opcjonalnym `min_distance_km`) do `http://szukacz:8002/search`, a następnie wzbogaca każdego kandydata o pole `name_hint` wyliczane z katalogu regionów analogowych (`networker/regions.py`), rozwiązując punkt 3 z `todo_list.txt`.
-   - `GET /api/v1/health` -> odpytuje `/health` w `charakteryzator` i `szukacz` oraz sprawdza, czy w `/data/earth/` znajdują się dane mockowe czy docelowe.
+2. **Request orchestration (FastAPI, `networker/api.py`)**:
+   - `POST /api/v1/characterize` -> forwarded to `http://charakteryzator:8001/characterize` (including the optional
+     `series` flag for 12-month p(t) data). If `3-charakteryzator` is unavailable or its map data is missing, the
+     gateway answers from the precomputed site tables `3-charakteryzator/outputs/{mars,moon}_sites.json`
+     (`networker/precomputed_sites.py`), marked `extra.model = "global"` because the values belong to the nearest
+     known site, not the clicked point.
+   - `POST /api/v1/search` -> forwarded (with the optional `min_distance_km`) to `http://szukacz:8002/search`; every
+     candidate then gets a `name_hint` from the catalogue of analog regions (`networker/regions.py`), solving item 3
+     of `todo_list.txt`.
+   - `POST /api/v1/error-map` -> forwarded to `http://szukacz:8002/error-map`.
+   - `GET /api/v1/health` -> queries `/health` of `charakteryzator` and `szukacz`.
 
-## Szybki start na Google Cloud VM
+## Quick start on a Google Cloud VM
 
 ```bash
-chmod +x deploy_gcp.sh enable_gcp_https.sh 2>/dev/null || chmod +x deploy_gcp.sh enable_https.sh
+chmod +x deploy_gcp.sh enable_https.sh
 ./deploy_gcp.sh
 ```
 
-Po zakupie domeny i skierowaniu rekordu DNS `A` na zewnętrzne IP serwera:
+After pointing the domain's DNS `A` record at the server's external IP:
 
 ```bash
-./enable_https.sh twojadomena.pl twoj@email.com
+./enable_https.sh yourdomain.com you@example.com
 ```
 
-## Oznaczenie tymczasowych plików Mock / Heurystyka
+## Data volumes
 
-Dopóki docelowe komponenty `3-charakteryzator` oraz `5-precomputer` są rozwijane na osobnych branchach, klaster korzysta z wyraźnie oznaczonych plików:
-- `3-charakteryzator/MOCK_HEURYSTYKA_charakteryzator_api.py` (`Dockerfile.mock`)
-- `5-precomputer/MOCK_HEURYSTYKA_generate_earth_data.py` (`Dockerfile.mock`)
-- `/data/earth/UWAGA_DANE_MOCK_HEURYSTYKA.txt` (tworzony automatycznie przy generowaniu danych mockowych)
+The containers read `./data` from the host (mounted as `/data`):
+- `data/earth/` - real Earth feature matrices built by `5-precomputer/build_earth.py` (see `LICENCES.md` for sources)
+- `data/mars/`, `data/moon/` - the map files the characterizer reads, prepared with
+  `3-charakteryzator/scripts/pack_server_data.sh` (not in git; about 1.3 GB)

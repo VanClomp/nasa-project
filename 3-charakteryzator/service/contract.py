@@ -89,7 +89,7 @@ def _series(body, records, labels, current, measured, axis):
     units = {k: RANGES[k]['unit'] for k in keys}
     return dict(axis=axis, labels=labels, current_index=current, values=vals, units=units)
 
-MONTHS_PL = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru']
+MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 def characterize_spec(req):
     if not isinstance(req, dict): raise RequestError('request body must be a JSON object')
@@ -119,7 +119,7 @@ def characterize_spec(req):
             t = dt.datetime.fromisoformat(ts.replace('Z', '+00:00'))
             full = ch._moon_point(dict(lat=lat, lon=lon, year=t.year), float(req.get('site_radius_km', 10.0)))
             recs = [m['target_profile']['features_raw'] for m in full['months']]
-            out['extra']['series'] = _series(body, recs, [f'{MONTHS_PL[m["month"] - 1]} {t.year}' for m in full['months']],
+            out['extra']['series'] = _series(body, recs, [f'{MONTHS[m["month"] - 1]} {t.year}' for m in full['months']],
                                              t.month - 1, tp['features_measured'], 'calendar_month_15th')
         return out
     full = None
@@ -143,11 +143,11 @@ def characterize_spec(req):
     if full is not None:
         recs = [m['target_profile']['features_raw'] for m in full['months']]
         starts = _mars_month_starts(t)
-        labels = [f"{MONTHS_PL[d.month - 1]} {d.year}" for d in starts]
+        labels = [f"{MONTHS[d.month - 1]} {d.year}" for d in starts]
         out['extra']['series'] = _series(body, recs, labels, full['current']['month'] - 1, tp['features_measured'],
                                          'mars_month')
         out['extra']['series']['detail_labels'] = [
-            f"Mars miesiąc {m['month']} (Ls {int(m['ls_start'])}–{int(m['ls_end'])}°), od {d.isoformat()}"
+            f"Mars month {m['month']} (Ls {int(m['ls_start'])}–{int(m['ls_end'])}°), from {d.isoformat()}"
             for m, d in zip(full['months'], starts)]
     return out
 

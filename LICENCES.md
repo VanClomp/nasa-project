@@ -1,26 +1,26 @@
-# Licencje i źródła zewnętrzne
+# Licences and external sources
 
 ## Szukacz (`4-szukacz/`)
 
-Biblioteki Pythona instalowane z PyPI (`4-szukacz/requirements.txt`):
+Python libraries installed from PyPI (`4-szukacz/requirements.txt`):
 
-| Biblioteka | Licencja | Źródło |
+| Library | Licence | Source |
 | :--- | :--- | :--- |
 | NumPy | BSD-3-Clause | https://numpy.org |
 | Pillow | MIT-CMU (HPND) | https://python-pillow.org |
 | FastAPI | MIT | https://fastapi.tiangolo.com |
-| Pydantic (zależność FastAPI) | MIT | https://docs.pydantic.dev |
+| Pydantic (FastAPI dependency) | MIT | https://docs.pydantic.dev |
 | Uvicorn | BSD-3-Clause | https://www.uvicorn.org |
 | PyArrow (Apache Arrow) | Apache-2.0 | https://arrow.apache.org |
 
-Obraz bazowy kontenera: `python:3.12-slim` (Docker Official Image; Python na licencji PSF-2.0).
+Container base image: `python:3.12-slim` (Docker Official Image; Python under the PSF-2.0 licence).
 
 
-## Networker (`2-networker/`) oraz Infrastruktura
+## Networker (`2-networker/`) and infrastructure
 
-Biblioteki i oprogramowanie używane w `2-networker/`, `docker-compose.yml` i skryptach wdrożeniowych:
+Libraries and software used in `2-networker/`, `docker-compose.yml` and the deployment scripts:
 
-| Oprogramowanie / Biblioteka | Licencja | Źródło |
+| Software / Library | Licence | Source |
 | :--- | :--- | :--- |
 | Nginx | BSD-2-Clause | https://nginx.org |
 | HTTPX | BSD-3-Clause | https://www.python-httpx.org |
@@ -34,7 +34,7 @@ References:
 
 Original Mosaic: Speyerer, E. J., Robinson, M. S., Denevi, B. W., & LROC Science Team (2011). Lunar Reconnaissance Orbiter Camera global morphological map of the Moon. Paper presented at the 42nd Lunar Planetary Science Conference, Lunar and Planetary Science Institute, Houston, TX. https://www.lpi.usra.edu/meetings/lpsc2011/pdf/2387.pdf
 
-Mission: Robinson, M. S., Brylow, S. M., Humm, D., Lawrence, S. J., Thomas, P. C., Denevi, B. W., Bowman-Cisneros, E., et al. (2010). Lunar Reconnaissance Orbiter Camera (LROC) instrument overview. Space Science Review, 150(1), 81â124. https://doi.org/10.1007/s11214-010-9634-2
+Mission: Robinson, M. S., Brylow, S. M., Humm, D., Lawrence, S. J., Thomas, P. C., Denevi, B. W., Bowman-Cisneros, E., et al. (2010). Lunar Reconnaissance Orbiter Camera (LROC) instrument overview. Space Science Review, 150(1), 81–124. https://doi.org/10.1007/s11214-010-9634-2
 
 Mosaic Production: Wagner, R. V., Speyerer, E. J., Robinson, M. S., & LROC Team (2015). New Mosaicked Data Products from the LROC Team. Paper presented at the 46th Lunar and Planetary Science Conference, Lunar and Planetary Institute, Houston, TX. https://www.hou.usra.edu/meetings/lpsc2015/pdf/1473.pdf
 Eposter: http://www.lpi.usra.edu/meetings/lpsc2015/eposter/1473.pdf
@@ -47,7 +47,7 @@ Petro, N. E., Keller, J. W., Cohen, B. A., & McClanahan, T. P. (2019). Ten years
 
 Planetary Data Systems (PDS) Cartography and Imaging Sciences (IMG) (2018). Lunar Reconnaissance Orbiter. https://pds-imaging.jpl.nasa.gov/portal/lro_mission.html
 
-Tooley, C. R., Houghton, M. B., Saylor Jr., S. S., Peddie, C., Everett, D. F., Baker, C. L., & Safdie, K. N. (2010). Lunar Reconnaissance Orbiter mission and spacecraft design. Space Science Review, 150, 23â62. https://doi.org/10.1007/s11214-009-9624-4
+Tooley, C. R., Houghton, M. B., Saylor Jr., S. S., Peddie, C., Everett, D. F., Baker, C. L., & Safdie, K. N. (2010). Lunar Reconnaissance Orbiter mission and spacecraft design. Space Science Review, 150, 23–62. https://doi.org/10.1007/s11214-009-9624-4
 
 
 

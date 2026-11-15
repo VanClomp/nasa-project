@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Automatyczna konfiguracja darmowego certyfikatu SSL (Let's Encrypt) dla domeny
-# Użycie (po skierowaniu rekordu DNS A domeny na IP serwera GCP):
+# Automatic setup of a free SSL certificate (Let's Encrypt) for a domain
+# Usage (after pointing the domain's DNS A record at the GCP server's IP):
 #   chmod +x enable_https.sh
-#   ./enable_https.sh twojadomena.pl twoj@email.com
+#   ./enable_https.sh yourdomain.com you@example.com
 # =============================================================================
 set -euo pipefail
 
 if [ "$#" -lt 2 ]; then
-    echo "Użycie: $0 <domena> <email>"
-    echo "Przykład: $0 analogfinder.pl kontakt@analogfinder.pl"
+    echo "Usage: $0 <domain> <email>"
+    echo "Example: $0 analogfinder.com contact@analogfinder.com"
     exit 1
 fi
 
@@ -23,7 +23,7 @@ fi
 
 mkdir -p ./certbot/www ./certbot/conf ./2-networker/conf.d
 
-echo "[1/3] Pobieranie certyfikatu Let's Encrypt dla domeny ${DOMAIN}..."
+echo "[1/3] Requesting a Let's Encrypt certificate for ${DOMAIN}..."
 $DOCKER_CMD run --rm \
     -v "$(pwd)/certbot/conf:/etc/letsencrypt" \
     -v "$(pwd)/certbot/www:/var/www/certbot" \
@@ -35,7 +35,7 @@ $DOCKER_CMD run --rm \
     --no-eff-email \
     --non-interactive
 
-echo "[2/3] Generowanie konfiguracji HTTPS dla Nginx (2-networker/conf.d/ssl.conf)..."
+echo "[2/3] Generating the Nginx HTTPS config (2-networker/conf.d/ssl.conf)..."
 cat > ./2-networker/conf.d/ssl.conf <<EOF
 server {
     listen 443 ssl;
@@ -73,7 +73,7 @@ server {
 }
 EOF
 
-echo "[3/3] Przeładowanie Nginx w kontenerze networker..."
+echo "[3/3] Reloading Nginx in the networker container..."
 $DOCKER_CMD compose exec networker nginx -s reload
 
 echo "======================================================================"

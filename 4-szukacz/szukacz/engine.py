@@ -1,8 +1,8 @@
-"""Wyniki w kształcie odpowiedzi API: POST /search i POST /error-map.
+"""API-shaped results: POST /search and POST /error-map.
 
-Łączy dane (data.py) z liczeniem (scoring.py) i mapami (maps.py) i buduje
-słowniki gotowe do zamiany na JSON. Nie zależy od FastAPI, więc da się go
-wołać bezpośrednio.
+Combines the data (data.py) with the scoring (scoring.py) and the maps (maps.py) and builds
+dictionaries ready to turn into JSON. It does not depend on FastAPI, so it can be
+called directly.
 """
 
 from __future__ import annotations
@@ -28,12 +28,12 @@ from .scoring import normalize_weights, score_all, score_block, select_diverse_t
 
 DEFAULT_TOP_K = 100
 DEFAULT_MIN_DISTANCE_KM = 100.0
-# Próg filtra require_caves; ta sama wartość co w mocku w explorer.php.
+# require_caves filter threshold; the same value as in the mock in explorer.php.
 DEFAULT_CAVE_MAX_KM = 15.0
 
 
 def _rounded(values, digits: int):
-    """Zaokrągla do typów Pythona; NaN i nieskończoności zamienia na None (JSON null)."""
+    """Rounds to Python types; turns NaN and infinities into None (JSON null)."""
     array = np.round(np.asarray(values, dtype=np.float64), digits)
     finite = np.isfinite(array)
     if finite.all():
@@ -47,33 +47,33 @@ def _check_vector(name: str, values, length: int) -> np.ndarray:
     try:
         vector = np.asarray(values, dtype=np.float32)
     except (TypeError, ValueError) as error:
-        raise ValueError(f"{name}: oczekiwano listy liczb") from error
+        raise ValueError(f"{name}: expected a list of numbers") from error
     if vector.shape != (length,):
-        raise ValueError(f"{name}: oczekiwano {length} liczb, jest {vector.size}")
+        raise ValueError(f"{name}: expected {length} numbers, got {vector.size}")
     if not np.isfinite(vector).all():
-        raise ValueError(f"{name}: wartości muszą być skończone")
+        raise ValueError(f"{name}: values must be finite")
     return vector
 
 
 def _check_weights(weights, length: int) -> np.ndarray:
-    """Sprawdza wagi i zwraca je podzielone przez sumę."""
+    """Checks the weights and returns them divided by their sum."""
     raw_weights = _check_vector("weights", weights, length)
     if (raw_weights < 0).any():
-        raise ValueError("weights: wagi nie mogą być ujemne")
+        raise ValueError("weights: weights cannot be negative")
     return normalize_weights(raw_weights)
 
 
 def _check_scale_max(error_scale_max: float) -> float:
     if not (error_scale_max > 0 and math.isfinite(error_scale_max)):
-        raise ValueError("error_scale_max: oczekiwano liczby > 0")
+        raise ValueError("error_scale_max: expected a number > 0")
     return float(error_scale_max)
 
 
 def _error_map_payload(grid: np.ndarray, bounds, point_errors: np.ndarray, scale_max: float) -> dict:
-    """Mapa błędu w kształcie pola `error_map` (opis w README.md).
+    """Error map shaped like the `error_map` field (described in README.md).
 
-    grid: (H, W) błędów z NaN w miejscach bez danych; bounds: (lat_min, lat_max,
-    lon_min, lon_max) krawędzi obrazu; point_errors: błędy punktów widocznych na mapie.
+    grid: (H, W) errors with NaN where there is no data; bounds: (lat_min, lat_max,
+    lon_min, lon_max) of the image edges; point_errors: errors of the points visible on the map.
     """
     height, width = grid.shape
     if point_errors.size:
@@ -103,33 +103,33 @@ def search(
     cave_max_km: float = DEFAULT_CAVE_MAX_KM,
     error_scale_max: float = DEFAULT_ERROR_SCALE_MAX,
 ) -> dict:
-    """Szuka na Ziemi top_k lokalizacji najbliższych profilowi celu.
+    """Finds the top_k locations on Earth closest to the target profile.
 
-    features_norm: K znormalizowanych cech celu (z Charakteryzatora).
-    weights: K nieujemnych wag cech.
-    top_k: ile lokalizacji zwrócić.
-    min_distance_km: zwracane lokalizacje są parami dalej niż ta odległość;
-        z dwóch bliższych sobie zostaje lepsza. 0 wyłącza odsiewanie.
-    require_caves: zwracaj tylko punkty z jaskinią nie dalej niż cave_max_km.
-    error_scale_max: błąd, na którym kończy się skala kolorów mapy błędu.
+    features_norm: the target's K normalised features (from the Charakteryzator).
+    weights: K non-negative feature weights.
+    top_k: how many locations to return.
+    min_distance_km: returned locations are pairwise farther apart than this distance;
+        of two closer ones, the better one stays. 0 turns the filtering off.
+    require_caves: return only points with a cave no farther than cave_max_km.
+    error_scale_max: error at which the error-map colour scale ends.
 
-    Zwraca słownik odpowiedzi POST /search (opis pól w README.md). Zgłasza
-    ValueError przy błędnych danych wejściowych.
+    Returns the POST /search response dictionary (fields described in README.md). Raises
+    ValueError on invalid input.
     """
     started = time.perf_counter()
     target = _check_vector("features_norm", features_norm, data.n_features)
     weights_norm = _check_weights(weights, data.n_features)
     if top_k < 1:
-        raise ValueError("top_k: oczekiwano liczby >= 1")
+        raise ValueError("top_k: expected a number >= 1")
     if not (min_distance_km >= 0):
-        raise ValueError("min_distance_km: oczekiwano liczby >= 0")
+        raise ValueError("min_distance_km: expected a number >= 0")
     error_scale_max = _check_scale_max(error_scale_max)
 
     best_score, _ = score_all(data.features_norm, target, weights_norm)
     eligible = data.nearest_cave_km <= cave_max_km if require_caves else None
     chosen = select_diverse_top_k(best_score, data.unit_xyz, top_k, min_distance_km, eligible)
 
-    # Sortowanie indeksów przed odczytem z mmap, potem powrót do kolejności rankingu.
+    # Sort the indices before reading from the mmap, then go back to the ranking order.
     read_order = np.argsort(chosen)
     back = np.argsort(read_order)
     chosen_sorted = chosen[read_order]
@@ -142,7 +142,7 @@ def search(
     rows = np.arange(chosen.size)
 
     if chosen.size:
-        # Miesiąc o najwyższym średnim dopasowaniu wśród zwróconych lokalizacji.
+        # The month with the highest mean match among the returned locations.
         month_means = np.where(np.isfinite(monthly_ranked), monthly_ranked, np.nan)
         counts = np.isfinite(month_means).sum(axis=0)
         sums = np.nansum(month_means, axis=0)
@@ -178,7 +178,7 @@ def search(
         }
         for i in range(chosen.size)
     ]
-    # Mapy pokazują wszystkie punkty, także te odrzucone przez filtr jaskiń.
+    # The maps show all points, including those removed by the cave filter.
     pixel_scores = pixel_best_scores(data, best_score)
     heatmap = render_heatmap(data, best_score, pixel_scores)
     error_map = _error_map_payload(
@@ -208,16 +208,16 @@ def error_map_detail(
     size_px: int = DEFAULT_DETAIL_SIZE_PX,
     error_scale_max: float = DEFAULT_ERROR_SCALE_MAX,
 ) -> dict:
-    """Szczegółowa mapa błędu dla okolicy punktu (lat, lon) na Ziemi.
+    """Detailed error map around the point (lat, lon) on Earth.
 
-    features_norm, weights: jak w search(); mapa pokazuje ten sam błąd co
-        error_map z search(), w tej samej skali kolorów.
-    lat, lon: środek mapki w stopniach (x = lon, y = lat).
-    radius_km: mapka sięga tyle km od punktu w każdą stronę.
-    size_px: szerokość mapki w pikselach.
+    features_norm, weights: as in search(); the map shows the same error as
+        error_map from search(), on the same colour scale.
+    lat, lon: map centre in degrees (x = lon, y = lat).
+    radius_km: the map reaches this many km from the point in every direction.
+    size_px: map width in pixels.
 
-    Zwraca słownik odpowiedzi POST /error-map (opis pól w README.md). Zgłasza
-    ValueError przy błędnych danych wejściowych.
+    Returns the POST /error-map response dictionary (fields described in README.md). Raises
+    ValueError on invalid input.
     """
     started = time.perf_counter()
     target = _check_vector("features_norm", features_norm, data.n_features)

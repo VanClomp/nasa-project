@@ -17,10 +17,10 @@ sys.path.insert(0, os.path.join(HERE, 'scripts'))
 OUT = os.path.join(HERE, '..', '1-webpage', 'presets.php')
 
 MOON_GROUPS = [   # (group label, predicate on moon_sites kind)
-    ('Artemis III – regiony kandydackie NASA (2024)', lambda k: k == 'Artemis region'),
-    ('Biegun południowy – najlepsze oświetlenie', lambda k: k == 'Polar illumination peak'),
-    ('Tunele lawowe (świetliki)', lambda k: k == 'Lava-tube skylight'),
-    ('Dotychczasowe lądowania', lambda k: k.startswith('Landed')),
+    ('Artemis III – NASA candidate regions (2024)', lambda k: k == 'Artemis region'),
+    ('South pole – best illumination', lambda k: k == 'Polar illumination peak'),
+    ('Lava tubes (skylights)', lambda k: k == 'Lava-tube skylight'),
+    ('Past landings', lambda k: k.startswith('Landed')),
 ]
 
 
@@ -35,13 +35,13 @@ def moon():
             if not pred(k): continue
             c = refined.get(s['id'], dict(lat=s['lat'], lon=s['lon']))
             if k == 'Artemis region':
-                desc = 'Region kandydacki Artemis III (NASA)'
+                desc = 'Artemis III candidate region (NASA)'
             elif k == 'Polar illumination peak':
-                desc = 'Grzbiet Shackleton–de Gerlache, najdłuższe oświetlenie'
+                desc = 'Shackleton–de Gerlache ridge, longest illumination'
             elif k == 'Lava-tube skylight':
-                desc = 'Świetlik tunelu lawowego (LROC)'
+                desc = 'Lava-tube skylight (LROC)'
             else:
-                desc = 'Lądowanie: ' + k[k.find('(') + 1:k.rfind(')')] if '(' in k else k
+                desc = 'Landing: ' + k[k.find('(') + 1:k.rfind(')')] if '(' in k else k
             name = s['name'] + (f" ({k[k.find('(') + 1:k.rfind(')')]})" if k.startswith('Landed') and '(' in k else '')
             out.append(dict(id=s['id'], name=name, lat=round(float(c['lat']), 3),
                             lon=round(((float(c['lon']) + 180) % 360) - 180, 3), group=label, desc=desc, local=False,
@@ -56,14 +56,14 @@ def mars():
                     'ground_temp_mean', 'pressure', 'wind_mean')      # = service/contract.py STATION_PARAMS
     months_with_data = {sid: [k for k in range(1, 13)
                               if any(x in mars_model.station_month(sid, k) for x in station_keys)] for sid in stations}
-    groups = [('Przyszłe misje – kandydaci', lambda s: s['kind'] == 'Candidate'),
-              ('Lądowiska z danymi stacji (model lokalny)', lambda s: s['kind'] != 'Candidate' and s['id'] in stations),
-              ('Pozostałe lądowiska', lambda s: s['kind'] != 'Candidate' and s['id'] not in stations)]
+    groups = [('Future missions – candidates', lambda s: s['kind'] == 'Candidate'),
+              ('Landing sites with station data (local model)', lambda s: s['kind'] != 'Candidate' and s['id'] in stations),
+              ('Other landing sites', lambda s: s['kind'] != 'Candidate' and s['id'] not in stations)]
     out = []
     for label, pred in groups:
         for s in marslib.SITES:
             if not pred(s): continue
-            desc = ('Kandydat: ' if s['kind'] == 'Candidate' else 'Lądowanie: ') + s['mission']
+            desc = ('Candidate: ' if s['kind'] == 'Candidate' else 'Landing: ') + s['mission']
             name = s['name'] + (f" ({s['mission']})" if s['kind'] != 'Candidate' else '')
             out.append(dict(id=s['id'], name=name, lat=round(float(s['lat']), 3),
                             lon=round(((float(s['lon']) + 180) % 360) - 180, 3), group=label, desc=desc,

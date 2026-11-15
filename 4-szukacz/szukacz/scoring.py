@@ -1,6 +1,6 @@
-"""Liczenie dopasowania i wybór zróżnicowanego Top-K.
+"""Match scoring and selection of a diverse Top-K.
 
-Moduł czysto numeryczny: nie czyta plików i nie zna formatu odpowiedzi API.
+A purely numerical module: it reads no files and knows nothing about the API response format.
 
     Score(n, m) = 1 - sum_k(w_k * |X[n, m, k] - y_k|) / sum_k(w_k)
 """
@@ -15,11 +15,11 @@ import numpy as np
 
 EARTH_RADIUS_KM = 6371.0088
 
-# Rozmiar bloku punktów liczonego naraz: (2048, 12, 9) float32 to ok. 0,9 MB,
-# czyli dane robocze jednego wątku mieszczą się w pamięci podręcznej procesora.
-# Wartość dobrana pomiarem (1024..16384) na 400 tys. punktów.
+# Size of the block of points computed at once: (2048, 12, 9) float32 is about 0.9 MB,
+# so one thread's working data fits in the CPU cache.
+# Value chosen by measurement (1024..16384) on 400k points.
 _CHUNK_POINTS = 2048
-# Od tylu najlepszych punktów zaczyna się szukanie zróżnicowanego Top-K.
+# The diverse Top-K search starts from this many best points.
 _MIN_POOL = 16384
 _POOL_GROWTH = 8
 
@@ -35,10 +35,10 @@ def _pool() -> ThreadPoolExecutor:
 
 
 def normalize_weights(weights: np.ndarray) -> np.ndarray:
-    """Zwraca wagi podzielone przez ich sumę (float32).
+    """Returns the weights divided by their sum (float32).
 
-    Gdy suma wag wynosi 0, mianownik przyjmuje wartość 1, czyli każdy punkt
-    dostaje wynik 1.0. Tak samo liczy frontend przy przeliczaniu na żywo.
+    When the weights sum to 0 the denominator becomes 1, so every point
+    gets a score of 1.0. The frontend computes it the same way when recalculating live.
     """
     w = np.asarray(weights, dtype=np.float64)
     total = float(w.sum())
@@ -46,7 +46,7 @@ def normalize_weights(weights: np.ndarray) -> np.ndarray:
 
 
 def score_block(block: np.ndarray, target: np.ndarray, weights_norm: np.ndarray) -> np.ndarray:
-    """Dopasowanie dla bloku cech o kształcie (..., K); zwraca tablicę (...)."""
+    """Match for a block of features of shape (..., K); returns an array (...)."""
     diff = np.subtract(block, target, dtype=np.float32)
     np.abs(diff, out=diff)
     penalty = diff.reshape(-1, diff.shape[-1]) @ weights_norm
@@ -57,12 +57,12 @@ def score_block(block: np.ndarray, target: np.ndarray, weights_norm: np.ndarray)
 def score_all(
     features: np.ndarray, target: np.ndarray, weights_norm: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Liczy dopasowanie wszystkich punktów i miesięcy, zostawia najlepszy miesiąc.
+    """Scores all points and months and keeps the best month.
 
     features: (N, M, K) float32, target: (K,), weights_norm: (K,) z normalize_weights.
-    Zwraca (best_score (N,) float32, best_month (N,) int8, miesiące liczone od 0).
-    Miesiąc z wynikiem NaN (brak danych) przegrywa z każdym innym; punkt bez
-    żadnego poprawnego miesiąca dostaje wynik -inf.
+    Returns (best_score (N,) float32, best_month (N,) int8, months counted from 0).
+    A month with a NaN score (no data) loses to any other; a point without
+    any valid month gets a score of -inf.
     """
     n_points = features.shape[0]
     best_score = np.empty(n_points, dtype=np.float32)
@@ -81,13 +81,13 @@ def score_all(
         for start in starts:
             work(start)
     else:
-        # list() wymusza wykonanie i przenosi ewentualny wyjątek z wątku.
+        # list() forces execution and re-raises any exception from the thread.
         list(_pool().map(work, starts))
     return best_score, best_month
 
 
 def latlon_to_unit_xyz(lat_deg: np.ndarray, lon_deg: np.ndarray) -> np.ndarray:
-    """Współrzędne geograficzne -> wektory jednostkowe (N, 3) float64."""
+    """Geographic coordinates -> unit vectors (N, 3) float64."""
     lat = np.radians(np.asarray(lat_deg, dtype=np.float64))
     lon = np.radians(np.asarray(lon_deg, dtype=np.float64))
     cos_lat = np.cos(lat)
@@ -95,12 +95,12 @@ def latlon_to_unit_xyz(lat_deg: np.ndarray, lon_deg: np.ndarray) -> np.ndarray:
 
 
 def great_circle_km(unit_a: np.ndarray, unit_b: np.ndarray) -> np.ndarray:
-    """Odległość po powierzchni Ziemi między wektorami jednostkowymi (rozgłaszanie numpy)."""
+    """Distance along the Earth's surface between unit vectors (numpy broadcasting)."""
     return EARTH_RADIUS_KM * np.arccos(np.clip(np.sum(unit_a * unit_b, axis=-1), -1.0, 1.0))
 
 
 def _top_descending(values: np.ndarray, count: int) -> np.ndarray:
-    """Pozycje `count` największych wartości, malejąco; remisy wygrywa niższy indeks."""
+    """Positions of the `count` largest values, descending; ties go to the lower index."""
     if count < values.size:
         positions = np.sort(np.argpartition(values, values.size - count)[values.size - count:])
     else:
@@ -109,10 +109,10 @@ def _top_descending(values: np.ndarray, count: int) -> np.ndarray:
 
 
 def _greedy_spread(unit_xyz: np.ndarray, top_k: int, cos_limit: float) -> np.ndarray:
-    """Zachłanny wybór z punktów posortowanych malejąco po wyniku.
+    """Greedy selection from points sorted by descending score.
 
-    Bierze najlepszy pozostały punkt i skreśla wszystkie leżące od niego nie
-    dalej niż limit (cosinus kąta >= cos_limit). Zwraca pozycje wybranych.
+    Takes the best remaining point and strikes out all points no farther from it
+    than the limit (angle cosine >= cos_limit). Returns the positions selected.
     """
     alive = np.ones(unit_xyz.shape[0], dtype=bool)
     chosen: list[int] = []
@@ -136,18 +136,18 @@ def select_diverse_top_k(
     min_distance_km: float,
     eligible: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Indeksy najlepszych punktów, parami oddalonych o więcej niż min_distance_km.
+    """Indices of the best points, pairwise more than min_distance_km apart.
 
-    Punkty są przeglądane od najlepszego. Punkt leżący za blisko już wybranego,
-    lepszego punktu jest pomijany, a jego miejsce zajmuje kolejny z rankingu,
-    więc wynik ma top_k pozycji, o ile tyle rozłącznych miejsc istnieje.
+    Points are scanned from the best. A point too close to an already chosen,
+    better point is skipped and the next one in the ranking takes its place,
+    so the result has top_k entries as long as that many separate places exist.
 
-    scores: (N,) wynik punktu (im większy, tym lepszy); wartości nieskończone
-        i NaN są pomijane.
+    scores: (N,) score of each point (higher is better); infinite values
+        and NaN are skipped.
     unit_xyz: (N, 3) z latlon_to_unit_xyz.
-    min_distance_km: 0 wyłącza odsiewanie (zwykłe Top-K).
-    eligible: opcjonalna maska (N,) punktów, które wolno zwrócić.
-    Zwraca indeksy (<= top_k) w kolejności malejącego wyniku.
+    min_distance_km: 0 turns the filtering off (plain Top-K).
+    eligible: optional (N,) mask of the points that may be returned.
+    Returns indices (<= top_k) in order of descending score.
     """
     scores = np.asarray(scores)
     mask = np.isfinite(scores)
@@ -166,7 +166,7 @@ def select_diverse_top_k(
     while True:
         ranked = candidates[_top_descending(candidate_scores, pool)]
         chosen = ranked[_greedy_spread(unit_xyz[ranked], top_k, cos_limit)]
-        # Za mało rozłącznych miejsc wśród `pool` najlepszych: szukamy głębiej.
+        # Not enough separate places among the `pool` best: search deeper.
         if chosen.size >= top_k or pool >= candidates.size:
             return chosen
         pool = min(candidates.size, pool * _POOL_GROWTH)

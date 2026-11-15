@@ -1,7 +1,7 @@
 <?php
 /**
- * dual.php - Alternatywny widok porównawczy: Księżyc/Mars po lewej + Ziemia po prawej
- * Kliknięcie w Księżyc/Marsa automatycznie aktualizuje pinezki analogów na Ziemi.
+ * dual.php - Alternative comparison view: Moon/Mars on the left + Earth on the right
+ * Clicking the Moon/Mars automatically updates the analog pins on Earth.
  */
 $selectedBody = strtolower($_GET['body'] ?? 'moon');
 if (!in_array($selectedBody, ['moon', 'mars'])) {
@@ -10,25 +10,25 @@ if (!in_array($selectedBody, ['moon', 'mars'])) {
 $isMoon = ($selectedBody === 'moon');
 
 $kFeatures = [
-    ['idx' => 0, 'key' => 'temp_mean',           'label' => 'Średnia temp. powierzchni', 'default_w' => 0.90],
-    ['idx' => 1, 'key' => 'temp_diurnal_amp',    'label' => 'Dobowa amplituda temp.',    'default_w' => 0.70],
-    ['idx' => 2, 'key' => 'thermal_inertia',     'label' => 'Bezwładność cieplna gruntu','default_w' => 0.85],
-    ['idx' => 3, 'key' => 'surface_roughness',   'label' => 'Chropowatość (SAR / DEM)',  'default_w' => 0.65],
-    ['idx' => 4, 'key' => 'soil_moisture',       'label' => 'Wilgotność / lód wodny',    'default_w' => 0.80],
-    ['idx' => 5, 'key' => 'dust_aerosol',        'label' => 'Zapylenie atmosfery (AOD)', 'default_w' => 0.50],
-    ['idx' => 6, 'key' => 'solar_elevation_max', 'label' => 'Maks. kąt Słońca',          'default_w' => 0.95],
-    ['idx' => 7, 'key' => 'radiation_proxy',     'label' => 'Promieniowanie (UV/DEM)',   'default_w' => 0.60],
-    ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Nachylenie terenu',         'default_w' => 0.75],
+    ['idx' => 0, 'key' => 'temp_mean',           'label' => 'Mean surface temp.',        'default_w' => 0.90],
+    ['idx' => 1, 'key' => 'temp_diurnal_amp',    'label' => 'Diurnal temp. range',       'default_w' => 0.70],
+    ['idx' => 2, 'key' => 'thermal_inertia',     'label' => 'Ground thermal inertia',    'default_w' => 0.85],
+    ['idx' => 3, 'key' => 'surface_roughness',   'label' => 'Roughness (SAR / DEM)',     'default_w' => 0.65],
+    ['idx' => 4, 'key' => 'soil_moisture',       'label' => 'Moisture / water ice',      'default_w' => 0.80],
+    ['idx' => 5, 'key' => 'dust_aerosol',        'label' => 'Atmospheric dust (AOD)',    'default_w' => 0.50],
+    ['idx' => 6, 'key' => 'solar_elevation_max', 'label' => 'Max. Sun elevation',        'default_w' => 0.95],
+    ['idx' => 7, 'key' => 'radiation_proxy',     'label' => 'Radiation (UV/DEM)',        'default_w' => 0.60],
+    ['idx' => 8, 'key' => 'slope_deg',           'label' => 'Terrain slope',             'default_w' => 0.75],
 ];
 
-// Miejsca lądowania: generowane z danych 3-charakteryzatora (scripts/export_presets.py)
+// Landing sites: generated from the 3-charakteryzator data (scripts/export_presets.py)
 $presets = require __DIR__ . '/presets.php';
 
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
 $initialDate = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
-    ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC), domyślnie dziś
+    ? $_GET['date'] : gmdate('Y-m-d');   // landing date (UTC), today by default
 $initialRotX = isset($_GET['rotX']) && is_numeric($_GET['rotX']) ? floatval($_GET['rotX']) : null;
 $initialRotY = isset($_GET['rotY']) && is_numeric($_GET['rotY']) ? floatval($_GET['rotY']) : null;
 $initialWeights = [];
@@ -40,11 +40,11 @@ if (isset($_GET['w'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="pl" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
+<html lang="en" data-body="<?php echo htmlspecialchars($selectedBody); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetary Analog Finder — Widok dwóch planet</title>
+    <title>Planetary Analog Finder — Two-planet view</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -55,22 +55,22 @@ if (isset($_GET['w'])) {
 
     <div class="hud-bg"></div>
 
-    <!-- GÓRNY PASEK NAWIGACYJNY -->
+    <!-- TOP NAVIGATION BAR -->
     <header class="navbar">
         <div class="nav-left">
-            <a href="index.php" class="back-btn">← Powrót</a>
+            <a href="index.php" class="back-btn">← Back</a>
             <span class="app-title">Planetary Analog Finder</span>
         </div>
 
         <div class="nav-right">
             <div class="mode-switcher">
-                <button class="mode-btn" type="button" onclick="switchToSingleView()">Pojedynczy</button>
-                <button class="mode-btn active" type="button">Dwie planety</button>
+                <button class="mode-btn" type="button" onclick="switchToSingleView()">Single</button>
+                <button class="mode-btn active" type="button">Two planets</button>
             </div>
 
             <div class="mode-switcher">
                 <button class="mode-btn <?php echo $isMoon ? 'active' : ''; ?>" id="btn-mode-moon" onclick="switchCelestialBody('moon')">
-                    Księżyc
+                    Moon
                 </button>
                 <button class="mode-btn <?php echo !$isMoon ? 'active' : ''; ?>" id="btn-mode-mars" onclick="switchCelestialBody('mars')">
                     Mars
@@ -79,31 +79,31 @@ if (isset($_GET['w'])) {
         </div>
     </header>
 
-    <!-- GŁÓWNA PRZESTRZEŃ ROBOCZA -->
+    <!-- MAIN WORKSPACE -->
     <main class="workspace workspace-dual" id="dual-workspace">
 
-        <!-- LEWA KOLUMNA: PARAMETRY I WAGI -->
+        <!-- LEFT COLUMN: PARAMETERS AND WEIGHTS -->
         <aside class="hud-panel dual-drawer dual-drawer-left" id="dual-filters-panel">
             <div class="panel-header">
                 <div class="panel-title">
-                    <span>Parametry i wagi</span>
+                    <span>Parameters and weights</span>
                 </div>
                 <button type="button" class="panel-switch-btn" onclick="toggleDualDrawer('results')">
-                    Wyniki →
+                    Results →
                 </button>
             </div>
 
             <div class="panel-body">
-                <span class="section-label">Miejsce lądowania</span>
+                <span class="section-label">Landing site</span>
                 <button type="button" class="site-picker-btn" id="site-picker-btn" onclick="SitePicker.open()" aria-haspopup="dialog">
                     <span class="site-picker-btn-text">
                         <strong id="site-picker-current">&nbsp;</strong>
                         <span id="site-picker-coords">&nbsp;</span>
                     </span>
-                    <span class="site-picker-btn-cta">Zmień ▾</span>
+                    <span class="site-picker-btn-cta">Change ▾</span>
                 </button>
 
-                <span class="section-label">Współrzędne</span>
+                <span class="section-label">Coordinates</span>
                 <div class="coords-row">
                     <div class="hud-input-group">
                         <label>LAT (°)</label>
@@ -114,9 +114,9 @@ if (isset($_GET['w'])) {
                         <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
                 </div>
-                <button type="button" class="center-pin-btn" onclick="centerGlobesOnPins()">Wyśrodkuj</button>
+                <button type="button" class="center-pin-btn" onclick="centerGlobesOnPins()">Center</button>
 
-                <span class="section-label">Data lądowania</span>
+                <span class="section-label">Landing date</span>
                 <div class="coords-row">
                     <div class="hud-input-group">
                         <label>DATA (UTC)</label>
@@ -124,7 +124,7 @@ if (isset($_GET['w'])) {
                     </div>
                 </div>
 
-                <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
+                <span class="section-label">Match weights (0.0 – 1.0)</span>
                 <div id="sliders-container">
                     <?php foreach ($kFeatures as $f): ?>
                         <?php $wVal = $initialWeights[$f['idx']] ?? $f['default_w']; ?>
@@ -146,67 +146,67 @@ if (isset($_GET['w'])) {
                 </div>
 
                 <label class="cave-toggle">
-                    <span>Wymagaj bliskości jaskiń (&lt; 15 km)</span>
+                    <span>Require a nearby cave (&lt; 15 km)</span>
                     <input type="checkbox" id="require-caves" <?php echo $initialCaves ? 'checked' : ''; ?> onchange="triggerSearchOnly()">
                 </label>
             </div>
 
             <div class="dual-match-summary">
-                <span>Najlepszy analog na Ziemi</span>
-                <strong id="dual-top-match">Ładowanie...</strong>
+                <span>Best analog on Earth</span>
+                <strong id="dual-top-match">Loading...</strong>
             </div>
 
             <div class="panel-footer">
                 <button type="button" class="find-analogs-btn" onclick="openResultsPage()">
-                    <span>Szczegóły wyników</span>
+                    <span>Result details</span>
                     <span>→</span>
                 </button>
             </div>
         </aside>
 
-        <!-- PRAWA PRZESTRZEŃ: DWIE PLANETY OBOK SIEBIE BEZ RAMEK -->
+        <!-- RIGHT AREA: TWO PLANETS SIDE BY SIDE, NO FRAMES -->
         <section class="dual-globes-stage">
-            <!-- LEWA PLANETA: KSIĘŻYC / MARS -->
+            <!-- LEFT PLANET: MOON / MARS -->
             <div class="dual-globe-col">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill" id="target-globe-pill">
-                        <?php echo $isMoon ? 'Księżyc' : 'Mars'; ?> · kliknij, aby wybrać punkt
+                        <?php echo $isMoon ? 'Moon' : 'Mars'; ?> · click to pick a point
                     </div>
                 </div>
                 <div class="dual-globe-canvas" id="target-globe-canvas"></div>
             </div>
 
-            <!-- PRAWA PLANETA: ZIEMIA Z PINEZKAMI ANALOGÓW -->
+            <!-- RIGHT PLANET: EARTH WITH ANALOG PINS -->
             <div class="dual-globe-col">
                 <div class="globe-hud-overlay">
                     <div class="hud-pill">
-                        Ziemia · znalezione analogi
+                        Earth · analogs found
                     </div>
                 </div>
                 <div class="dual-globe-canvas" id="earth-globe-canvas"></div>
             </div>
         </section>
 
-        <!-- PRAWA KOLUMNA: WYNIKI WYSZUKIWANIA (POKAZYWANA PO PRZEŁĄCZENIU) -->
+        <!-- RIGHT COLUMN: SEARCH RESULTS (SHOWN AFTER SWITCHING) -->
         <aside class="hud-panel dual-drawer dual-drawer-right" id="dual-results-panel">
             <div class="panel-header">
                 <button type="button" class="panel-switch-btn" onclick="toggleDualDrawer('filters')">
                     ← Filtry
                 </button>
                 <div class="panel-title">
-                    <span>Wyniki wyszukiwania</span>
+                    <span>Search results</span>
                 </div>
             </div>
 
             <div class="panel-body" id="dual-candidates-list">
                 <div style="color: var(--text-muted); font-size: 0.78rem; padding: 0.5rem 0;">
-                    Ładowanie analogów...
+                    Loading analogs...
                 </div>
             </div>
 
             <div class="panel-footer">
                 <button type="button" class="find-analogs-btn" onclick="openResultsPage()">
-                    <span>Szczegóły wyników</span>
+                    <span>Result details</span>
                     <span>→</span>
                 </button>
             </div>
@@ -253,7 +253,7 @@ if (isset($_GET['w'])) {
             const pinGroup = new THREE.Group();
             const color = isBest ? 0x10b981 : 0x60a5fa;
 
-            // Subtelny pierścień na powierzchni planety
+            // Subtle ring on the planet surface
             const baseRing = new THREE.Mesh(
                 new THREE.RingGeometry(isBest ? 0.015 : 0.010, isBest ? 0.021 : 0.014, 32),
                 new THREE.MeshBasicMaterial({
@@ -266,7 +266,7 @@ if (isset($_GET['w'])) {
             baseRing.position.z = 0.001;
             pinGroup.add(baseRing);
 
-            // Zewnętrzna aureola dla najlepszego dopasowania
+            // Outer halo for the best match
             if (isBest) {
                 const outerRing = new THREE.Mesh(
                     new THREE.RingGeometry(0.028, 0.032, 36),
@@ -281,7 +281,7 @@ if (isset($_GET['w'])) {
                 pinGroup.add(outerRing);
             }
 
-            // Smukła nóżka pinezki skierowana prostopadle do powierzchni (oś +Z)
+            // Slim pin stem pointing perpendicular to the surface (+Z axis)
             const stemH = isBest ? 0.044 : 0.030;
             const stemGeo = new THREE.CylinderGeometry(0.0016, 0.0010, stemH, 10);
             stemGeo.rotateX(Math.PI / 2);
@@ -296,7 +296,7 @@ if (isset($_GET['w'])) {
             stem.position.z = stemH * 0.5 + 0.001;
             pinGroup.add(stem);
 
-            // Główka pinezki 3D
+            // 3D pin head
             const headR = isBest ? 0.012 : 0.0085;
             const head = new THREE.Mesh(
                 new THREE.SphereGeometry(headR, 18, 18),
@@ -322,7 +322,7 @@ if (isset($_GET['w'])) {
         }
 
         // =========================================================================
-        // 1. SCENA LEWA: KSIĘŻYC / MARS (KLIKALNA + ZOOM DO KURSORA)
+        // 1. LEFT SCENE: MOON / MARS (CLICKABLE + ZOOM TO CURSOR)
         // =========================================================================
         function createGlobeController(containerId, options) {
             const container = document.getElementById(containerId);
@@ -387,7 +387,7 @@ if (isset($_GET['w'])) {
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 renderer.setSize(rect.width, rect.height);
                 camera.aspect = rect.width / rect.height;
-                // Dopasowanie FOV tak, aby sfera (r=1.12) przy z=4.3 wypełniała ~95% kolumny z zachowaniem oddechu
+                // Fit the FOV so that the sphere (r=1.12) at z=4.3 fills ~95% of the column with some breathing room
                 const targetHalfSpan = 1.22;
                 const hHalf = targetHalfSpan / Math.min(1, camera.aspect);
                 camera.fov = (2 * Math.atan(hHalf / 4.3) * 180) / Math.PI;
@@ -481,7 +481,7 @@ if (isset($_GET['w'])) {
                 state.isDragging = false;
             });
 
-            // Obsługa dotyku (obrót 1 palcem, tapnięcie, pinch-to-zoom 2 palcami)
+            // Touch support (1-finger rotate, tap, 2-finger pinch-to-zoom)
             let prevPinchDist = 0;
             renderer.domElement.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -607,7 +607,7 @@ if (isset($_GET['w'])) {
             return state;
         }
 
-        // Inicjalizacja lewej planety (Księżyc / Mars)
+        // Initialise the left planet (Moon / Mars)
         const targetGlobe = createGlobeController('target-globe-canvas', {
             initialTexture: getTargetTexture(currentBody),
             onClickPoint: (lat, lon) => {
@@ -623,7 +623,7 @@ if (isset($_GET['w'])) {
             targetGlobe.group.rotation.y = INITIAL_ROT_Y;
         }
 
-        // Pinezka na Księżycu / Marsie
+        // Pin on the Moon / Mars
         const targetMarker = new THREE.Group();
         targetMarker.add(new THREE.Mesh(
             new THREE.CircleGeometry(0.013, 24),
@@ -639,7 +639,7 @@ if (isset($_GET['w'])) {
         targetGlobe.group.add(targetMarker);
         targetGlobe.onPinScale = (s) => targetMarker.scale.setScalar(s);
 
-        // Inicjalizacja prawej planety (Ziemia)
+        // Initialise the right planet (Earth)
         const earthGlobe = createGlobeController('earth-globe-canvas', {
             initialTexture: earthPhotoTexture
         });
@@ -650,7 +650,7 @@ if (isset($_GET['w'])) {
         };
 
         // =========================================================================
-        // 2. API + AUTOMATYCZNA AKTUALIZACJA PINEZEK NA ZIEMI
+        // 2. API + AUTOMATIC UPDATE OF THE PINS ON EARTH
         // =========================================================================
         async function callApi(endpoint, payload) {
             try {
@@ -705,7 +705,7 @@ if (isset($_GET['w'])) {
                 const top = currentCandidates[0];
                 summaryEl.innerText = `${top.name_hint} (${(top.score * 100).toFixed(1)}%)`;
             } else {
-                summaryEl.innerText = 'Brak wyników dla filtra jaskiń';
+                summaryEl.innerText = 'No results for the cave filter';
             }
 
             renderDualCandidatesList();
@@ -716,15 +716,15 @@ if (isset($_GET['w'])) {
             if (!listEl) return;
 
             if (currentCandidates.length === 0) {
-                listEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; padding: 0.75rem 0;">Brak lokalizacji spełniających kryteria filtra jaskiń.</div>`;
+                listEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.78rem; padding: 0.75rem 0;">No locations meet the cave filter.</div>`;
                 return;
             }
 
             listEl.innerHTML = currentCandidates.map((c, idx) => {
                 const isSel = (idx === selectedCandidateIndex);
                 const caveText = c.nearest_skylight_km !== null
-                    ? `Jaskinia: ${c.nearest_skylight_km} km`
-                    : 'Brak jaskiń';
+                    ? `Cave: ${c.nearest_skylight_km} km`
+                    : 'No caves';
                 return `
                     <div class="candidate-card ${isSel ? 'selected' : ''}" onclick="selectDualCandidate(${idx})">
                         <div class="cand-top">
@@ -833,7 +833,7 @@ if (isset($_GET['w'])) {
             document.getElementById('btn-mode-moon').classList.toggle('active', body === 'moon');
             document.getElementById('btn-mode-mars').classList.toggle('active', body === 'mars');
             document.getElementById('target-globe-pill').innerText =
-                `${body === 'moon' ? 'Księżyc' : 'Mars'} · kliknij, aby wybrać punkt`;
+                `${body === 'moon' ? 'Moon' : 'Mars'} · click to pick a point`;
 
             const pList = PRESETS[body];
 
@@ -848,8 +848,8 @@ if (isset($_GET['w'])) {
         }
 
 
-        // Data lądowania z pola #input-date -> timestamp_iso dla /api/v1/characterize (południe UTC tego dnia).
-        // Warunki na Marsie / Księżycu (pora roku Ls, pył, temperatury, położenie Słońca) zależą od tej daty.
+        // Landing date from #input-date -> timestamp_iso for /api/v1/characterize (noon UTC that day).
+        // Conditions on Mars / the Moon (season Ls, dust, temperatures, Sun position) depend on this date.
         function landingTimestamp() {
             const el = document.getElementById('input-date');
             const d = el ? el.value : '';
@@ -889,7 +889,7 @@ if (isset($_GET['w'])) {
             prefetch.href = targetUrl;
             document.head.appendChild(prefetch);
 
-            // Zaktualizuj aktywny przycisk w pasku nawigacji
+            // Update the active button in the navigation bar
             const modeBtns = document.querySelectorAll('.nav-right .mode-switcher:first-child .mode-btn');
             if (modeBtns.length >= 2) {
                 modeBtns[0].classList.add('active');
@@ -910,7 +910,7 @@ if (isset($_GET['w'])) {
             const winH = window.innerHeight;
             const vpH = winH - navH;
 
-            // Aktualna pozycja i rozmiar lewej planety na ekranie
+            // Current position and size of the left planet on screen
             const rect = targetGlobe.container.getBoundingClientRect();
             const cam = targetGlobe.camera;
             const curVFov = (cam.fov * Math.PI) / 180;
@@ -919,7 +919,7 @@ if (isset($_GET['w'])) {
             const startCenterX = rect.left + rect.width / 2 - (cam.position.x / startWorldPerPx);
             const startCenterY = rect.top + rect.height / 2 + (cam.position.y / startWorldPerPx);
 
-            // Dokładna docelowa geometria pojedynczej planety w explorer.php
+            // Exact target geometry of the single planet in explorer.php
             const vpSingleW = winW - 418;
             const vpSingleH = Math.max(200, winH - navH - 182);
             const endCenterX = 402 + vpSingleW / 2;
@@ -928,7 +928,7 @@ if (isset($_GET['w'])) {
             const endWorldPerPx = (2 * 3.45 * Math.tan(singleVFov / 2)) / vpSingleH;
             const endRadiusPx = 1.12 / endWorldPerPx;
 
-            // Zamroź aktualną pozycję lewego panelu przed animacją do wymiarów explorer.php
+            // Freeze the left panel's current position before animating to the explorer.php layout
             const showingResults = workspace.classList.contains('show-results');
             if (leftDrawer) {
                 const lr = leftDrawer.getBoundingClientRect();
@@ -956,7 +956,7 @@ if (isset($_GET['w'])) {
             }
             if (navbar) navbar.style.zIndex = '30';
 
-            // Rozszerz canvas lewej planety na cały obszar pod navbarem bez przeskoku w klatce 0
+            // Expand the left planet's canvas to the whole area under the navbar without a jump in frame 0
             targetGlobe.isTransitioning = true;
             if (targetCol) targetCol.style.overflow = 'visible';
             const canvasBox = targetGlobe.container;

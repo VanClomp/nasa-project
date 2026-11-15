@@ -1,4 +1,4 @@
-"""Testy jednostkowe komponentu 2-networker."""
+"""Unit tests of the 2-networker component."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from networker.regions import resolve_name_hint
 
 class TestNetworkerComponents(unittest.TestCase):
     def test_all_python_modules_compile_cleanly(self) -> None:
-        """Weryfikuje poprawność składniową wszystkich plików .py w repozytorium."""
+        """Checks that every .py file in the repository compiles."""
         for folder in ("2-networker", "3-charakteryzator", "4-szukacz"):
             for py_file in (ROOT_DIR / folder).rglob("*.py"):
                 py_compile.compile(str(py_file), doraise=True)
@@ -28,7 +28,7 @@ class TestNetworkerComponents(unittest.TestCase):
 
     def test_resolve_name_hint_fallback_zones(self) -> None:
         hint = resolve_name_hint(-80.0, 10.0)
-        self.assertIn("Antarktyczna", hint)
+        self.assertIn("Antarctic", hint)
 
 
 if __name__ == "__main__":

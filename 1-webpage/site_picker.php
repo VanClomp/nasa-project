@@ -1,24 +1,24 @@
 <?php
 /**
- * site_picker.php - okno wyboru miejsca lądowania (Księżyc / Mars), wspólne dla explorer.php i dual.php.
- * Lista pochodzi z presets.php (generowany z danych 3-charakteryzatora: regiony Artemis III, lądowiska, kandydaci).
- * Wymaga na stronie: const PRESETS, let currentBody, pól #input-lat / #input-lon i funkcji selectPreset(lat, lon, el).
- * Dołączać PO głównym <script> strony.
+ * site_picker.php - landing-site picker window (Moon / Mars), shared by explorer.php and dual.php.
+ * The list comes from presets.php (generated from the 3-charakteryzator data: Artemis III regions, landing sites, candidates).
+ * Needs on the page: const PRESETS, let currentBody, the #input-lat / #input-lon fields and selectPreset(lat, lon, el).
+ * Include AFTER the page's main <script>.
  */
 ?>
 <div class="site-picker-overlay" id="site-picker" hidden>
     <div class="site-picker" role="dialog" aria-modal="true" aria-labelledby="site-picker-title">
         <div class="site-picker-head">
             <div>
-                <span class="section-label" style="margin:0;">Miejsce lądowania</span>
-                <h2 id="site-picker-title">Wybierz miejsce</h2>
+                <span class="section-label" style="margin:0;">Landing site</span>
+                <h2 id="site-picker-title">Choose a site</h2>
             </div>
-            <button type="button" class="site-picker-close" aria-label="Zamknij" onclick="SitePicker.close()">✕</button>
+            <button type="button" class="site-picker-close" aria-label="Close" onclick="SitePicker.close()">✕</button>
         </div>
         <input type="search" id="site-picker-search" class="site-picker-search" autocomplete="off"
-               placeholder="Szukaj: Malapert, Apollo 15, Jezero…" aria-label="Szukaj miejsca">
+       placeholder="Search: Malapert, Apollo 15, Jezero…" aria-label="Search sites">
         <div class="site-picker-list" id="site-picker-list" role="listbox" aria-labelledby="site-picker-title"></div>
-        <div class="site-picker-foot">Możesz też kliknąć dowolny punkt na globusie albo wpisać współrzędne.</div>
+        <div class="site-picker-foot">You can also click any point on the globe or type coordinates.</div>
     </div>
 </div>
 <script>
@@ -43,7 +43,7 @@ const SitePicker = (() => {
         const nameEl = document.getElementById('site-picker-current');
         const metaEl = document.getElementById('site-picker-coords');
         if (!nameEl) return;
-        nameEl.innerText = c.preset ? c.preset.name : 'Własny punkt';
+        nameEl.innerText = c.preset ? c.preset.name : 'Custom point';
         metaEl.innerText = c.preset ? `${c.preset.desc} · ${fmt(c.lat)}°, ${fmt(c.lon)}°`
                                     : `${isFinite(c.lat) ? fmt(c.lat) : '--'}°, ${isFinite(c.lon) ? fmt(c.lon) : '--'}°`;
     }
@@ -54,8 +54,8 @@ const SitePicker = (() => {
         const m = p.station_months || [];
         if (!p.local || !m.length) return '';
         const ls = m.map(k => `Ls ${30 * (k - 1)}–${30 * k}°`).join(', ');
-        const text = m.length === 12 ? 'dane stacji · cały rok' : `dane stacji · ${m.length}/12 mies.`;
-        return `<em class="site-picker-tag${m.length === 12 ? '' : ' partial'}" title="Miesiące marsjańskie z danymi stacji: ${ls}. W pozostałych: model globalny.">${text}</em>`;
+        const text = m.length === 12 ? 'station data · all year' : `station data · ${m.length}/12 months`;
+        return `<em class="site-picker-tag${m.length === 12 ? '' : ' partial'}" title="Mars months with station data: ${ls}. In the others: global model.">${text}</em>`;
     }
 
     function render() {
@@ -73,7 +73,7 @@ const SitePicker = (() => {
                         <code>${fmt(p.lat)}°, ${fmt(p.lon)}°</code></span>
                     </button>`;
         });
-        listEl.innerHTML = n ? html : '<div class="site-picker-empty">Brak wyników</div>';
+        listEl.innerHTML = n ? html : '<div class="site-picker-empty">No results</div>';
     }
 
     function choose(i) {

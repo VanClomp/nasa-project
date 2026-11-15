@@ -1,92 +1,94 @@
 # Project Context – Planetary Analog Finder (NASA Space Apps 2026)
 
-## 1. Opis projektu i rola
-**Planetary Analog Finder** to narzędzie analityczno-wizualizacyjne wyszukujące na Ziemi lokalizacje oraz okresy w roku (miesiące), które pod względem fizycznym, geologicznym i orbitalnym najlepiej odpowiadają wybranemu punktowi na **Księżycu** lub **Marsie**.
+## 1. Project description and role
+**Planetary Analog Finder** is an analysis and visualisation tool that searches Earth for the locations and the times of year (months) that best match a chosen point on the **Moon** or **Mars** physically, geologically and orbitally.
 
-## 2. Kierunek Artystyczny i Design System (Minimalist Aerospace / Linear / SpaceX UI)
+## 2. Art direction and design system (Minimalist Aerospace / Linear / SpaceX UI)
 
-Odchodzimy od „growego”, przesadzonego stylu sci-fi/cyberpunk (brak gamingowych fontów typu *Orbitron*, brak sztucznych laserów, narożników z gier i jaskrawych tęczowych ramek). Stawiamy na **dojrzały, minimalistyczny, inżynieryjny design premium** inspirowany interfejsami **SpaceX Crew Dragon, Linear.app, Vercel oraz NASA JPL Eyes**.
+We are moving away from a "gamey", over-the-top sci-fi/cyberpunk style (no gaming fonts like *Orbitron*, no fake lasers, game-style corners or garish rainbow frames). We aim for a **mature, minimal, engineering-grade premium design** inspired by the interfaces of **SpaceX Crew Dragon, Linear.app, Vercel and NASA JPL Eyes**.
 
-### Zasady przewodnie:
-1. **Minimalizm i przestrzeń (Negative Space):**
-   * Czysta geometria, dużo oddechu wokół elementów, cienkie linie podziału (`1px solid rgba(255, 255, 255, 0.07)`), brak zbędnych ozdobników.
-2. **Paleta kolorystyczna (Matte Obsidian & Precision Accents):**
-   * **Tło bazowe:** Głęboki, matowy obsydian `#050507` oraz `#090A0F` (bez krzykliwych gradientów).
-   * **Powierzchnie (Cards / Panels):** Subtelne, półprzezroczyste warstwy `rgba(17, 19, 24, 0.72)` z delikatnym rozmyciem `backdrop-filter: blur(20px)` oraz cienką obwódką `1px` rozświetlaną dopiero przy interakcji.
-   * **Tekst:**
-     * Główny: `#F4F4F6` (czysta, lekko złamana biel)
-     * Drugorzędny: `#8E929F` (chłodny, techniczny szary)
-     * Etykiety / metadane: `#525665`
-   * **Stonowane, precyzyjne akcenty świetlne (tylko tam, gdzie niosą informację):**
-     * **Księżyc (Lunar Ice / Silver):** `#E2E8F0` oraz chłodny subtelny błękit `#60A5FA`
-     * **Mars (Ember / Terracotta):** `#F97316` oraz ciepły bursztyn `#FB923C`
-     * **Wskaźnik dopasowania Ziemi (Signal Emerald):** `#10B981`
-3. **Typografia (Inżynieryjna precyzja):**
-   * **Nagłówki i UI:** *Inter* lub *Plus Jakarta Sans* (wagi `400`, `500`, `600`, ciasny kerning `letter-spacing: -0.03em`).
-   * **Dane liczbowe, współrzędne i telemetria:** *JetBrains Mono* (`font-variant-numeric: tabular-nums`) – gwarantuje idealne wyrównanie kolumn z liczbami i brak skakania interfejsu podczas animacji.
-
----
-
-## 3. Nowoczesne, subtelne animacje (High-Craft Motion)
-
-Animacje mają budować wrażenie precyzyjnego instrumentu naukowego:
-
-1. **Realistyczne oświetlenie 3D (Terminator & Fresnel Rim Glow):**
-   * Globusy Księżyca i Marsa w Three.js są oświetlone kierunkowym światłem słonecznym z wyraźną granicą dnia i nocy (*terminator line*) oraz subtelną poświatą krawędziową (*Fresnel shader*).
-   * Po najechaniu kursorem na kafelek kamera i źródło światła płynnie, z bezwładnością (*damped inertia*) reagują na ruch myszy, a globus delikatnie przyspiesza obrót.
-2. **Subtelny efekt Spotlight na krawędziach (`1px Border Glow`):**
-   * Zamiast świecenia całego kafelka – kursor myszy oświetla jedynie cienką (`1px`) krawędź karty oraz delikatny refleks w miejscu, w którym znajduje się wskaźnik (styl Linear / Vercel).
-3. **Płynna fizyka przejść (`cubic-bezier(0.22, 1, 0.36, 1)`):**
-   * Wszystkie przejścia (zmiana kart, rozwijanie parametrów, aktualizacja wykresów i pasków dopasowania) korzystają z miękkich krzywych wygaszania.
-4. **Animacje danych (`Tabular Number Transitions`):**
-   * Płynna interpolacja wartości liczbowych (np. `94.2%`) i szerokości pasków dopasowania w czasie rzeczywistym (60 FPS) podczas przesuwania suwaków wag.
+### Guiding principles:
+1. **Minimalism and space (negative space):**
+   * Clean geometry, plenty of breathing room around elements, thin dividers (`1px solid rgba(255, 255, 255, 0.07)`), no unnecessary ornament.
+2. **Colour palette (Matte Obsidian & Precision Accents):**
+   * **Base background:** deep, matte obsidian `#050507` and `#090A0F` (no loud gradients).
+   * **Surfaces (cards / panels):** subtle, semi-transparent layers `rgba(17, 19, 24, 0.72)` with a soft `backdrop-filter: blur(20px)` and a thin `1px` border that lights up only on interaction.
+   * **Text:**
+     * Primary: `#F4F4F6` (clean, slightly broken white)
+     * Secondary: `#8E929F` (cool, technical grey)
+     * Labels / metadata: `#525665`
+   * **Muted, precise light accents (only where they carry information):**
+     * **Moon (Lunar Ice / Silver):** `#E2E8F0` and a cool, subtle blue `#60A5FA`
+     * **Mars (Ember / Terracotta):** `#F97316` and a warm amber `#FB923C`
+     * **Earth match indicator (Signal Emerald):** `#10B981`
+3. **Typography (engineering precision):**
+   * **Headings and UI:** *Inter* or *Plus Jakarta Sans* (weights `400`, `500`, `600`, tight kerning `letter-spacing: -0.03em`).
+   * **Numbers, coordinates and telemetry:** *JetBrains Mono* (`font-variant-numeric: tabular-nums`) – guarantees perfectly aligned number columns and no jumping UI during animations.
 
 ---
 
-## 4. Nowoczesne animacje i mikro-interakcje (Kluczowy priorytet)
+## 3. Modern, subtle animation (High-Craft Motion)
 
-1. **Dynamiczna transformacja motywu (`Moon` ↔ `Mars` ↔ `Earth`):**
-   * Płynna zmiana zmiennych CSS (`--accent-glow`, `--accent-primary`) oraz oświetlenia sceny 3D przy przełączaniu globusów.
-2. **Efekt skanowania po kliknięciu współrzędnych (`lat`, `lon`):**
-   * Animowany pierścień / fala radarowa rozchodząca się od klikniętego punktu na Księżycu lub Marsie w trakcie odpytywania `/api/v1/characterize`.
-3. **Liczniki telemetryczne (Scramble Text & Number Ticker):**
-   * Podczas wczytywania parametrów `features_raw` i `score` (np. `94.2% MATCH`), cyfry płynnie odliczają wartość lub „dekodują się” w stylu terminala kosmicznego.
-4. **Kaskadowe wejścia i Spotlight Hover:**
-   * Karty z Top kandydatami pojawiają się kaskadowo (`staggered animation`), a po najechaniu myszką podąża za kursorem neonowa poświata (`radial-gradient` śledzący `clientX/clientY`).
-5. **Interaktywne suwaki wag (`K_FEATURES`) z natychmiastowym feedbackiem:**
-   * Przesunięcie suwaka płynnie animuje wykres radarowy i pasek dopasowania.
+Animations should feel like a precise scientific instrument:
+
+1. **Realistic 3D lighting (Terminator & Fresnel Rim Glow):**
+   * The Moon and Mars globes in Three.js are lit by directional sunlight with a clear day–night boundary (*terminator line*) and a subtle rim glow (*Fresnel shader*).
+   * When hovering over a tile, the camera and the light source react smoothly, with *damped inertia*, to mouse movement, and the globe gently speeds up its rotation.
+2. **Subtle edge spotlight (`1px Border Glow`):**
+   * Instead of lighting up the whole tile, the cursor lights only the thin (`1px`) card edge plus a soft highlight where the pointer is (Linear / Vercel style).
+3. **Smooth transition physics (`cubic-bezier(0.22, 1, 0.36, 1)`):**
+   * All transitions (card changes, expanding parameters, updating charts and match bars) use soft easing curves.
+4. **Data animation (`Tabular Number Transitions`):**
+   * Smooth real-time (60 FPS) interpolation of numbers (e.g. `94.2%`) and match-bar widths while the weight sliders move.
 
 ---
 
-## 5. Kontrakt API (9 cech `K_FEATURES`)
+## 4. Modern animation and micro-interactions (key priority)
 
-Kolejność cech w tablicach `features_norm` i `weights` (indeksy `0..8`) jest stała w całym systemie:
+1. **Dynamic theme transformation (`Moon` ↔ `Mars` ↔ `Earth`):**
+   * Smooth change of the CSS variables (`--accent-glow`, `--accent-primary`) and the 3D scene lighting when switching globes.
+2. **Scan effect after clicking coordinates (`lat`, `lon`):**
+   * An animated ring / radar wave spreading from the clicked point on the Moon or Mars while `/api/v1/characterize` is queried.
+3. **Telemetry counters (Scramble Text & Number Ticker):**
+   * While the `features_raw` and `score` values load (e.g. `94.2% MATCH`), the digits count up smoothly or "decode" like a space terminal.
+4. **Cascading entrances and spotlight hover:**
+   * The Top candidate cards appear in a cascade (`staggered animation`), and on hover a neon glow follows the cursor (`radial-gradient` tracking `clientX/clientY`).
+5. **Interactive weight sliders (`K_FEATURES`) with instant feedback:**
+   * Moving a slider smoothly animates the radar chart and the match bar.
 
-| Indeks | Klucz | Opis | Jednostka |
+---
+
+## 5. API contract (the 9 `K_FEATURES`)
+
+The order of the features in the `features_norm` and `weights` arrays (indices `0..8`) is fixed across the whole system:
+
+| Index | Key | Description | Unit |
 | :--- | :--- | :--- | :--- |
-| `0` | `temp_mean` | Średnia temperatura powierzchni | `°C` |
-| `1` | `temp_diurnal_amp` | Dobowa amplituda temperatur ($T_{\max} - T_{\min}$) | `°C` |
-| `2` | `thermal_inertia` | Bezwładność cieplna gruntu (sypki pył vs lita skała) | $\text{J}\cdot\text{m}^{-2}\cdot\text{K}^{-1}\cdot\text{s}^{-1/2}$ |
-| `3` | `surface_roughness` | Chropowatość powierzchni (SAR / wysokościomierz) | `m / indeks` |
-| `4` | `soil_moisture` | Wilgotność gruntu / zawartość lodu wodnego | `%` |
-| `5` | `dust_aerosol` | Zapylenie atmosfery (AOD) | `bezwymiarowy` |
-| `6` | `solar_elevation_max` | Maksymalny dzienny kąt wzniesienia Słońca | `°` (stopnie) |
-| `7` | `radiation_proxy` | Ekspozycja na promieniowanie (wysokość n.p.m. + UV) | `indeks` |
-| `8` | `slope_deg` | Nachylenie terenu | `°` (stopnie) |
+| `0` | `temp_mean` | Mean surface temperature | `°C` |
+| `1` | `temp_diurnal_amp` | Diurnal temperature range ($T_{\max} - T_{\min}$) | `°C` |
+| `2` | `thermal_inertia` | Ground thermal inertia (loose dust vs solid rock) | $\text{J}\cdot\text{m}^{-2}\cdot\text{K}^{-1}\cdot\text{s}^{-1/2}$ |
+| `3` | `surface_roughness` | Surface roughness (SAR / altimeter) | `m / index` |
+| `4` | `soil_moisture` | Soil moisture / water-ice content | `%` |
+| `5` | `dust_aerosol` | Atmospheric dust (AOD) | `dimensionless` |
+| `6` | `solar_elevation_max` | Maximum daily Sun elevation | `°` (degrees) |
+| `7` | `radiation_proxy` | Radiation exposure (elevation + UV) | `index` |
+| `8` | `slope_deg` | Terrain slope | `°` (degrees) |
 
-### Endpointy, z którymi rozmawia Twój Frontend:
+(Exact units and definitions as implemented: `3-charakteryzator/service/norm_ranges.json` and `3-charakteryzator/PARAMETERS.md`.)
+
+### Endpoints your frontend talks to:
 1. **`POST /api/v1/characterize`**
-   * Wysyłasz: `{"target_body": "moon" | "mars", "lat": -85.2, "lon": 31.4, "timestamp_iso": "2026-11-14T12:00:00Z"}`
-   * Otrzymujesz: `features_raw` (do wyświetlenia w HUD), `features_norm` (tablica 9 floatów `[0..1]`), `nearest_skylight_km`.
+   * You send: `{"target_body": "moon" | "mars", "lat": -85.2, "lon": 31.4, "timestamp_iso": "2026-11-14T12:00:00Z"}`
+   * You get: `features_raw` (to show in the HUD), `features_norm` (an array of 9 floats `[0..1]`), `nearest_skylight_km`.
 2. **`POST /api/v1/search`**
-   * Wysyłasz: `{"features_norm": [...], "weights": [...], "require_caves": false, "top_k": 100}`
-   * Otrzymujesz: `execution_time_ms`, `best_global_month`, `heatmap_base64` (obraz `1024x512` nakładany na globus Ziemi) oraz listę `candidates` (Top lokalizacje na Ziemi z ich `climatogram_12m`, `monthly_scores` i `features_raw_best_month`).
+   * You send: `{"features_norm": [...], "weights": [...], "require_caves": false, "top_k": 100}`
+   * You get: `execution_time_ms`, `best_global_month`, `heatmap_base64` (a `1024x512` image laid over the Earth globe) and a list of `candidates` (the top locations on Earth with their `climatogram_12m`, `monthly_scores` and `features_raw_best_month`).
 
 ---
 
-## 6. Organizacja CSS
-* Wszystkie pliki `.php` korzystają z jednego, wspólnego arkusza stylów [style.css](file:///Users/antos/Documents/programowanie/nasa-project/nasa-project/style.css).
-* Dla każdej nowej strony `.php` podpinaj `<link rel="stylesheet" href="style.css">` i dopisuj nowe klasy w tym pliku.
+## 6. CSS organisation
+* All `.php` files use one shared stylesheet, [1-webpage/style.css](1-webpage/style.css).
+* For every new `.php` page, link `<link rel="stylesheet" href="style.css">` and add new classes to that file.
 
-## 7. Licencje
-Zapisz w pliku 'LICENCES.md' wszystkie źródła, gdy używamy czegoś z internetu
+## 7. Licences
+Record every source in `LICENCES.md` whenever we use something from the internet.

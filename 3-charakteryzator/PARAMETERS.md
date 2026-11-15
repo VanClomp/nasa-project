@@ -12,7 +12,7 @@ landing date, and where each value comes from at a given place. The same feature
    (a surface station record, an orbital map read at this pixel, or exact orbital geometry); `false` = predicted by
    the global model (latitude, elevation and surface maps), which is less certain.
 
-The pages show both on every parameter tile (`zmierzone` / `model`, `◷ z datą` / `stałe`) and draw a p(t) chart for
+The pages show both on every parameter tile (`measured` / `model`, `◷ by date` / `fixed`) and draw a p(t) chart for
 each time-varying parameter below the existing charts on the results page.
 
 ## Mars
@@ -55,7 +55,7 @@ do not cover every month:
 | 7 | `radiation_proxy` | g/cm2 | no | - | always 0 (no atmosphere) | - |
 | 8 | `slope_deg` | deg | no | - | always: LOLA (40 m poles, 240 m to 75 deg, 16 ppd elsewhere) | - |
 
-**Model label on the Moon** (`extra.model = "orbital"`, blue badge "Pomiary orbitalne · ten punkt"): there are no
+**Model label on the Moon** (`extra.model = "orbital"`, blue badge "Orbital measurements · this point"): there are no
 surface weather stations, but terrain, sunlight, rocks and hydrogen are measured from orbit at the exact pixel
 (LOLA, Diviner, Lunar Prospector) - more certain than the Mars global model, so it is not shown as "uncertain".
 A green local model on the Moon would need surface records (Apollo 15/17 heat-flow experiments, Chandrayaan-3

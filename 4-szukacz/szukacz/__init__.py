@@ -1,4 +1,4 @@
-"""Szukacz: silnik wyszukiwania ziemskich analogów (komponent 4)."""
+"""Szukacz: search engine for Earth analogs (component 4)."""
 
 from .data import K_FEATURES, EarthData, load_earth_data
 from .engine import error_map_detail, search
