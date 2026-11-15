@@ -36,6 +36,7 @@ mkdir -p ./data/earth ./data/moon ./data/mars ./certbot/www ./certbot/conf ./2-n
 # 3. Build and start the containers
 echo "[3/4] Building and starting the containers (docker compose up -d --build)..."
 $DOCKER_CMD compose up -d --build
+$DOCKER_CMD compose restart networker
 
 # 4. Check that it works
 echo "[4/4] Waiting for the services to start and testing the healthcheck..."
