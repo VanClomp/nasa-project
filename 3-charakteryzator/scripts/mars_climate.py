@@ -39,7 +39,7 @@ def _grid(scenario, col):
     g = piv(scenario)
     if scenario != 'typical':                       # storm-year gaps: fall back to the typical year
         g = g.fillna(piv('typical'))
-    a = g.to_numpy(float)
+    a = g.to_numpy(float).copy()                    # pandas 3 (copy-on-write) returns a read-only view
     for i in range(a.shape[0]):                     # circular interpolation along Ls
         row = a[i]; ok = np.isfinite(row)
         if ok.sum() >= 2:
