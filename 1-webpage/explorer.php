@@ -290,6 +290,7 @@ if (isset($_GET['w'])) {
     <link rel="stylesheet" href="style.css?v=<?php echo @filemtime(__DIR__ . '/style.css') ?: 1; ?>">
 </head>
 <body>
+    <?php include __DIR__ . '/progress_bar.php'; ?>
 
     <div class="hud-bg"></div>
 
