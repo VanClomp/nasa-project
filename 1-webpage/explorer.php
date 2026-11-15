@@ -298,7 +298,7 @@ if (isset($_GET['w'])) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo @filemtime(__DIR__ . '/style.css') ?: 1; ?>">
 </head>
 <body>
 
@@ -361,8 +361,8 @@ if (isset($_GET['w'])) {
                         <label>LON (°)</label>
                         <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
-                    <button class="scan-btn" onclick="triggerCharacterize()">Pobierz</button>
                 </div>
+                <button type="button" class="center-pin-btn" onclick="centerGlobeOnPin()">Wyśrodkuj</button>
 
                 <span class="section-label">Data lądowania</span>
                 <div class="coords-row">
@@ -504,40 +504,7 @@ if (isset($_GET['w'])) {
                 return marsPhotoTexture;
             }
 
-            const c = document.createElement('canvas');
-            c.width = 1024;
-            c.height = 512;
-            const ctx = c.getContext('2d');
-
-            {
-                // ZIEMIA + HEATMAPA DOPASOWANIA
-                ctx.fillStyle = '#091526';
-                ctx.fillRect(0, 0, 1024, 512);
-
-                // Siatka geograficzna Ziemi
-                ctx.strokeStyle = 'rgba(0, 240, 255, 0.14)';
-                ctx.lineWidth = 1;
-                for (let x = 0; x < 1024; x += 64) {
-                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
-                }
-                for (let y = 0; y < 512; y += 64) {
-                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
-                }
-
-                // Rysowanie plam ciepła (Heatmap) wokół najlepszych kandydatów
-                candidates.forEach(cand => {
-                    const px = ((cand.lon + 180) / 360) * 1024;
-                    const py = ((90 - cand.lat) / 180) * 512;
-                    const radius = 55 * cand.score;
-                    const g = ctx.createRadialGradient(px, py, 2, px, py, radius);
-                    g.addColorStop(0, `rgba(0, 255, 157, ${cand.score * 0.95})`);
-                    g.addColorStop(0.5, `rgba(0, 240, 255, ${cand.score * 0.45})`);
-                    g.addColorStop(1, 'rgba(0, 240, 255, 0)');
-                    ctx.fillStyle = g;
-                    ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill();
-                });
-            }
-            return new THREE.CanvasTexture(c);
+            return loadBodyTexture('images/earth_photo.jpg');
         }
 
         const sphereGeo = new THREE.SphereGeometry(1.12, 64, 64);
@@ -651,11 +618,44 @@ if (isset($_GET['w'])) {
         renderer.domElement.addEventListener('wheel', (e) => {
             if (isDiving) return;
             e.preventDefault();
+            pauseAutoRotate();
             applyZoomAt(e.clientX, e.clientY, e.deltaY * 0.0022);
         }, { passive: false });
 
+        let isCentering = false;
+        let targetCenterRotX = 0;
+        let targetCenterRotY = 0;
+        let pauseAutoRotateUntil = 0;
+
+        function pauseAutoRotate(ms = 8000) {
+            pauseAutoRotateUntil = performance.now() + ms;
+        }
+
+        function centerGlobeOnPin() {
+            if (isDiving) return;
+            pauseAutoRotate();
+            const lat = parseFloat(document.getElementById('input-lat').value) || 0;
+            const lon = parseFloat(document.getElementById('input-lon').value) || 0;
+            const p = latLonToVector3(lat, lon, 1);
+            const rXZ = Math.hypot(p.x, p.z);
+            const desiredRotY = -Math.atan2(p.x, p.z);
+            const desiredRotX = Math.atan2(p.y, rXZ);
+
+            let deltaY = (desiredRotY - globeGroup.rotation.y) % (Math.PI * 2);
+            if (deltaY > Math.PI) deltaY -= Math.PI * 2;
+            if (deltaY < -Math.PI) deltaY += Math.PI * 2;
+
+            targetCenterRotX = desiredRotX;
+            targetCenterRotY = globeGroup.rotation.y + deltaY;
+            targetCamX = 0;
+            targetCamY = 0;
+            isCentering = true;
+        }
+
         renderer.domElement.addEventListener('mousedown', (e) => {
             if (isDiving) return;
+            isCentering = false;
+            pauseAutoRotate();
             isDragging = true;
             dragMoved = false;
             prevMouse = { x: e.clientX, y: e.clientY };
@@ -663,6 +663,7 @@ if (isset($_GET['w'])) {
 
         window.addEventListener('mousemove', (e) => {
             if (!isDragging || isDiving) return;
+            pauseAutoRotate();
             const dx = e.clientX - prevMouse.x;
             const dy = e.clientY - prevMouse.y;
             if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
@@ -691,8 +692,11 @@ if (isset($_GET['w'])) {
         }
 
         window.addEventListener('mouseup', (e) => {
-            if (isDragging && !dragMoved) {
-                pickPointAt(e.clientX, e.clientY);
+            if (isDragging) {
+                pauseAutoRotate();
+                if (!dragMoved) {
+                    pickPointAt(e.clientX, e.clientY);
+                }
             }
             isDragging = false;
         });
@@ -702,6 +706,8 @@ if (isset($_GET['w'])) {
         renderer.domElement.addEventListener('touchstart', (e) => {
             if (isDiving) return;
             e.preventDefault();
+            isCentering = false;
+            pauseAutoRotate();
             isDragging = true;
             if (e.touches.length === 1) {
                 dragMoved = false;
@@ -719,6 +725,7 @@ if (isset($_GET['w'])) {
         renderer.domElement.addEventListener('touchmove', (e) => {
             if (!isDragging || isDiving) return;
             e.preventDefault();
+            pauseAutoRotate();
             if (e.touches.length === 1 && prevPinchDist === 0) {
                 const dx = e.touches[0].clientX - prevMouse.x;
                 const dy = e.touches[0].clientY - prevMouse.y;
@@ -749,8 +756,11 @@ if (isset($_GET['w'])) {
                 return;
             }
             if (e.touches.length === 0) {
-                if (isDragging && !dragMoved && e.changedTouches.length > 0) {
-                    pickPointAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                if (isDragging) {
+                    pauseAutoRotate();
+                    if (!dragMoved && e.changedTouches.length > 0) {
+                        pickPointAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                    }
                 }
                 isDragging = false;
                 prevPinchDist = 0;
@@ -784,8 +794,21 @@ if (isset($_GET['w'])) {
                     return;
                 }
             } else {
-                if (!isDragging) {
-                    globeGroup.rotation.y += 0.0008;
+                if (isCentering) {
+                    globeGroup.rotation.x += (targetCenterRotX - globeGroup.rotation.x) * 0.12;
+                    globeGroup.rotation.y += (targetCenterRotY - globeGroup.rotation.y) * 0.12;
+                    if (Math.abs(targetCenterRotX - globeGroup.rotation.x) < 0.001 &&
+                        Math.abs(targetCenterRotY - globeGroup.rotation.y) < 0.001) {
+                        globeGroup.rotation.x = targetCenterRotX;
+                        globeGroup.rotation.y = targetCenterRotY;
+                        isCentering = false;
+                    }
+                } else if (!isDragging) {
+                    const now = performance.now();
+                    if (now >= pauseAutoRotateUntil) {
+                        const resumeFactor = Math.min(1, (now - pauseAutoRotateUntil) / 800);
+                        globeGroup.rotation.y += 0.0008 * resumeFactor;
+                    }
                 }
                 camera.position.x += (targetCamX - camera.position.x) * 0.08;
                 camera.position.y += (targetCamY - camera.position.y) * 0.08;
@@ -1082,8 +1105,34 @@ if (isset($_GET['w'])) {
             });
         }
 
-        // Start aplikacji
+        // Start aplikacji + automatyczne przeliczanie po zmianie współrzędnych
         window.addEventListener('DOMContentLoaded', () => {
+            const latInput = document.getElementById('input-lat');
+            const lonInput = document.getElementById('input-lon');
+            let coordsDebounce = null;
+
+            const handleCoordsInput = () => {
+                const rawLat = parseFloat(latInput.value);
+                const rawLon = parseFloat(lonInput.value);
+                if (Number.isNaN(rawLat) || Number.isNaN(rawLon)) return;
+                const lat = Math.max(-90, Math.min(90, rawLat));
+                const lon = Math.max(-180, Math.min(180, rawLon));
+                updateMarkerPosition(lat, lon);
+                document.getElementById('readout-coords').innerText = `${lat.toFixed(1)}°, ${lon.toFixed(1)}°`;
+                clearTimeout(coordsDebounce);
+                coordsDebounce = setTimeout(() => {
+                    triggerCharacterize();
+                }, 200);
+            };
+
+            [latInput, lonInput].forEach(el => {
+                el.addEventListener('input', handleCoordsInput);
+                el.addEventListener('change', () => {
+                    clearTimeout(coordsDebounce);
+                    triggerCharacterize();
+                });
+            });
+
             triggerCharacterize();
         });
     </script>
