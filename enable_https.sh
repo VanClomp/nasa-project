@@ -62,8 +62,8 @@ server {
     }
 
     location / {
-        set \$frontend_upstream http://frontend:80;
-        proxy_pass \$frontend_upstream;
+        rewrite ^/(moon_photo|mars_photo|earth_photo|sky_photo)\.jpg$ /images/$1.jpg break;
+        proxy_pass http://frontend:80;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

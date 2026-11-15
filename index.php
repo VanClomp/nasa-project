@@ -217,8 +217,6 @@
             const group = new THREE.Group();
             scene.add(group);
 
-            const loadedTexture = config.textureUrl ? textureLoader.load(config.textureUrl) : null;
-
             const uniforms = {
                 uBaseColor:  { value: new THREE.Color(config.baseColor) },
                 uDarkColor:  { value: new THREE.Color(config.darkColor) },
@@ -226,9 +224,17 @@
                 uLightDir:   { value: new THREE.Vector3(1.2, 0.4, 0.9) },
                 uHover:      { value: 0.0 },
                 uSeed:       { value: config.seed },
-                uHasTexture: { value: loadedTexture ? 1.0 : 0.0 },
-                uTexture:    { value: loadedTexture }
+                uHasTexture: { value: 0.0 },
+                uTexture:    { value: null }
             };
+
+            if (config.textureUrl) {
+                textureLoader.load(config.textureUrl, (tex) => {
+                    tex.needsUpdate = true;
+                    uniforms.uTexture.value = tex;
+                    uniforms.uHasTexture.value = 1.0;
+                });
+            }
 
             const geo = new THREE.SphereGeometry(1.04, 64, 64);
             const mat = new THREE.ShaderMaterial({

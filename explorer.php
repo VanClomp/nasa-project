@@ -466,19 +466,27 @@ if (isset($_GET['w'])) {
         globeGroup.add(pinsGroup);
 
         const textureLoader = new THREE.TextureLoader();
-        let moonPhotoTexture = null;
-        let marsPhotoTexture = null;
+        function loadBodyTexture(url) {
+            return textureLoader.load(url, (tex) => {
+                tex.needsUpdate = true;
+                if (typeof sphereMat !== 'undefined' && sphereMat) {
+                    sphereMat.needsUpdate = true;
+                }
+            });
+        }
+        let moonPhotoTexture = loadBodyTexture('images/moon_photo.jpg');
+        let marsPhotoTexture = loadBodyTexture('images/mars_photo.jpg');
 
         function generateBodyTexture(mode, candidates = []) {
             if (mode === 'moon') {
                 if (!moonPhotoTexture) {
-                    moonPhotoTexture = textureLoader.load('images/moon_photo.jpg');
+                    moonPhotoTexture = loadBodyTexture('images/moon_photo.jpg');
                 }
                 return moonPhotoTexture;
             }
             if (mode === 'mars') {
                 if (!marsPhotoTexture) {
-                    marsPhotoTexture = textureLoader.load('images/mars_photo.jpg');
+                    marsPhotoTexture = loadBodyTexture('images/mars_photo.jpg');
                 }
                 return marsPhotoTexture;
             }
