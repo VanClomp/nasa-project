@@ -136,7 +136,7 @@
             }
         `;
 
-        // Proceduralny shader powierzchni planetarnej (FBM noise w GLSL - zero kreskówkowych plam)
+        // Proceduralny shader powierzchni planetarnej lub tekstura ze zdjęcia
         const fragmentShader = `
             uniform vec3 uBaseColor;
             uniform vec3 uDarkColor;
@@ -144,6 +144,8 @@
             uniform vec3 uLightDir;
             uniform float uHover;
             uniform float uSeed;
+            uniform float uHasTexture;
+            uniform sampler2D uTexture;
 
             varying vec3 vNormal;
             varying vec3 vPosition;
@@ -177,12 +179,16 @@
             }
 
             void main() {
-                // Tekstura geologiczna z 5 oktaw szumu FBM
-                float n = fbm(vUv * vec2(14.0, 7.0));
-                float detail = fbm(vUv * vec2(42.0, 21.0));
-                float surfaceFactor = smoothstep(0.28, 0.72, n * 0.75 + detail * 0.25);
-
-                vec3 albedo = mix(uDarkColor, uBaseColor, surfaceFactor);
+                vec3 albedo;
+                if (uHasTexture > 0.5) {
+                    albedo = texture2D(uTexture, vUv).rgb;
+                } else {
+                    // Tekstura geologiczna z 5 oktaw szumu FBM
+                    float n = fbm(vUv * vec2(14.0, 7.0));
+                    float detail = fbm(vUv * vec2(42.0, 21.0));
+                    float surfaceFactor = smoothstep(0.28, 0.72, n * 0.75 + detail * 0.25);
+                    albedo = mix(uDarkColor, uBaseColor, surfaceFactor);
+                }
 
                 // Oświetlenie kierunkowe Słońca (wyraźny, realistyczny terminator)
                 vec3 lightDir = normalize(uLightDir);
@@ -193,12 +199,14 @@
                 vec3 viewDir = normalize(-vPosition);
                 float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.4);
 
-                vec3 color = albedo * (0.06 + diff * 0.95 * terminator);
+                vec3 color = albedo * (0.08 + diff * 0.95 * terminator);
                 color += uRimColor * fresnel * (0.28 + uHover * 0.35);
 
                 gl_FragColor = vec4(color, 1.0);
             }
         `;
+
+        const textureLoader = new THREE.TextureLoader();
 
         function createMinimalPlanet(holderId, config) {
             const container = document.getElementById(holderId);
@@ -214,13 +222,17 @@
             const group = new THREE.Group();
             scene.add(group);
 
+            const loadedTexture = config.textureUrl ? textureLoader.load(config.textureUrl) : null;
+
             const uniforms = {
-                uBaseColor: { value: new THREE.Color(config.baseColor) },
-                uDarkColor: { value: new THREE.Color(config.darkColor) },
-                uRimColor:  { value: new THREE.Color(config.rimColor) },
-                uLightDir:  { value: new THREE.Vector3(1.2, 0.4, 0.9) },
-                uHover:     { value: 0.0 },
-                uSeed:      { value: config.seed }
+                uBaseColor:  { value: new THREE.Color(config.baseColor) },
+                uDarkColor:  { value: new THREE.Color(config.darkColor) },
+                uRimColor:   { value: new THREE.Color(config.rimColor) },
+                uLightDir:   { value: new THREE.Vector3(1.2, 0.4, 0.9) },
+                uHover:      { value: 0.0 },
+                uSeed:       { value: config.seed },
+                uHasTexture: { value: loadedTexture ? 1.0 : 0.0 },
+                uTexture:    { value: loadedTexture }
             };
 
             const geo = new THREE.SphereGeometry(1.04, 64, 64);
@@ -257,7 +269,8 @@
             baseColor: '#CBD5E1',
             darkColor: '#334155',
             rimColor:  '#60A5FA',
-            seed: 1.0
+            seed: 1.0,
+            textureUrl: 'moon_photo.jpg'
         });
 
         const marsScene = createMinimalPlanet('mars-holder', {

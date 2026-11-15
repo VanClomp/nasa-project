@@ -479,29 +479,23 @@ $presets = [
         const pinsGroup = new THREE.Group();
         globeGroup.add(pinsGroup);
 
+        const textureLoader = new THREE.TextureLoader();
+        let moonPhotoTexture = null;
+
         function generateBodyTexture(mode, candidates = []) {
+            if (mode === 'moon') {
+                if (!moonPhotoTexture) {
+                    moonPhotoTexture = textureLoader.load('moon_photo.jpg');
+                }
+                return moonPhotoTexture;
+            }
+
             const c = document.createElement('canvas');
             c.width = 1024;
             c.height = 512;
             const ctx = c.getContext('2d');
 
-            if (mode === 'moon') {
-                ctx.fillStyle = '#64748b';
-                ctx.fillRect(0, 0, 1024, 512);
-                for (let i = 0; i < 45; i++) {
-                    const x = Math.random() * 1024, y = Math.random() * 512, r = Math.random() * 80 + 20;
-                    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
-                    g.addColorStop(0, 'rgba(30,41,59,0.65)');
-                    g.addColorStop(1, 'rgba(30,41,59,0)');
-                    ctx.fillStyle = g;
-                    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-                }
-                for (let i = 0; i < 220; i++) {
-                    const x = Math.random() * 1024, y = Math.random() * 512, r = Math.random() * 16 + 2;
-                    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(226,232,240,0.35)'; ctx.stroke();
-                }
-            } else if (mode === 'mars') {
+            if (mode === 'mars') {
                 const grad = ctx.createLinearGradient(0, 0, 0, 512);
                 grad.addColorStop(0, '#f8fafc');
                 grad.addColorStop(0.07, '#b45309');
