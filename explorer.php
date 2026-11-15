@@ -277,6 +277,8 @@ $presets = [
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
+$initialDate = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
+    ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC), domyślnie dziś
 $initialWeights = [];
 if (isset($_GET['w'])) {
     $parts = explode(',', $_GET['w']);
@@ -362,6 +364,14 @@ if (isset($_GET['w'])) {
                     <button class="scan-btn" onclick="triggerCharacterize()">Pobierz</button>
                 </div>
 
+                <span class="section-label">Data lądowania</span>
+                <div class="coords-row">
+                    <div class="hud-input-group">
+                        <label>DATA (UTC)</label>
+                        <input type="date" id="input-date" min="1990-01-01" max="2100-12-31" value="<?php echo htmlspecialchars($initialDate); ?>" onchange="triggerCharacterize()">
+                    </div>
+                </div>
+
                 <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
                 <div id="sliders-container">
                     <?php foreach ($kFeatures as $f): ?>
@@ -412,11 +422,14 @@ if (isset($_GET['w'])) {
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        Dane lokalizacji · <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span>
+                        Dane lokalizacji · <span id="readout-coords"><?php echo $initialLat; ?>°, <?php echo $initialLon; ?>°</span><span id="readout-season"></span>
                     </span>
-                    <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
-                        Najbliższa jaskinia: -- km
-                    </span>
+                    <div class="readout-meta">
+                        <span class="model-badge" id="model-badge" title="Pochodzenie danych">Model: --</span>
+                        <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
+                            Najbliższa jaskinia: -- km
+                        </span>
+                    </div>
                 </div>
                 <div class="readout-grid">
                     <div class="readout-box"><span>TEMP. ŚREDNIA</span><strong id="raw-temp_mean">-- °C</strong></div>
@@ -832,7 +845,7 @@ if (isset($_GET['w'])) {
                 target_body: currentBody,
                 lat: lat,
                 lon: lon,
-                timestamp_iso: new Date().toISOString()
+                timestamp_iso: landingTimestamp()
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);
@@ -841,6 +854,32 @@ if (isset($_GET['w'])) {
         function onWeightSliderChange(slider) {
             const idx = slider.dataset.idx;
             document.getElementById(`weight-val-${idx}`).innerText = parseFloat(slider.value).toFixed(2);
+        }
+
+
+        // Data lądowania z pola #input-date -> timestamp_iso dla /api/v1/characterize (południe UTC tego dnia).
+        // Warunki na Marsie / Księżycu (pora roku Ls, pył, temperatury, położenie Słońca) zależą od tej daty.
+        function landingTimestamp() {
+            const el = document.getElementById('input-date');
+            const d = el ? el.value : '';
+            return /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T12:00:00Z` : new Date().toISOString();
+        }
+        function landingDate() {
+            return landingTimestamp().slice(0, 10);
+        }
+
+        // Pora roku dla wybranej daty (extra.season z 3-charakteryzator)
+        function renderSeason(profile) {
+            const el = document.getElementById('readout-season');
+            if (!el) return;
+            const s = (profile && profile.extra && profile.extra.season) || null;
+            if (s && s.ls !== undefined) {
+                el.innerText = ` · Ls ${Number(s.ls).toFixed(0)}° (rok marsjański ${s.mars_year})`;
+            } else if (s && s.local_lunar_hour !== undefined) {
+                el.innerText = ` · godz. księżycowa ${Number(s.local_lunar_hour).toFixed(1)}`;
+            } else {
+                el.innerText = '';
+            }
         }
 
         function renderTargetProfileReadout(profile) {
@@ -856,6 +895,21 @@ if (isset($_GET['w'])) {
             document.getElementById('raw-slope_deg').innerText = `${r.slope_deg} °`;
             document.getElementById('readout-skylight').innerText =
                 `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
+            renderModelBadge(profile);
+            renderSeason(profile);
+        }
+
+        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty, "global" = model globalny (niepewny).
+        // Brak pola (np. mock w PHP) traktujemy jako globalny.
+        function renderModelBadge(profile) {
+            const badge = document.getElementById('model-badge');
+            if (!badge) return;
+            const extra = (profile && profile.extra) || {};
+            const isLocal = extra.model === 'local';
+            badge.classList.toggle('local', isLocal);
+            badge.classList.toggle('global', !isLocal);
+            badge.innerText = isLocal ? 'Model lokalny · dane stacji' : 'Model globalny · niepewny';
+            badge.title = extra.model_basis || (isLocal ? 'Dane stacji' : 'Model globalny');
         }
 
         function selectPreset(lat, lon, btnEl) {
@@ -906,7 +960,8 @@ if (isset($_GET['w'])) {
                 lat: lat.toFixed(2),
                 lon: lon.toFixed(2),
                 w: weights,
-                caves: caves
+                caves: caves,
+                date: landingDate()
             });
             window.location.href = `dual.php?${params.toString()}`;
         }
@@ -923,7 +978,8 @@ if (isset($_GET['w'])) {
                 lat: lat.toFixed(2),
                 lon: lon.toFixed(2),
                 w: weights,
-                caves: caves
+                caves: caves,
+                date: landingDate()
             });
             diveUrl = `results.php?${params.toString()}`;
 

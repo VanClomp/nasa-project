@@ -869,6 +869,51 @@ body.leaving {
     border-radius: 10px;
 }
 
+/* Pochodzenie danych z Charakteryzatora (extra.model): lokalny = dane stacji, globalny = model niepewny */
+.readout-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.model-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    cursor: help;
+    transition: color 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                background 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.model-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.model-badge.local {
+    color: var(--emerald);
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.model-badge.global {
+    color: #FB923C;
+    border-color: rgba(251, 146, 60, 0.35);
+    background: rgba(251, 146, 60, 0.08);
+}
+
 .readout-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);

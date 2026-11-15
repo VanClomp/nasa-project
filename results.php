@@ -11,6 +11,8 @@ if (!in_array($selectedBody, ['moon', 'mars'])) {
 $lat = isset($_GET['lat']) ? floatval($_GET['lat']) : -89.9;
 $lon = isset($_GET['lon']) ? floatval($_GET['lon']) : 0.0;
 $caves = (isset($_GET['caves']) && $_GET['caves'] === '1');
+$date = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
+    ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC)
 
 $defaultWeights = [0.90, 0.70, 0.85, 0.65, 0.80, 0.50, 0.95, 0.60, 0.75];
 $weights = $defaultWeights;
@@ -28,7 +30,8 @@ $backQuery = http_build_query([
     'lat'   => $lat,
     'lon'   => $lon,
     'w'     => implode(',', array_map(fn($v) => number_format($v, 2, '.', ''), $weights)),
-    'caves' => $caves ? '1' : '0'
+    'caves' => $caves ? '1' : '0',
+    'date'  => $date
 ]);
 ?>
 <!DOCTYPE html>
@@ -85,11 +88,14 @@ $backQuery = http_build_query([
             <div class="target-readout-bar">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="section-label" style="margin:0;">
-                        Profil celu · <?php echo $selectedBody === 'moon' ? 'Księżyc' : 'Mars'; ?> (<?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°)
+                        Profil celu · <?php echo $selectedBody === 'moon' ? 'Księżyc' : 'Mars'; ?> (<?php echo number_format($lat, 1); ?>°, <?php echo number_format($lon, 1); ?>°) · <?php echo htmlspecialchars($date); ?><span id="readout-season"></span>
                     </span>
-                    <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
-                        Najbliższa jaskinia: -- km
-                    </span>
+                    <div class="readout-meta">
+                        <span class="model-badge" id="model-badge" title="Pochodzenie danych">Model: --</span>
+                        <span style="font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--text-muted);" id="readout-skylight">
+                            Najbliższa jaskinia: -- km
+                        </span>
+                    </div>
                 </div>
                 <div class="readout-grid">
                     <div class="readout-box"><span>TEMP. ŚREDNIA</span><strong id="raw-temp_mean">-- °C</strong></div>
@@ -140,7 +146,8 @@ $backQuery = http_build_query([
             lat: <?php echo json_encode($lat); ?>,
             lon: <?php echo json_encode($lon); ?>,
             weights: <?php echo json_encode($weights); ?>,
-            require_caves: <?php echo json_encode($caves); ?>
+            require_caves: <?php echo json_encode($caves); ?>,
+            date: <?php echo json_encode($date); ?>
         };
         const MONTH_NAMES = ['STY', 'LUT', 'MAR', 'KWI', 'MAJ', 'CZE', 'LIP', 'SIE', 'WRZ', 'PAŹ', 'LIS', 'GRU'];
 
@@ -429,6 +436,21 @@ $backQuery = http_build_query([
             });
         }
 
+
+        // Pora roku dla wybranej daty (extra.season z 3-charakteryzator)
+        function renderSeason(profile) {
+            const el = document.getElementById('readout-season');
+            if (!el) return;
+            const s = (profile && profile.extra && profile.extra.season) || null;
+            if (s && s.ls !== undefined) {
+                el.innerText = ` · Ls ${Number(s.ls).toFixed(0)}° (rok marsjański ${s.mars_year})`;
+            } else if (s && s.local_lunar_hour !== undefined) {
+                el.innerText = ` · godz. księżycowa ${Number(s.local_lunar_hour).toFixed(1)}`;
+            } else {
+                el.innerText = '';
+            }
+        }
+
         function renderTargetProfileReadout(profile) {
             const r = profile.features_raw;
             document.getElementById('raw-temp_mean').innerText = `${r.temp_mean} °C`;
@@ -442,6 +464,21 @@ $backQuery = http_build_query([
             document.getElementById('raw-slope_deg').innerText = `${r.slope_deg} °`;
             document.getElementById('readout-skylight').innerText =
                 `Najbliższa jaskinia: ${profile.nearest_skylight_km} km`;
+            renderModelBadge(profile);
+            renderSeason(profile);
+        }
+
+        // extra.model z 3-charakteryzator: "local" = dane stacji dla tej daty, "global" = model globalny (niepewny).
+        // Brak pola (np. mock w PHP) traktujemy jako globalny.
+        function renderModelBadge(profile) {
+            const badge = document.getElementById('model-badge');
+            if (!badge) return;
+            const extra = (profile && profile.extra) || {};
+            const isLocal = extra.model === 'local';
+            badge.classList.toggle('local', isLocal);
+            badge.classList.toggle('global', !isLocal);
+            badge.innerText = isLocal ? 'Model lokalny · dane stacji' : 'Model globalny · niepewny';
+            badge.title = extra.model_basis || (isLocal ? 'Dane stacji' : 'Model globalny');
         }
 
         function renderCandidatesList() {
@@ -579,7 +616,7 @@ $backQuery = http_build_query([
                 target_body: SEARCH_PARAMS.body,
                 lat: SEARCH_PARAMS.lat,
                 lon: SEARCH_PARAMS.lon,
-                timestamp_iso: new Date().toISOString()
+                timestamp_iso: `${SEARCH_PARAMS.date}T12:00:00Z`
             });
             currentTargetProfile = profile;
             renderTargetProfileReadout(profile);

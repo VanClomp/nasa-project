@@ -39,6 +39,8 @@ $presets = [
 $initialLat = isset($_GET['lat']) ? floatval($_GET['lat']) : $presets[$selectedBody][0]['lat'];
 $initialLon = isset($_GET['lon']) ? floatval($_GET['lon']) : $presets[$selectedBody][0]['lon'];
 $initialCaves = isset($_GET['caves']) && $_GET['caves'] === '1';
+$initialDate = (isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']))
+    ? $_GET['date'] : gmdate('Y-m-d');   // data lądowania (UTC), domyślnie dziś
 $initialWeights = [];
 if (isset($_GET['w'])) {
     $parts = explode(',', $_GET['w']);
@@ -121,6 +123,14 @@ if (isset($_GET['w'])) {
                         <input type="number" id="input-lon" step="0.1" min="-180" max="180" value="<?php echo $initialLon; ?>">
                     </div>
                     <button class="scan-btn" onclick="triggerCharacterizeAndSearch()">Pobierz</button>
+                </div>
+
+                <span class="section-label">Data lądowania</span>
+                <div class="coords-row">
+                    <div class="hud-input-group">
+                        <label>DATA (UTC)</label>
+                        <input type="date" id="input-date" min="1990-01-01" max="2100-12-31" value="<?php echo htmlspecialchars($initialDate); ?>" onchange="triggerCharacterizeAndSearch()">
+                    </div>
                 </div>
 
                 <span class="section-label">Wagi dopasowania (0.0 – 1.0)</span>
@@ -592,7 +602,7 @@ if (isset($_GET['w'])) {
                 target_body: currentBody,
                 lat: lat,
                 lon: lon,
-                timestamp_iso: new Date().toISOString()
+                timestamp_iso: landingTimestamp()
             });
             currentTargetProfile = profile;
             await triggerSearchOnly();
@@ -667,6 +677,18 @@ if (isset($_GET['w'])) {
             triggerCharacterizeAndSearch();
         }
 
+
+        // Data lądowania z pola #input-date -> timestamp_iso dla /api/v1/characterize (południe UTC tego dnia).
+        // Warunki na Marsie / Księżycu (pora roku Ls, pył, temperatury, położenie Słońca) zależą od tej daty.
+        function landingTimestamp() {
+            const el = document.getElementById('input-date');
+            const d = el ? el.value : '';
+            return /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T12:00:00Z` : new Date().toISOString();
+        }
+        function landingDate() {
+            return landingTimestamp().slice(0, 10);
+        }
+
         function buildQuery() {
             const lat = parseFloat(document.getElementById('input-lat').value) || 0;
             const lon = parseFloat(document.getElementById('input-lon').value) || 0;
@@ -677,7 +699,8 @@ if (isset($_GET['w'])) {
                 lat: lat.toFixed(2),
                 lon: lon.toFixed(2),
                 w: weights,
-                caves: caves
+                caves: caves,
+                date: landingDate()
             }).toString();
         }
 
