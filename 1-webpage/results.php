@@ -956,7 +956,8 @@ $backQuery = http_build_query([
                 features_norm: profile.features_norm,
                 weights: SEARCH_PARAMS.weights,
                 require_caves: SEARCH_PARAMS.require_caves,
-                top_k: 100
+                top_k: 100,
+                include_maps: false   // the pages draw pins only; skip the unused heatmap/error-map images
             });
 
             document.getElementById('api-latency').innerText = `${searchRes.execution_time_ms} ms`;

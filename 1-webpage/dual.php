@@ -791,7 +791,8 @@ if (isset($_GET['w'])) {
                 features_norm: currentTargetProfile.features_norm,
                 weights: getWeightsVector(),
                 require_caves: document.getElementById('require-caves').checked,
-                top_k: 100
+                top_k: 100,
+                include_maps: false   // the pages draw pins only; skip the unused heatmap/error-map images
             });
             currentCandidates = res.candidates || [];
             refreshEarthPins();

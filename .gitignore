@@ -1,3 +1,7 @@
+# Real Earth data on the server (read by 4-szukacz instead of the mock in data/earth/); never tracked so that
+# git pull / checkout on the server cannot replace it
+data/earth_real/
+
 # Raw binary Mars and Moon maps (1.3+ GB; prepared with 3-charakteryzator/scripts/pack_server_data.sh)
 data/mars/*
 !data/mars/.gitkeep

@@ -40,11 +40,15 @@ def _mars_point(p, radius):
     if not (-90 <= lat <= 90): raise ValueError(f'latitude {lat} outside -90..90')
     months = [int(k) for k in p.get('months', range(1, 13))]
     if any(k < 1 or k > 12 for k in months): raise ValueError('months must be 1..12')
-    r = mm.characterize(lat, lon, months, radius)
-    cur = None
+    t = ls = k = None
     if p.get('timestamp_iso'):
         t = dt.datetime.fromisoformat(p['timestamp_iso'].replace('Z', '+00:00')).replace(tzinfo=None)
         ls = m.ls_from_utc(t); k = int(ls // 30) + 1
+        if p.get('detail') != 'full' and 'months' not in p:
+            months = [k]                          # a dated answer only needs its own Mars month (12x less work)
+    r = mm.characterize(lat, lon, months, radius)
+    cur = None
+    if t is not None:
         cur = dict(timestamp_iso=p['timestamp_iso'], ls=round(ls, 2), mars_year=m.mars_year_from_days(m.days_j2000(t), ls), month=k,
                    entry=next((x for x in r['months'] if x['month'] == k), None))
     full = dict(input=p, coordinates=dict(lat=lat, lon_east=round(lon % 360, 4)), site=r['site'], current=cur,
