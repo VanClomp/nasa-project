@@ -1,18 +1,5 @@
 services:
   # ---------------------------------------------------------------------------
-  # 0. Inicjalizator danych startowych (MOCK HEURYSTYKA)
-  # Jeśli w ./data/earth nie ma jeszcze macierzy .npy, generuje je przed startem
-  # Szukacza. Jeśli prawdziwe dane już tam są - nic nie nadpisuje.
-  # ---------------------------------------------------------------------------
-  precomputer-mock-init:
-    build:
-      context: ./5-precomputer
-      dockerfile: Dockerfile.mock
-    volumes:
-      - ./data:/data
-    restart: "no"
-
-  # ---------------------------------------------------------------------------
   # 1. Frontend (PHP 8.3 + Apache)
   # Korzysta z plików w głównym katalogu repozytorium (bez ich przenoszenia).
   # ---------------------------------------------------------------------------
@@ -23,7 +10,11 @@ services:
     volumes:
       - ./index.php:/var/www/html/index.php:ro
       - ./explorer.php:/var/www/html/explorer.php:ro
+      - ./results.php:/var/www/html/results.php:ro
       - ./style.css:/var/www/html/style.css:ro
+      - ./mars_photo.jpg:/var/www/html/mars_photo.jpg:ro
+      - ./moon_photo.jpg:/var/www/html/moon_photo.jpg:ro
+      - ./sky_photo.jpg:/var/www/html/sky_photo.jpg:ro
     expose:
       - "80"
     networks:
@@ -34,13 +25,12 @@ services:
 
   # ---------------------------------------------------------------------------
   # 3. Charakteryzator (Księżyc / Mars -> TargetProfile)
-  # UWAGA: Obecnie uruchamia Dockerfile.mock (MOCK_HEURYSTYKA_charakteryzator_api.py).
-  # Gdy docelowy 3-charakteryzator będzie gotowy, zmień dockerfile na Dockerfile.
   # ---------------------------------------------------------------------------
   charakteryzator:
-    build:
-      context: ./3-charakteryzator
-      dockerfile: Dockerfile.mock
+    build: ./3-charakteryzator
+    environment:
+      MARS_DATA_DIR: /data/mars
+      MOON_DATA_DIR: /data/moon
     volumes:
       - ./data:/data:ro
     expose:
@@ -52,9 +42,6 @@ services:
   # ---------------------------------------------------------------------------
   szukacz:
     build: ./4-szukacz
-    depends_on:
-      precomputer-mock-init:
-        condition: service_completed_successfully
     volumes:
       - ./data:/data:ro
     expose:
@@ -77,9 +64,10 @@ services:
     environment:
       - CHARAKTERYZATOR_URL=http://charakteryzator:8001
       - SZUKACZ_URL=http://szukacz:8002
-      - NETWORKER_ALLOW_MOCK_FALLBACK=1
     volumes:
       - ./data:/data:ro
+      - ./3-charakteryzator/outputs:/charakteryzator/outputs:ro
+      - ./3-charakteryzator/service/norm_ranges.json:/charakteryzator/service/norm_ranges.json:ro
       - ./2-networker/conf.d:/etc/nginx/conf.d:ro
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro

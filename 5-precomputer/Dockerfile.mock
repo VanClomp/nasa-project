@@ -1,9 +1,0 @@
-# ⚠️ UWAGA: Kontener inicjalizujący dane heurystyczne (MOCK), jeśli /data/earth jest puste
-FROM python:3.12-slim
-
-WORKDIR /app
-RUN pip install --no-cache-dir numpy pyarrow
-
-COPY MOCK_HEURYSTYKA_generate_earth_data.py .
-
-CMD ["sh", "-c", "if [ ! -f /data/earth/earth_features_norm.npy ]; then python MOCK_HEURYSTYKA_generate_earth_data.py --output-dir /data/earth --n-points 60000; else echo '[5-precomputer] Pliki w /data/earth juz istnieja - pomijam generowanie mocka.'; fi"]

@@ -1,11 +1,11 @@
 # Dockerfile dla 1-frontend (PHP 8.3 + Apache)
-# Budowany z kontekstu głównego katalogu repozytorium (bez przenoszenia plików .php/.css)
+# Budowany z kontekstu głównego katalogu repozytorium (bez przenoszenia plików .php/.css/.jpg)
 FROM php:8.3-apache
 
 RUN a2enmod rewrite headers
 
 WORKDIR /var/www/html
 
-COPY index.php explorer.php style.css ./
+COPY index.php explorer.php results.php style.css *.jpg ./
 
 EXPOSE 80
