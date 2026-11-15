@@ -36,6 +36,7 @@ mkdir -p ./data/earth ./data/moon ./data/mars ./certbot/www ./certbot/conf ./2-n
 # 3. Budowanie i uruchomienie kontenerów
 echo "[3/4] Budowanie i uruchamianie kontenerów (docker compose up -d --build)..."
 $DOCKER_CMD compose up -d --build
+$DOCKER_CMD compose restart networker
 
 # 4. Weryfikacja działania
 echo "[4/4] Oczekiwanie na uruchomienie serwisów i test healthcheck..."
